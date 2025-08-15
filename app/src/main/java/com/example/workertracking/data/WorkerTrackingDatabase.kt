@@ -19,7 +19,7 @@ import com.example.workertracking.data.entity.*
         EventWorker::class,
         Payment::class
     ],
-    version = 2,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -46,13 +46,50 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add globalPayRate and hourlyPayRate columns to workers table
+                database.execSQL("ALTER TABLE workers ADD COLUMN globalPayRate REAL")
+                database.execSQL("ALTER TABLE workers ADD COLUMN hourlyPayRate REAL")
+            }
+        }
+
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create project_workers table for many-to-many relationship with pay rates
+                database.execSQL("""
+                    CREATE TABLE project_workers (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        projectId INTEGER NOT NULL,
+                        workerId INTEGER NOT NULL,
+                        payRate REAL NOT NULL,
+                        FOREIGN KEY(projectId) REFERENCES projects(id) ON DELETE CASCADE,
+                        FOREIGN KEY(workerId) REFERENCES workers(id) ON DELETE CASCADE
+                    )
+                """)
+            }
+        }
+
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Remove project_workers table and worker payment rate columns
+                database.execSQL("DROP TABLE IF EXISTS project_workers")
+                
+                // Remove payment rate columns from workers table
+                database.execSQL("CREATE TABLE workers_new (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, phoneNumber TEXT NOT NULL, referenceId INTEGER, FOREIGN KEY(referenceId) REFERENCES workers(id) ON DELETE SET NULL)")
+                database.execSQL("INSERT INTO workers_new (id, name, phoneNumber, referenceId) SELECT id, name, phoneNumber, referenceId FROM workers")
+                database.execSQL("DROP TABLE workers")
+                database.execSQL("ALTER TABLE workers_new RENAME TO workers")
+            }
+        }
+
         fun getDatabase(context: Context): WorkerTrackingDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     WorkerTrackingDatabase::class.java,
                     "worker_tracking_database"
-                ).addMigrations(MIGRATION_1_2).build()
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
                 INSTANCE = instance
                 instance
             }

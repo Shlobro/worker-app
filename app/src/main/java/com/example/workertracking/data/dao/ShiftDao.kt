@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ShiftDao {
+    @Query("SELECT * FROM shifts ORDER BY date DESC")
+    fun getAllShifts(): Flow<List<Shift>>
+    
     @Query("SELECT * FROM shifts WHERE projectId = :projectId ORDER BY date DESC")
     fun getShiftsByProject(projectId: Long): Flow<List<Shift>>
 

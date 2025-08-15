@@ -78,12 +78,30 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 - Manual DI through AppContainer for simplicity
 
 #### Worker Management Requirements
-- **Worker Creation**: Workers are created with name, phone number, and optional reference worker (no percentage)
+- **Worker Creation**: Workers are created with name, phone number, and optional reference worker (NO payment rates stored on worker)
 - **Phone Integration**: Worker phone numbers are clickable and trigger phone dialer intent
 - **Search Functionality**: Workers can be searched by name in the workers list
-- **Worker Details**: Clicking on a worker shows their details, projects, and events with search capability
-- **Reference Payment**: When assigning workers to projects/events, prompt for hourly reference payment (in shekels) if worker has a reference
-- **Database Schema**: Worker entity uses `phoneNumber` field instead of `contactInfo`, no `referencePercentage` field
+- **Worker Details**: Clicking on a worker shows their details and only projects they participate in through shifts
+- **Payment Rates**: Payment rates are set per shift or per event, NOT stored on worker entity
+- **Database Schema**: Worker entity uses `phoneNumber` field without any payment rate fields
+
+### Project-Worker Relationship (Through Shifts Only)
+- **No Direct Assignment**: Workers cannot be added directly to projects
+- **Shift-Based Only**: Workers are linked to projects only through shifts
+- **Project Details**: Project detail screens show shifts, not workers directly
+- **Worker Participation**: Workers can work on any project by creating shifts
+
+### Shift Management (Primary Workflow)
+- **Shift Creation**: Shifts can be created for ANY worker and ANY project with date, start time, hours, and pay rate
+- **No Pre-Assignment Required**: Workers don't need to be "assigned" to projects before creating shifts
+- **Payment Per Shift**: Each shift has its own pay rate specified during creation
+- **Project View**: Projects show their shifts with worker names, dates, hours, and payments
+
+### Event-Worker Relationship  
+- **Direct Assignment**: Workers can be assigned directly to events with hours and hourly rates
+- **Payment Per Event**: Each worker-event assignment has specific hours and pay rate
+- **Total Calculation**: Event total cost calculated as (hours × hourly rate) per worker
+- **EventWorker Entity**: Links events to workers with hours and pay rate
 
 ### Development Guidelines
 

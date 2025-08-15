@@ -38,6 +38,7 @@ import com.example.workertracking.ui.screens.workers.AddWorkerScreen
 import com.example.workertracking.ui.screens.workers.WorkerDetailScreen
 import com.example.workertracking.ui.screens.events.EventsScreen
 import com.example.workertracking.ui.screens.events.AddEventScreen
+import com.example.workertracking.ui.screens.shifts.AddShiftScreen
 import com.example.workertracking.ui.viewmodel.ProjectsViewModel
 import com.example.workertracking.ui.viewmodel.AddProjectViewModel
 import com.example.workertracking.ui.viewmodel.ProjectDetailViewModel
@@ -45,6 +46,7 @@ import com.example.workertracking.ui.viewmodel.WorkersViewModel
 import com.example.workertracking.ui.viewmodel.AddWorkerViewModel
 import com.example.workertracking.ui.viewmodel.WorkerDetailViewModel
 import com.example.workertracking.ui.viewmodel.AddEventViewModel
+import com.example.workertracking.ui.viewmodel.AddShiftViewModel
 import com.example.workertracking.ui.theme.WorkerTrackingTheme
 
 class MainActivity : ComponentActivity() {
@@ -140,6 +142,9 @@ fun WorkerTrackingApp() {
                     },
                     onProjectClick = { project ->
                         navController.navigate(Screen.ProjectDetail.createRoute(project.id))
+                    },
+                    onDeleteProject = { project ->
+                        viewModel.deleteProject(project)
                     }
                 )
             }
@@ -173,11 +178,10 @@ fun WorkerTrackingApp() {
                 val viewModel: ProjectDetailViewModel = viewModel {
                     ProjectDetailViewModel(
                         application.container.projectRepository,
-                        application.container.workerRepository
+                        application.container.shiftRepository
                     )
                 }
                 val project by viewModel.project.collectAsState()
-                val workers by viewModel.workers.collectAsState()
                 val shifts by viewModel.shifts.collectAsState()
                 val isLoading by viewModel.isLoading.collectAsState()
                 
@@ -187,11 +191,16 @@ fun WorkerTrackingApp() {
                 
                 ProjectDetailScreen(
                     project = project,
-                    workers = workers,
                     shifts = shifts,
                     isLoading = isLoading,
                     onNavigateBack = {
                         navController.popBackStack()
+                    },
+                    onAddShift = {
+                        navController.navigate(Screen.AddShift.createRoute(projectId))
+                    },
+                    onDeleteShift = { shift ->
+                        viewModel.deleteShift(shift)
                     }
                 )
             }
@@ -210,6 +219,9 @@ fun WorkerTrackingApp() {
                     },
                     onWorkerClick = { worker ->
                         navController.navigate(Screen.WorkerDetail.createRoute(worker.id))
+                    },
+                    onDeleteWorker = { worker ->
+                        viewModel.deleteWorker(worker)
                     }
                 )
             }
@@ -246,7 +258,8 @@ fun WorkerTrackingApp() {
                     WorkerDetailViewModel(
                         application.container.workerRepository,
                         application.container.projectRepository,
-                        application.container.eventRepository
+                        application.container.eventRepository,
+                        application.container.shiftRepository
                     )
                 }
                 val worker by viewModel.worker.collectAsState()
@@ -294,6 +307,43 @@ fun WorkerTrackingApp() {
                     },
                     onSaveEvent = { name, date, time ->
                         viewModel.saveEvent(name, date, time)
+                    }
+                )
+            }
+            composable(
+                route = Screen.AddShift.route,
+                arguments = listOf(navArgument("projectId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val projectId = backStackEntry.arguments?.getLong("projectId") ?: 0L
+                val viewModel: AddShiftViewModel = viewModel {
+                    AddShiftViewModel(
+                        application.container.shiftRepository,
+                        application.container.workerRepository
+                    )
+                }
+                val allWorkers by viewModel.allWorkers.collectAsState()
+                val saveSuccess by viewModel.saveSuccess.collectAsState()
+                
+                LaunchedEffect(Unit) {
+                    viewModel.loadAllWorkers()
+                }
+                
+                LaunchedEffect(saveSuccess) {
+                    if (saveSuccess) {
+                        viewModel.clearSaveSuccess()
+                        navController.popBackStack()
+                    }
+                }
+                
+                AddShiftScreen(
+                    projectId = projectId,
+                    projectName = "פרויקט", // TODO: Get actual project name
+                    allWorkers = allWorkers,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onSaveShift = { pId, workerId, date, startTime, hours, payRate ->
+                        viewModel.saveShift(pId, workerId, date, startTime, hours, payRate)
                     }
                 )
             }

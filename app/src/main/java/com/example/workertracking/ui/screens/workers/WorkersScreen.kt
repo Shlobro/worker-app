@@ -2,7 +2,9 @@ package com.example.workertracking.ui.screens.workers
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,9 +30,11 @@ fun WorkersScreen(
     workers: List<Worker> = emptyList(),
     isLoading: Boolean = false,
     onAddWorker: () -> Unit = {},
-    onWorkerClick: (Worker) -> Unit = {}
+    onWorkerClick: (Worker) -> Unit = {},
+    onDeleteWorker: (Worker) -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    var workerToDelete by remember { mutableStateOf<Worker?>(null) }
     
     val filteredWorkers = remember(workers, searchQuery) {
         if (searchQuery.isBlank()) {
@@ -136,24 +140,62 @@ fun WorkersScreen(
                 items(filteredWorkers) { worker ->
                     WorkerCard(
                         worker = worker,
-                        onClick = { onWorkerClick(worker) }
+                        onClick = { onWorkerClick(worker) },
+                        onLongClick = { workerToDelete = worker }
                     )
                 }
             }
         }
     }
+    
+    // Delete confirmation dialog
+    workerToDelete?.let { worker ->
+        AlertDialog(
+            onDismissRequest = { workerToDelete = null },
+            title = { Text(stringResource(R.string.delete_confirmation_title)) },
+            text = { 
+                Text(
+                    stringResource(R.string.delete_worker_message, worker.name),
+                    color = MaterialTheme.colorScheme.error
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDeleteWorker(worker)
+                        workerToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(stringResource(R.string.confirm_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { workerToDelete = null }) {
+                    Text(stringResource(R.string.cancel_delete))
+                }
+            }
+        )
+    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun WorkerCard(
     worker: Worker,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(

@@ -7,7 +7,8 @@
       "Bash(chmod:*)",
       "Bash(./gradlew:*)",
       "Bash(\"./gradlew.bat\" assembleDebug)",
-      "Bash(copy:*)"
+      "Bash(copy:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

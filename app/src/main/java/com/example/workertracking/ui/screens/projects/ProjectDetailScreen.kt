@@ -1,5 +1,7 @@
 package com.example.workertracking.ui.screens.projects
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,37 +24,26 @@ import java.text.DateFormat
 import java.text.NumberFormat
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ProjectDetailScreen(
     project: Project?,
-    workers: List<Worker> = emptyList(),
     shifts: List<Shift> = emptyList(),
     isLoading: Boolean,
     onNavigateBack: () -> Unit,
+    onAddShift: () -> Unit,
+    onDeleteShift: (Shift) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    
-    val filteredWorkers = remember(workers, searchQuery) {
-        if (searchQuery.isBlank()) {
-            workers
-        } else {
-            workers.filter { worker ->
-                worker.name.contains(searchQuery, ignoreCase = true) ||
-                worker.phoneNumber.contains(searchQuery, ignoreCase = true)
-            }
-        }
-    }
+    var shiftToDelete by remember { mutableStateOf<Shift?>(null) }
     
     val filteredShifts = remember(shifts, searchQuery) {
         if (searchQuery.isBlank()) {
             shifts
         } else {
-            shifts.filter { shift ->
-                // TODO: Filter shifts when available
-                true
-            }
+            // TODO: Filter shifts by date or worker name when available
+            shifts
         }
     }
 
@@ -175,7 +166,7 @@ fun ProjectDetailScreen(
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
-                        label = { Text(stringResource(R.string.search_workers)) },
+                        label = { Text("חפש משמרות") },
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -183,39 +174,85 @@ fun ProjectDetailScreen(
                 }
                 
                 item {
-                    Text(
-                        text = stringResource(R.string.workers_title),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                
-                items(filteredWorkers) { worker ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = worker.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "טלפון: ${worker.phoneNumber}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        Text(
+                            text = "משמרות",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Button(onClick = onAddShift) {
+                            Text("הוסף משמרת")
                         }
                     }
                 }
                 
-                if (filteredWorkers.isEmpty() && searchQuery.isNotBlank()) {
+                items(filteredShifts) { shift ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .combinedClickable(
+                                onClick = { /* Optional: Add shift detail click */ },
+                                onLongClick = { shiftToDelete = shift }
+                            )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = DateFormat.getDateInstance().format(shift.date),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "${shift.startTime} (${shift.hours}h)",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "שכר שעתי: ${shift.payRate} ₪",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = "סה\"כ: ${shift.hours * shift.payRate} ₪",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                if (filteredShifts.isEmpty() && shifts.isNotEmpty() && searchQuery.isNotBlank()) {
                     item {
                         Text(
                             text = stringResource(R.string.no_data),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+                
+                if (shifts.isEmpty()) {
+                    item {
+                        Text(
+                            text = "אין משמרות עדיין",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.fillMaxWidth()
@@ -236,5 +273,37 @@ fun ProjectDetailScreen(
                 )
             }
         }
+    }
+    
+    // Delete confirmation dialog
+    shiftToDelete?.let { shift ->
+        AlertDialog(
+            onDismissRequest = { shiftToDelete = null },
+            title = { Text(stringResource(R.string.delete_confirmation_title)) },
+            text = { 
+                Text(
+                    stringResource(R.string.delete_shift_message),
+                    color = MaterialTheme.colorScheme.error
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDeleteShift(shift)
+                        shiftToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(stringResource(R.string.confirm_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { shiftToDelete = null }) {
+                    Text(stringResource(R.string.cancel_delete))
+                }
+            }
+        )
     }
 }

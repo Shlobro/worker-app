@@ -101,4 +101,15 @@
     <string name="call_worker">התקשר לעובד</string>
     <string name="worker_projects_events">פרויקטים ואירועים</string>
     <string name="search_projects_events">חפש פרויקטים ואירועים...</string>
+    <string name="contact_info">פרטי התקשרות</string>
+    <string name="reference_percentage">אחוז המפנה (%)</string>
+    
+    <!-- Delete Confirmation -->
+    <string name="delete_confirmation_title">אישור מחיקה</string>
+    <string name="delete_worker_message">האם אתה בטוח שברצונך למחוק את העובד %1$s? פעולה זו לא ניתנת לביטול ותמחק את כל הנתונים הקשורים לעובד זה.</string>
+    <string name="delete_project_message">האם אתה בטוח שברצונך למחוק את הפרויקט %1$s? פעולה זו לא ניתנת לביטול ותמחק את כל הנתונים הקשורים לפרויקט זה.</string>
+    <string name="delete_event_message">האם אתה בטוח שברצונך למחוק את האירוע %1$s? פעולה זו לא ניתנת לביטול ותמחק את כל הנתונים הקשורים לאירוע זה.</string>
+    <string name="delete_shift_message">האם אתה בטוח שברצונך למחוק את המשמרת? פעולה זו לא ניתנת לביטול.</string>
+    <string name="confirm_delete">מחק</string>
+    <string name="cancel_delete">בטל</string>
 </resources>

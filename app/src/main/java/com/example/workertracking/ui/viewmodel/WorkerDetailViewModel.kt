@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.data.entity.Project
 import com.example.workertracking.data.entity.Event
+import com.example.workertracking.data.entity.Shift
 import com.example.workertracking.repository.WorkerRepository
 import com.example.workertracking.repository.ProjectRepository
 import com.example.workertracking.repository.EventRepository
+import com.example.workertracking.repository.ShiftRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +18,8 @@ import kotlinx.coroutines.launch
 class WorkerDetailViewModel(
     private val workerRepository: WorkerRepository,
     private val projectRepository: ProjectRepository,
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    private val shiftRepository: ShiftRepository
 ) : ViewModel() {
 
     private val _worker = MutableStateFlow<Worker?>(null)
@@ -45,13 +48,21 @@ class WorkerDetailViewModel(
 
     private fun loadWorkerProjectsAndEvents(workerId: Long) {
         viewModelScope.launch {
-            // For now, load all projects and events
-            // TODO: Filter by worker when DAO methods are available
-            projectRepository.getAllProjects().collect { projects ->
-                _projects.value = projects
+            // Load projects for this worker through shifts
+            shiftRepository.getShiftsByWorker(workerId).collect { shifts ->
+                val projectIds = shifts.map { it.projectId }.distinct()
+                val workerProjects = mutableListOf<Project>()
+                projectIds.forEach { projectId ->
+                    projectRepository.getProjectById(projectId)?.let { project ->
+                        workerProjects.add(project)
+                    }
+                }
+                _projects.value = workerProjects
             }
         }
         viewModelScope.launch {
+            // Load events for this worker through EventWorker
+            // For now, load all events - TODO: filter by worker
             eventRepository.getAllEvents().collect { events ->
                 _events.value = events
             }

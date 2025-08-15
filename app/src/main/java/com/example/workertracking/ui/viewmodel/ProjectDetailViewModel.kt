@@ -3,10 +3,9 @@ package com.example.workertracking.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.workertracking.data.entity.Project
-import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.data.entity.Shift
 import com.example.workertracking.repository.ProjectRepository
-import com.example.workertracking.repository.WorkerRepository
+import com.example.workertracking.repository.ShiftRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,14 +13,11 @@ import kotlinx.coroutines.launch
 
 class ProjectDetailViewModel(
     private val projectRepository: ProjectRepository,
-    private val workerRepository: WorkerRepository
+    private val shiftRepository: ShiftRepository
 ) : ViewModel() {
 
     private val _project = MutableStateFlow<Project?>(null)
     val project: StateFlow<Project?> = _project.asStateFlow()
-
-    private val _workers = MutableStateFlow<List<Worker>>(emptyList())
-    val workers: StateFlow<List<Worker>> = _workers.asStateFlow()
 
     private val _shifts = MutableStateFlow<List<Shift>>(emptyList())
     val shifts: StateFlow<List<Shift>> = _shifts.asStateFlow()
@@ -34,24 +30,28 @@ class ProjectDetailViewModel(
             _isLoading.value = true
             try {
                 _project.value = projectRepository.getProjectById(projectId)
-                loadProjectWorkersAndShifts(projectId)
+                loadProjectShifts(projectId)
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    private fun loadProjectWorkersAndShifts(projectId: Long) {
+    private fun loadProjectShifts(projectId: Long) {
         viewModelScope.launch {
-            // For now, load all workers and shifts
-            // TODO: Filter by project when DAO methods are available
-            workerRepository.getAllWorkers().collect { workers ->
-                _workers.value = workers
+            shiftRepository.getShiftsByProject(projectId).collect { shifts ->
+                _shifts.value = shifts
             }
         }
+    }
+    
+    fun deleteShift(shift: Shift) {
         viewModelScope.launch {
-            // TODO: Load shifts for this project when Shift entity and DAO are implemented
-            _shifts.value = emptyList()
+            try {
+                shiftRepository.deleteShift(shift)
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
         }
     }
 }

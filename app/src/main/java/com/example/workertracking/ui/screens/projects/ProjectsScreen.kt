@@ -1,5 +1,7 @@
 package com.example.workertracking.ui.screens.projects
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,8 +27,10 @@ fun ProjectsScreen(
     projects: List<Project> = emptyList(),
     isLoading: Boolean = false,
     onAddProject: () -> Unit = {},
-    onProjectClick: (Project) -> Unit = {}
+    onProjectClick: (Project) -> Unit = {},
+    onDeleteProject: (Project) -> Unit = {}
 ) {
+    var projectToDelete by remember { mutableStateOf<Project?>(null) }
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
@@ -82,25 +86,63 @@ fun ProjectsScreen(
                 items(projects) { project ->
                     ProjectCard(
                         project = project,
-                        onClick = { onProjectClick(project) }
+                        onClick = { onProjectClick(project) },
+                        onLongClick = { projectToDelete = project }
                     )
                 }
             }
         }
     }
+    
+    // Delete confirmation dialog
+    projectToDelete?.let { project ->
+        AlertDialog(
+            onDismissRequest = { projectToDelete = null },
+            title = { Text(stringResource(R.string.delete_confirmation_title)) },
+            text = { 
+                Text(
+                    stringResource(R.string.delete_project_message, project.name),
+                    color = MaterialTheme.colorScheme.error
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDeleteProject(project)
+                        projectToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(stringResource(R.string.confirm_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { projectToDelete = null }) {
+                    Text(stringResource(R.string.cancel_delete))
+                }
+            }
+        )
+    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ProjectCard(
     project: Project,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: () -> Unit = {}
 ) {
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
     Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
