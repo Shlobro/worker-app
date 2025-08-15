@@ -1,0 +1,101 @@
+<resources>
+    <string name="app_name">Worker Tracking</string>
+    
+    <!-- Bottom Navigation -->
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_projects">Projects</string>
+    <string name="nav_workers">Workers</string>
+    <string name="nav_events">Events</string>
+    
+    <!-- Dashboard -->
+    <string name="dashboard_title">Dashboard</string>
+    <string name="total_income">Total Income</string>
+    <string name="total_payments_owed">Total Payments Owed</string>
+    <string name="net_profit">Net Profit</string>
+    <string name="net_loss">Net Loss</string>
+    
+    <!-- Projects -->
+    <string name="projects_title">Projects</string>
+    <string name="add_project">Add Project</string>
+    <string name="project_name">Project Name</string>
+    <string name="project_location">Project Location</string>
+    <string name="start_date">Start Date</string>
+    <string name="income_type">Income Type</string>
+    <string name="daily_rate">Daily Rate</string>
+    <string name="weekly_rate">Weekly Rate</string>
+    <string name="hourly_rate">Hourly Rate</string>
+    <string name="monthly_rate">Monthly Rate</string>
+    <string name="fixed_amount">Fixed Amount</string>
+    <string name="project_income">Project Income</string>
+    <string name="worker_costs">Worker Costs</string>
+    <string name="project_profit">Project Profit</string>
+    
+    <!-- Workers -->
+    <string name="workers_title">Workers</string>
+    <string name="add_worker">Add Worker</string>
+    <string name="worker_name">Worker Name</string>
+    <string name="contact_info">Contact Info</string>
+    <string name="reference_worker">Reference Worker</string>
+    <string name="total_owed">Total Owed</string>
+    <string name="payment_history">Payment History</string>
+    <string name="pending_payments">Pending Payments</string>
+    <string name="project_history">Project History</string>
+    
+    <!-- Shifts -->
+    <string name="shifts_title">Shifts</string>
+    <string name="add_shift">Add Shift</string>
+    <string name="shift_date">Shift Date</string>
+    <string name="start_time">Start Time</string>
+    <string name="end_time">End Time</string>
+    <string name="hours_worked">Hours Worked</string>
+    <string name="pay_rate">Pay Rate</string>
+    <string name="total_pay">Total Pay</string>
+    
+    <!-- Events -->
+    <string name="events_title">Events</string>
+    <string name="add_event">Add Event</string>
+    <string name="event_name">Event Name</string>
+    <string name="event_date">Event Date</string>
+    <string name="event_time">Event Time</string>
+    <string name="assign_workers">Assign Workers</string>
+    
+    <!-- Payments -->
+    <string name="add_payment">Add Payment</string>
+    <string name="payment_amount">Payment Amount</string>
+    <string name="payment_date">Payment Date</string>
+    <string name="payment_source">Payment Source</string>
+    
+    <!-- Common -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="create">Create</string>
+    <string name="select">Select</string>
+    <string name="amount">Amount</string>
+    <string name="date">Date</string>
+    <string name="time">Time</string>
+    <string name="hours">Hours</string>
+    <string name="currency_symbol">$</string>
+    <string name="no_data">No data</string>
+    <string name="loading">Loading...</string>
+    
+    <!-- Validation -->
+    <string name="error_empty_field">This field is required</string>
+    <string name="error_invalid_amount">Invalid amount</string>
+    <string name="error_invalid_date">Invalid date</string>
+    <string name="error_invalid_time">Invalid time</string>
+    
+    <!-- Dashboard Cards -->
+    <string name="financial_summary">Financial Summary</string>
+    <string name="recent_activity">Recent Activity</string>
+    
+    <!-- Content Descriptions -->
+    <string name="back">Back</string>
+    <string name="select_date">Select Date</string>
+    <string name="income_rate_label">Income Rate</string>
+    
+    <!-- Worker specific -->
+    <string name="no_reference">No Reference</string>
+    <string name="reference_percentage">Reference Percentage (%)</string>
+</resources>

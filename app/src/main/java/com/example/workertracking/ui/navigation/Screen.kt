@@ -1,0 +1,27 @@
+package com.example.workertracking.ui.navigation
+
+sealed class Screen(val route: String, val titleRes: Int, val iconRes: Int? = null) {
+    object Dashboard : Screen("dashboard", com.example.workertracking.R.string.nav_dashboard)
+    object Projects : Screen("projects", com.example.workertracking.R.string.nav_projects)
+    object Workers : Screen("workers", com.example.workertracking.R.string.nav_workers)
+    object Events : Screen("events", com.example.workertracking.R.string.nav_events)
+    
+    // Detail screens
+    object ProjectDetail : Screen("project_detail/{projectId}", com.example.workertracking.R.string.projects_title) {
+        fun createRoute(projectId: Long) = "project_detail/$projectId"
+    }
+    object WorkerDetail : Screen("worker_detail/{workerId}", com.example.workertracking.R.string.workers_title) {
+        fun createRoute(workerId: Long) = "worker_detail/$workerId"
+    }
+    object EventDetail : Screen("event_detail/{eventId}", com.example.workertracking.R.string.events_title) {
+        fun createRoute(eventId: Long) = "event_detail/$eventId"
+    }
+    
+    // Add/Edit screens
+    object AddProject : Screen("add_project", com.example.workertracking.R.string.add_project)
+    object AddWorker : Screen("add_worker", com.example.workertracking.R.string.add_worker)
+    object AddEvent : Screen("add_event", com.example.workertracking.R.string.add_event)
+    object AddShift : Screen("add_shift/{projectId}", com.example.workertracking.R.string.add_shift) {
+        fun createRoute(projectId: Long) = "add_shift/$projectId"
+    }
+}

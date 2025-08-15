@@ -1,0 +1,104 @@
+<resources>
+    <string name="app_name">מעקב עובדים</string>
+    
+    <!-- Bottom Navigation -->
+    <string name="nav_dashboard">לוח בקרה</string>
+    <string name="nav_projects">פרויקטים</string>
+    <string name="nav_workers">עובדים</string>
+    <string name="nav_events">אירועים</string>
+    
+    <!-- Dashboard -->
+    <string name="dashboard_title">לוח בקרה</string>
+    <string name="total_income">סה"כ הכנסות</string>
+    <string name="total_payments_owed">סה"כ תשלומים לתשלום</string>
+    <string name="net_profit">רווח נקי</string>
+    <string name="net_loss">הפסד נקי</string>
+    
+    <!-- Projects -->
+    <string name="projects_title">פרויקטים</string>
+    <string name="add_project">הוסף פרויקט</string>
+    <string name="project_name">שם הפרויקט</string>
+    <string name="project_location">מיקום הפרויקט</string>
+    <string name="start_date">תאריך התחלה</string>
+    <string name="income_type">סוג הכנסה</string>
+    <string name="daily_rate">תעריף יומי</string>
+    <string name="weekly_rate">תעריף שבועי</string>
+    <string name="hourly_rate">תעריף שעתי</string>
+    <string name="monthly_rate">תעריף חודשי</string>
+    <string name="fixed_amount">סכום קבוע</string>
+    <string name="project_income">הכנסות הפרויקט</string>
+    <string name="worker_costs">עלויות עובדים</string>
+    <string name="project_profit">רווח הפרויקט</string>
+    
+    <!-- Workers -->
+    <string name="workers_title">עובדים</string>
+    <string name="add_worker">הוסף עובד</string>
+    <string name="worker_name">שם העובד</string>
+    <string name="phone_number">מספר טלפון</string>
+    <string name="reference_worker">עובד מפנה</string>
+    <string name="total_owed">סה"כ חוב</string>
+    <string name="payment_history">היסטוריית תשלומים</string>
+    <string name="pending_payments">תשלומים ממתינים</string>
+    <string name="project_history">היסטוריית פרויקטים</string>
+    
+    <!-- Shifts -->
+    <string name="shifts_title">משמרות</string>
+    <string name="add_shift">הוסף משמרת</string>
+    <string name="shift_date">תאריך המשמרת</string>
+    <string name="start_time">שעת התחלה</string>
+    <string name="end_time">שעת סיום</string>
+    <string name="hours_worked">שעות עבודה</string>
+    <string name="pay_rate">תעריף שכר</string>
+    <string name="total_pay">סה"כ שכר</string>
+    
+    <!-- Events -->
+    <string name="events_title">אירועים</string>
+    <string name="add_event">הוסף אירוע</string>
+    <string name="event_name">שם האירוע</string>
+    <string name="event_date">תאריך האירוע</string>
+    <string name="event_time">שעת האירוע</string>
+    <string name="assign_workers">הקצה עובדים</string>
+    
+    <!-- Payments -->
+    <string name="add_payment">הוסף תשלום</string>
+    <string name="payment_amount">סכום התשלום</string>
+    <string name="payment_date">תאריך התשלום</string>
+    <string name="payment_source">מקור התשלום</string>
+    
+    <!-- Common -->
+    <string name="save">שמור</string>
+    <string name="cancel">בטל</string>
+    <string name="delete">מחק</string>
+    <string name="edit">ערוך</string>
+    <string name="create">צור</string>
+    <string name="select">בחר</string>
+    <string name="amount">סכום</string>
+    <string name="date">תאריך</string>
+    <string name="time">זמן</string>
+    <string name="hours">שעות</string>
+    <string name="currency_symbol">₪</string>
+    <string name="no_data">אין נתונים</string>
+    <string name="loading">טוען...</string>
+    
+    <!-- Validation -->
+    <string name="error_empty_field">שדה זה חובה</string>
+    <string name="error_invalid_amount">סכום לא תקין</string>
+    <string name="error_invalid_date">תאריך לא תקין</string>
+    <string name="error_invalid_time">זמן לא תקין</string>
+    
+    <!-- Dashboard Cards -->
+    <string name="financial_summary">סיכום כספי</string>
+    <string name="recent_activity">פעילות אחרונה</string>
+    
+    <!-- Content Descriptions -->
+    <string name="back">חזור</string>
+    <string name="select_date">בחר תאריך</string>
+    <string name="income_rate_label">תעריף הכנסה</string>
+    
+    <!-- Worker specific -->
+    <string name="no_reference">ללא מפנה</string>
+    <string name="search_workers">חפש עובדים...</string>
+    <string name="call_worker">התקשר לעובד</string>
+    <string name="worker_projects_events">פרויקטים ואירועים</string>
+    <string name="search_projects_events">חפש פרויקטים ואירועים...</string>
+</resources>
