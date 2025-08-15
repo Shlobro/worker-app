@@ -48,17 +48,9 @@ class WorkerDetailViewModel(
 
     private fun loadWorkerProjectsAndEvents(workerId: Long) {
         viewModelScope.launch {
-            // Load projects for this worker through shifts
-            shiftRepository.getShiftsByWorker(workerId).collect { shifts ->
-                val projectIds = shifts.map { it.projectId }.distinct()
-                val workerProjects = mutableListOf<Project>()
-                projectIds.forEach { projectId ->
-                    projectRepository.getProjectById(projectId)?.let { project ->
-                        workerProjects.add(project)
-                    }
-                }
-                _projects.value = workerProjects
-            }
+            // For now, load empty projects list
+            // TODO: Implement proper project loading for worker through ShiftWorker table
+            _projects.value = emptyList()
         }
         viewModelScope.launch {
             // Load events for this worker through EventWorker

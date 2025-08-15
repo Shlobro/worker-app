@@ -13,21 +13,25 @@ import com.example.workertracking.data.entity.*
 @Database(
     entities = [
         Project::class,
+        ProjectIncome::class,
         Worker::class,
         Shift::class,
+        ShiftWorker::class,
         Event::class,
         EventWorker::class,
         Payment::class
     ],
-    version = 5,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class WorkerTrackingDatabase : RoomDatabase() {
     
     abstract fun projectDao(): ProjectDao
+    abstract fun projectIncomeDao(): ProjectIncomeDao
     abstract fun workerDao(): WorkerDao
     abstract fun shiftDao(): ShiftDao
+    abstract fun shiftWorkerDao(): ShiftWorkerDao
     abstract fun eventDao(): EventDao
     abstract fun eventWorkerDao(): EventWorkerDao
     abstract fun paymentDao(): PaymentDao
@@ -83,13 +87,69 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create shift_workers table
+                database.execSQL("""
+                    CREATE TABLE shift_workers (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        shiftId INTEGER NOT NULL,
+                        workerId INTEGER NOT NULL,
+                        isHourlyRate INTEGER NOT NULL,
+                        payRate REAL NOT NULL,
+                        FOREIGN KEY(shiftId) REFERENCES shifts(id) ON DELETE CASCADE,
+                        FOREIGN KEY(workerId) REFERENCES workers(id) ON DELETE CASCADE
+                    )
+                """)
+                
+                // Migrate existing shift data to new structure
+                database.execSQL("""
+                    INSERT INTO shift_workers (shiftId, workerId, isHourlyRate, payRate)
+                    SELECT id, workerId, 1, payRate FROM shifts WHERE workerId IS NOT NULL
+                """)
+                
+                // Update shifts table to remove workerId and payRate columns
+                database.execSQL("""
+                    CREATE TABLE shifts_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        projectId INTEGER NOT NULL,
+                        date INTEGER NOT NULL,
+                        startTime TEXT NOT NULL,
+                        endTime TEXT NOT NULL,
+                        hours REAL NOT NULL,
+                        FOREIGN KEY(projectId) REFERENCES projects(id) ON DELETE CASCADE
+                    )
+                """)
+                database.execSQL("INSERT INTO shifts_new (id, projectId, date, startTime, endTime, hours) SELECT id, projectId, date, startTime, endTime, hours FROM shifts")
+                database.execSQL("DROP TABLE shifts")
+                database.execSQL("ALTER TABLE shifts_new RENAME TO shifts")
+            }
+        }
+
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create project_income table
+                database.execSQL("""
+                    CREATE TABLE project_income (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        projectId INTEGER NOT NULL,
+                        date INTEGER NOT NULL,
+                        description TEXT NOT NULL,
+                        amount REAL NOT NULL,
+                        units REAL NOT NULL DEFAULT 1.0,
+                        FOREIGN KEY(projectId) REFERENCES projects(id) ON DELETE CASCADE
+                    )
+                """)
+            }
+        }
+
         fun getDatabase(context: Context): WorkerTrackingDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     WorkerTrackingDatabase::class.java,
                     "worker_tracking_database"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7).build()
                 INSTANCE = instance
                 instance
             }

@@ -10,8 +10,8 @@ import com.example.workertracking.repository.WorkerRepository
 class AppContainer(context: Context) {
     private val database = WorkerTrackingDatabase.getDatabase(context)
     
-    val projectRepository = ProjectRepository(database.projectDao())
+    val projectRepository = ProjectRepository(database.projectDao(), database.projectIncomeDao())
     val workerRepository = WorkerRepository(database.workerDao(), database.paymentDao())
-    val shiftRepository = ShiftRepository(database.shiftDao())
+    val shiftRepository = ShiftRepository(database.shiftDao(), database.shiftWorkerDao())
     val eventRepository = EventRepository(database.eventDao(), database.eventWorkerDao())
 }

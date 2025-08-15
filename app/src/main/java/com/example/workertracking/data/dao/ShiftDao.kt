@@ -12,8 +12,6 @@ interface ShiftDao {
     @Query("SELECT * FROM shifts WHERE projectId = :projectId ORDER BY date DESC")
     fun getShiftsByProject(projectId: Long): Flow<List<Shift>>
 
-    @Query("SELECT * FROM shifts WHERE workerId = :workerId ORDER BY date DESC")
-    fun getShiftsByWorker(workerId: Long): Flow<List<Shift>>
 
     @Query("SELECT * FROM shifts WHERE id = :id")
     suspend fun getShiftById(id: Long): Shift?
@@ -27,9 +25,11 @@ interface ShiftDao {
     @Delete
     suspend fun deleteShift(shift: Shift)
 
-    @Query("SELECT SUM(hours * payRate) FROM shifts WHERE projectId = :projectId")
+    @Query("""
+        SELECT SUM(CASE WHEN sw.isHourlyRate = 1 THEN sw.payRate * s.hours ELSE sw.payRate END) 
+        FROM shifts s 
+        INNER JOIN shift_workers sw ON s.id = sw.shiftId 
+        WHERE s.projectId = :projectId
+    """)
     suspend fun getTotalCostForProject(projectId: Long): Double?
-
-    @Query("SELECT SUM(hours * payRate) FROM shifts WHERE workerId = :workerId")
-    suspend fun getTotalEarnedByWorker(workerId: Long): Double?
 }

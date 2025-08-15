@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 import java.util.Date
 
 @Entity(
-    tableName = "shifts",
+    tableName = "project_income",
     foreignKeys = [
         ForeignKey(
             entity = Project::class,
@@ -16,12 +16,12 @@ import java.util.Date
         )
     ]
 )
-data class Shift(
+data class ProjectIncome(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val projectId: Long,
     val date: Date,
-    val startTime: String,
-    val endTime: String,
-    val hours: Double
+    val description: String, // e.g., "יום עבודה", "שבוע 1", etc.
+    val amount: Double, // Amount earned for this period/unit
+    val units: Double = 1.0 // e.g., 1 day, 2 weeks, 8 hours, etc.
 )

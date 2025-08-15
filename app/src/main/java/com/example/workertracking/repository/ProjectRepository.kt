@@ -1,10 +1,15 @@
 package com.example.workertracking.repository
 
 import com.example.workertracking.data.dao.ProjectDao
+import com.example.workertracking.data.dao.ProjectIncomeDao
 import com.example.workertracking.data.entity.Project
+import com.example.workertracking.data.entity.ProjectIncome
 import kotlinx.coroutines.flow.Flow
 
-class ProjectRepository(private val projectDao: ProjectDao) {
+class ProjectRepository(
+    private val projectDao: ProjectDao,
+    private val projectIncomeDao: ProjectIncomeDao
+) {
     
     fun getAllProjects(): Flow<List<Project>> = projectDao.getAllProjects()
     
@@ -21,4 +26,20 @@ class ProjectRepository(private val projectDao: ProjectDao) {
         val variableIncome = projectDao.getTotalProjectIncomeExcludingFixed() ?: 0.0
         return fixedIncome + variableIncome
     }
+    
+    // Project Income methods
+    fun getIncomesByProject(projectId: Long): Flow<List<ProjectIncome>> = 
+        projectIncomeDao.getIncomesByProject(projectId)
+    
+    suspend fun getTotalIncomeForProject(projectId: Long): Double =
+        projectIncomeDao.getTotalIncomeForProject(projectId) ?: 0.0
+    
+    suspend fun insertIncome(income: ProjectIncome): Long = 
+        projectIncomeDao.insertIncome(income)
+    
+    suspend fun updateIncome(income: ProjectIncome) = 
+        projectIncomeDao.updateIncome(income)
+    
+    suspend fun deleteIncome(income: ProjectIncome) = 
+        projectIncomeDao.deleteIncome(income)
 }

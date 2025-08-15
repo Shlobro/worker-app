@@ -25,17 +25,82 @@ import java.util.*
 fun AddShiftScreen(
     projectId: Long,
     projectName: String,
-    allWorkers: List<Worker>,
     onNavigateBack: () -> Unit,
-    onSaveShift: (Long, Long, Date, String, Double, Double) -> Unit
+    onSaveShift: (Long, Date, String, String, Double) -> Unit
 ) {
-    var selectedWorker by remember { mutableStateOf<Worker?>(null) }
     var selectedDate by remember { mutableStateOf(Date()) }
-    var startTime by remember { mutableStateOf("") }
+    var startTimeInput by remember { mutableStateOf("") }
+    var endTimeInput by remember { mutableStateOf("") }
     var hours by remember { mutableStateOf("") }
-    var payRate by remember { mutableStateOf("") }
+    var isManualHours by remember { mutableStateOf(false) }
     
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    
+    // Format time input to HH:MM format
+    fun formatTimeInput(input: String): String {
+        val digitsOnly = input.filter { it.isDigit() }
+        return when {
+            digitsOnly.isEmpty() -> ""
+            digitsOnly.length == 1 -> digitsOnly
+            digitsOnly.length == 2 -> digitsOnly
+            digitsOnly.length == 3 -> "${digitsOnly.substring(0, 1)}:${digitsOnly.substring(1)}"
+            digitsOnly.length >= 4 -> {
+                val hours = digitsOnly.substring(0, 2).padStart(2, '0')
+                val minutes = digitsOnly.substring(2, minOf(4, digitsOnly.length)).padStart(2, '0')
+                // Validate time format
+                val h = hours.toIntOrNull() ?: 0
+                val m = minutes.toIntOrNull() ?: 0
+                if (h <= 23 && m <= 59) {
+                    "$hours:$minutes"
+                } else {
+                    input.take(input.length - 1) // Remove last character if invalid
+                }
+            }
+            else -> input
+        }
+    }
+    
+    // Calculate hours between two times
+    fun calculateHours(start: String, end: String): Double? {
+        try {
+            if (start.matches(Regex("\\d{2}:\\d{2}")) && end.matches(Regex("\\d{2}:\\d{2}"))) {
+                val startParts = start.split(":")
+                val endParts = end.split(":")
+                
+                val startHour = startParts[0].toInt()
+                val startMinute = startParts[1].toInt()
+                val endHour = endParts[0].toInt()
+                val endMinute = endParts[1].toInt()
+                
+                val startTotalMinutes = startHour * 60 + startMinute
+                var endTotalMinutes = endHour * 60 + endMinute
+                
+                // Handle shifts that cross midnight
+                if (endTotalMinutes <= startTotalMinutes) {
+                    endTotalMinutes += 24 * 60
+                }
+                
+                val diffMinutes = endTotalMinutes - startTotalMinutes
+                return diffMinutes / 60.0
+            }
+        } catch (e: Exception) {
+            // Ignore parsing errors
+        }
+        return null
+    }
+    
+    // Update hours automatically when start or end time changes (only if not manually set)
+    LaunchedEffect(startTimeInput, endTimeInput) {
+        if (!isManualHours && startTimeInput.isNotBlank() && endTimeInput.isNotBlank()) {
+            calculateHours(startTimeInput, endTimeInput)?.let { calculatedHours ->
+                hours = if (calculatedHours == calculatedHours.toInt().toDouble()) {
+                    calculatedHours.toInt().toString()
+                } else {
+                    String.format("%.1f", calculatedHours)
+                }
+            }
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -60,118 +125,125 @@ fun AddShiftScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "בחר עובד:",
+                text = "פרטי המשמרת:",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
+            OutlinedTextField(
+                value = dateFormatter.format(selectedDate),
+                onValueChange = { },
+                label = { Text("תאריך") },
+                modifier = Modifier.fillMaxWidth(),
+                readOnly = true,
+                trailingIcon = {
+                    IconButton(onClick = { /* TODO: Date picker */ }) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "בחר תאריך"
+                        )
+                    }
+                }
+            )
             
-            LazyColumn(
-                modifier = Modifier.weight(0.4f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            OutlinedTextField(
+                value = startTimeInput,
+                onValueChange = { input ->
+                    val formatted = formatTimeInput(input)
+                    if (formatted.length <= 5) { // Max HH:MM
+                        startTimeInput = formatted
+                    }
+                },
+                label = { Text("שעת התחלה") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                placeholder = { Text("0800 או 08:00") },
+                supportingText = { Text("הקלד 4 ספרות (למשל: 0800 עבור 08:00)") }
+            )
+            
+            OutlinedTextField(
+                value = endTimeInput,
+                onValueChange = { input ->
+                    val formatted = formatTimeInput(input)
+                    if (formatted.length <= 5) { // Max HH:MM
+                        endTimeInput = formatted
+                    }
+                },
+                label = { Text("שעת סיום") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                placeholder = { Text("1600 או 16:00") },
+                supportingText = { Text("הקלד 4 ספרות (למשל: 1600 עבור 16:00)") }
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Bottom
             ) {
-                items(allWorkers) { worker ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = { selectedWorker = worker }
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = selectedWorker?.id == worker.id,
-                                onClick = { selectedWorker = worker }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(
-                                    text = worker.name,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "טלפון: ${worker.phoneNumber}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                OutlinedTextField(
+                    value = hours,
+                    onValueChange = { 
+                        hours = it
+                        isManualHours = true // Mark as manually edited
+                    },
+                    label = { Text("מספר שעות") },
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    supportingText = { 
+                        if (!isManualHours) {
+                            Text("מחושב אוטומטית") 
+                        } else {
+                            Text("נערך ידנית")
                         }
+                    }
+                )
+                
+                if (isManualHours) {
+                    TextButton(
+                        onClick = { 
+                            isManualHours = false
+                            // Recalculate hours
+                            if (startTimeInput.isNotBlank() && endTimeInput.isNotBlank()) {
+                                calculateHours(startTimeInput, endTimeInput)?.let { calculatedHours ->
+                                    hours = if (calculatedHours == calculatedHours.toInt().toDouble()) {
+                                        calculatedHours.toInt().toString()
+                                    } else {
+                                        String.format("%.1f", calculatedHours)
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    ) {
+                        Text("חשב אוטומטית")
                     }
                 }
             }
             
-            if (selectedWorker != null) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    OutlinedTextField(
-                        value = dateFormatter.format(selectedDate),
-                        onValueChange = { },
-                        label = { Text("תאריך") },
-                        modifier = Modifier.fillMaxWidth(),
-                        readOnly = true,
-                        trailingIcon = {
-                            IconButton(onClick = { /* TODO: Date picker */ }) {
-                                Icon(
-                                    imageVector = Icons.Default.DateRange,
-                                    contentDescription = "בחר תאריך"
-                                )
-                            }
-                        }
-                    )
-                    
-                    OutlinedTextField(
-                        value = startTime,
-                        onValueChange = { startTime = it },
-                        label = { Text("שעת התחלה (HH:MM)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        placeholder = { Text("08:00") }
-                    )
-                    
-                    OutlinedTextField(
-                        value = hours,
-                        onValueChange = { hours = it },
-                        label = { Text("מספר שעות") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true
-                    )
-                    
-                    OutlinedTextField(
-                        value = payRate,
-                        onValueChange = { payRate = it },
-                        label = { Text("שכר שעתי (${stringResource(R.string.currency_symbol)})") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true
-                    )
-                    
-                    Button(
-                        onClick = {
-                            selectedWorker?.let { worker ->
-                                val shiftHours = hours.toDoubleOrNull()
-                                val rate = payRate.toDoubleOrNull()
-                                if (shiftHours != null && rate != null && 
-                                    startTime.isNotBlank() && shiftHours > 0 && rate > 0) {
-                                    onSaveShift(projectId, worker.id, selectedDate, startTime, shiftHours, rate)
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = selectedWorker != null && 
-                                  startTime.isNotBlank() && 
-                                  hours.toDoubleOrNull() != null && 
-                                  hours.toDoubleOrNull()!! > 0 &&
-                                  payRate.toDoubleOrNull() != null && 
-                                  payRate.toDoubleOrNull()!! > 0
-                    ) {
-                        Text("שמור משמרת")
+            Button(
+                onClick = {
+                    val shiftHours = hours.toDoubleOrNull()
+                    if (shiftHours != null && 
+                        startTimeInput.isNotBlank() && 
+                        endTimeInput.isNotBlank() && 
+                        shiftHours > 0 &&
+                        startTimeInput.matches(Regex("\\d{2}:\\d{2}")) &&
+                        endTimeInput.matches(Regex("\\d{2}:\\d{2}"))) {
+                        onSaveShift(projectId, selectedDate, startTimeInput, endTimeInput, shiftHours)
                     }
-                }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = startTimeInput.isNotBlank() && 
+                          endTimeInput.isNotBlank() &&
+                          hours.toDoubleOrNull() != null && 
+                          hours.toDoubleOrNull()!! > 0 &&
+                          startTimeInput.matches(Regex("\\d{2}:\\d{2}")) &&
+                          endTimeInput.matches(Regex("\\d{2}:\\d{2}"))
+            ) {
+                Text("שמור משמרת")
             }
         }
     }

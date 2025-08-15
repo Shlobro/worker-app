@@ -1,0 +1,124 @@
+package com.example.workertracking.ui.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.workertracking.data.entity.Shift
+import com.example.workertracking.data.entity.ShiftWorker
+import com.example.workertracking.data.entity.Worker
+import com.example.workertracking.repository.ShiftRepository
+import com.example.workertracking.repository.WorkerRepository
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+
+class ShiftDetailViewModel(
+    private val shiftRepository: ShiftRepository,
+    private val workerRepository: WorkerRepository
+) : ViewModel() {
+    
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+    
+    private val _shift = MutableStateFlow<Shift?>(null)
+    val shift: StateFlow<Shift?> = _shift.asStateFlow()
+    
+    private val _shiftWorkers = MutableStateFlow<List<Pair<ShiftWorker, Worker>>>(emptyList())
+    val shiftWorkers: StateFlow<List<Pair<ShiftWorker, Worker>>> = _shiftWorkers.asStateFlow()
+    
+    private val _allWorkers = MutableStateFlow<List<Worker>>(emptyList())
+    val allWorkers: StateFlow<List<Worker>> = _allWorkers.asStateFlow()
+    
+    fun loadShiftDetails(shiftId: Long) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                // Load shift
+                val shift = shiftRepository.getShiftById(shiftId)
+                _shift.value = shift
+                
+                _isLoading.value = false
+            } catch (e: Exception) {
+                _error.value = e.message
+                _isLoading.value = false
+            }
+        }
+        
+        // Load all workers as a separate flow
+        viewModelScope.launch {
+            workerRepository.getAllWorkers().collect { workers ->
+                _allWorkers.value = workers
+                // Refresh shift workers when workers change
+                if (_shift.value != null) {
+                    loadShiftWorkers(_shift.value!!.id)
+                }
+            }
+        }
+        
+        // Load shift workers as a separate flow
+        loadShiftWorkers(shiftId)
+    }
+    
+    fun addWorkerToShift(shiftId: Long, workerId: Long, isHourlyRate: Boolean, payRate: Double) {
+        viewModelScope.launch {
+            try {
+                val shiftWorker = ShiftWorker(
+                    shiftId = shiftId,
+                    workerId = workerId,
+                    isHourlyRate = isHourlyRate,
+                    payRate = payRate
+                )
+                
+                shiftRepository.addWorkerToShift(shiftWorker)
+                
+                // Refresh shift workers
+                loadShiftWorkers(shiftId)
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+    
+    fun removeWorkerFromShift(shiftId: Long, workerId: Long) {
+        viewModelScope.launch {
+            try {
+                shiftRepository.removeWorkerFromShift(shiftId, workerId)
+                
+                // Refresh shift workers
+                loadShiftWorkers(shiftId)
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+    
+    fun updateWorkerPayment(shiftWorker: ShiftWorker) {
+        viewModelScope.launch {
+            try {
+                shiftRepository.updateShiftWorker(shiftWorker)
+                
+                // Refresh shift workers
+                loadShiftWorkers(shiftWorker.shiftId)
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+    
+    private fun loadShiftWorkers(shiftId: Long) {
+        viewModelScope.launch {
+            shiftRepository.getWorkersByShift(shiftId).collect { shiftWorkers ->
+                val shiftWorkersWithWorkerInfo = shiftWorkers.mapNotNull { shiftWorker ->
+                    val worker = _allWorkers.value.find { it.id == shiftWorker.workerId }
+                    worker?.let { shiftWorker to it }
+                }
+                _shiftWorkers.value = shiftWorkersWithWorkerInfo
+            }
+        }
+    }
+    
+    fun clearError() {
+        _error.value = null
+    }
+}

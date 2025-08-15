@@ -33,12 +33,14 @@ import com.example.workertracking.ui.screens.dashboard.DashboardScreen
 import com.example.workertracking.ui.screens.projects.ProjectsScreen
 import com.example.workertracking.ui.screens.projects.AddProjectScreen
 import com.example.workertracking.ui.screens.projects.ProjectDetailScreen
+import com.example.workertracking.ui.screens.projects.AddIncomeScreen
 import com.example.workertracking.ui.screens.workers.WorkersScreen
 import com.example.workertracking.ui.screens.workers.AddWorkerScreen
 import com.example.workertracking.ui.screens.workers.WorkerDetailScreen
 import com.example.workertracking.ui.screens.events.EventsScreen
 import com.example.workertracking.ui.screens.events.AddEventScreen
 import com.example.workertracking.ui.screens.shifts.AddShiftScreen
+import com.example.workertracking.ui.screens.shifts.ShiftDetailScreen
 import com.example.workertracking.ui.viewmodel.ProjectsViewModel
 import com.example.workertracking.ui.viewmodel.AddProjectViewModel
 import com.example.workertracking.ui.viewmodel.ProjectDetailViewModel
@@ -47,6 +49,8 @@ import com.example.workertracking.ui.viewmodel.AddWorkerViewModel
 import com.example.workertracking.ui.viewmodel.WorkerDetailViewModel
 import com.example.workertracking.ui.viewmodel.AddEventViewModel
 import com.example.workertracking.ui.viewmodel.AddShiftViewModel
+import com.example.workertracking.ui.viewmodel.ShiftDetailViewModel
+import com.example.workertracking.ui.viewmodel.AddIncomeViewModel
 import com.example.workertracking.ui.theme.WorkerTrackingTheme
 
 class MainActivity : ComponentActivity() {
@@ -183,6 +187,8 @@ fun WorkerTrackingApp() {
                 }
                 val project by viewModel.project.collectAsState()
                 val shifts by viewModel.shifts.collectAsState()
+                val totalIncome by viewModel.totalIncome.collectAsState()
+                val totalPayments by viewModel.totalPayments.collectAsState()
                 val isLoading by viewModel.isLoading.collectAsState()
                 
                 LaunchedEffect(projectId) {
@@ -192,6 +198,8 @@ fun WorkerTrackingApp() {
                 ProjectDetailScreen(
                     project = project,
                     shifts = shifts,
+                    totalIncome = totalIncome,
+                    totalPayments = totalPayments,
                     isLoading = isLoading,
                     onNavigateBack = {
                         navController.popBackStack()
@@ -199,8 +207,14 @@ fun WorkerTrackingApp() {
                     onAddShift = {
                         navController.navigate(Screen.AddShift.createRoute(projectId))
                     },
+                    onShiftClick = { shiftId ->
+                        navController.navigate(Screen.ShiftDetail.createRoute(shiftId))
+                    },
                     onDeleteShift = { shift ->
                         viewModel.deleteShift(shift)
+                    },
+                    onAddIncome = {
+                        navController.navigate(Screen.AddIncome.createRoute(projectId))
                     }
                 )
             }
@@ -317,16 +331,10 @@ fun WorkerTrackingApp() {
                 val projectId = backStackEntry.arguments?.getLong("projectId") ?: 0L
                 val viewModel: AddShiftViewModel = viewModel {
                     AddShiftViewModel(
-                        application.container.shiftRepository,
-                        application.container.workerRepository
+                        application.container.shiftRepository
                     )
                 }
-                val allWorkers by viewModel.allWorkers.collectAsState()
                 val saveSuccess by viewModel.saveSuccess.collectAsState()
-                
-                LaunchedEffect(Unit) {
-                    viewModel.loadAllWorkers()
-                }
                 
                 LaunchedEffect(saveSuccess) {
                     if (saveSuccess) {
@@ -338,12 +346,79 @@ fun WorkerTrackingApp() {
                 AddShiftScreen(
                     projectId = projectId,
                     projectName = "פרויקט", // TODO: Get actual project name
-                    allWorkers = allWorkers,
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onSaveShift = { pId, workerId, date, startTime, hours, payRate ->
-                        viewModel.saveShift(pId, workerId, date, startTime, hours, payRate)
+                    onSaveShift = { pId, date, startTime, endTime, hours ->
+                        viewModel.saveShift(pId, date, startTime, endTime, hours)
+                    }
+                )
+            }
+            composable(
+                route = Screen.ShiftDetail.route,
+                arguments = listOf(navArgument("shiftId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val shiftId = backStackEntry.arguments?.getLong("shiftId") ?: 0L
+                val viewModel: ShiftDetailViewModel = viewModel {
+                    ShiftDetailViewModel(
+                        application.container.shiftRepository,
+                        application.container.workerRepository
+                    )
+                }
+                val shift by viewModel.shift.collectAsState()
+                val shiftWorkers by viewModel.shiftWorkers.collectAsState()
+                val allWorkers by viewModel.allWorkers.collectAsState()
+                val isLoading by viewModel.isLoading.collectAsState()
+                
+                LaunchedEffect(shiftId) {
+                    viewModel.loadShiftDetails(shiftId)
+                }
+                
+                shift?.let { 
+                    ShiftDetailScreen(
+                        shift = it,
+                        shiftWorkers = shiftWorkers,
+                        allWorkers = allWorkers,
+                        onNavigateBack = {
+                            navController.popBackStack()
+                        },
+                        onAddWorkerToShift = { sId, wId, isHourly, payRate ->
+                            viewModel.addWorkerToShift(sId, wId, isHourly, payRate)
+                        },
+                        onRemoveWorkerFromShift = { sId, wId ->
+                            viewModel.removeWorkerFromShift(sId, wId)
+                        },
+                        onUpdateWorkerPayment = { shiftWorker ->
+                            viewModel.updateWorkerPayment(shiftWorker)
+                        }
+                    )
+                }
+            }
+            composable(
+                route = Screen.AddIncome.route,
+                arguments = listOf(navArgument("projectId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val projectId = backStackEntry.arguments?.getLong("projectId") ?: 0L
+                val viewModel: AddIncomeViewModel = viewModel {
+                    AddIncomeViewModel(application.container.projectRepository)
+                }
+                val saveSuccess by viewModel.saveSuccess.collectAsState()
+                
+                LaunchedEffect(saveSuccess) {
+                    if (saveSuccess) {
+                        viewModel.clearSaveSuccess()
+                        navController.popBackStack()
+                    }
+                }
+                
+                AddIncomeScreen(
+                    projectId = projectId,
+                    projectName = "פרויקט", // TODO: Get actual project name
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onSaveIncome = { pId, date, description, amount, units ->
+                        viewModel.saveIncome(pId, date, description, amount, units)
                     }
                 )
             }

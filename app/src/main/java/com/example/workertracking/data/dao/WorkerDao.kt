@@ -25,9 +25,12 @@ interface WorkerDao {
     suspend fun deleteWorker(worker: Worker)
 
     @Query("""
-        SELECT SUM(s.hours * s.payRate) + SUM(ew.hours * ew.payRate) 
+        SELECT 
+            COALESCE(SUM(CASE WHEN sw.isHourlyRate = 1 THEN sw.payRate * s.hours ELSE sw.payRate END), 0) + 
+            COALESCE(SUM(ew.hours * ew.payRate), 0)
         FROM workers w
-        LEFT JOIN shifts s ON w.id = s.workerId
+        LEFT JOIN shift_workers sw ON w.id = sw.workerId
+        LEFT JOIN shifts s ON sw.shiftId = s.id
         LEFT JOIN event_workers ew ON w.id = ew.workerId
         WHERE w.id = :workerId
     """)

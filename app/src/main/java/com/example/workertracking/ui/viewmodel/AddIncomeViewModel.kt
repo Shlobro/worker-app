@@ -2,16 +2,16 @@ package com.example.workertracking.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.workertracking.data.entity.Shift
-import com.example.workertracking.repository.ShiftRepository
+import com.example.workertracking.data.entity.ProjectIncome
+import com.example.workertracking.repository.ProjectRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Date
 
-class AddShiftViewModel(
-    private val shiftRepository: ShiftRepository
+class AddIncomeViewModel(
+    private val projectRepository: ProjectRepository
 ) : ViewModel() {
     
     private val _isLoading = MutableStateFlow(false)
@@ -23,25 +23,25 @@ class AddShiftViewModel(
     private val _saveSuccess = MutableStateFlow(false)
     val saveSuccess: StateFlow<Boolean> = _saveSuccess.asStateFlow()
     
-    fun saveShift(
+    fun saveIncome(
         projectId: Long,
         date: Date,
-        startTime: String,
-        endTime: String,
-        hours: Double
+        description: String,
+        amount: Double,
+        units: Double
     ) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val shift = Shift(
+                val income = ProjectIncome(
                     projectId = projectId,
                     date = date,
-                    startTime = startTime,
-                    endTime = endTime,
-                    hours = hours
+                    description = description,
+                    amount = amount,
+                    units = units
                 )
                 
-                shiftRepository.insertShift(shift)
+                projectRepository.insertIncome(income)
                 
                 _saveSuccess.value = true
                 _isLoading.value = false

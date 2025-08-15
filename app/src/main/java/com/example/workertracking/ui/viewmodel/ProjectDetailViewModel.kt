@@ -22,6 +22,12 @@ class ProjectDetailViewModel(
     private val _shifts = MutableStateFlow<List<Shift>>(emptyList())
     val shifts: StateFlow<List<Shift>> = _shifts.asStateFlow()
 
+    private val _totalIncome = MutableStateFlow(0.0)
+    val totalIncome: StateFlow<Double> = _totalIncome.asStateFlow()
+
+    private val _totalPayments = MutableStateFlow(0.0)
+    val totalPayments: StateFlow<Double> = _totalPayments.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -31,6 +37,7 @@ class ProjectDetailViewModel(
             try {
                 _project.value = projectRepository.getProjectById(projectId)
                 loadProjectShifts(projectId)
+                loadFinancialData(projectId)
             } finally {
                 _isLoading.value = false
             }
@@ -41,7 +48,21 @@ class ProjectDetailViewModel(
         viewModelScope.launch {
             shiftRepository.getShiftsByProject(projectId).collect { shifts ->
                 _shifts.value = shifts
+                // Refresh financial data when shifts change
+                loadFinancialData(projectId)
             }
+        }
+    }
+    
+    private fun loadFinancialData(projectId: Long) {
+        viewModelScope.launch {
+            // Load total income for project
+            val income = projectRepository.getTotalIncomeForProject(projectId)
+            _totalIncome.value = income
+            
+            // Load total payments owed to workers for this project
+            val payments = shiftRepository.getTotalCostForProject(projectId) ?: 0.0
+            _totalPayments.value = payments
         }
     }
     
@@ -49,6 +70,8 @@ class ProjectDetailViewModel(
         viewModelScope.launch {
             try {
                 shiftRepository.deleteShift(shift)
+                // Refresh financial data after deleting shift
+                _project.value?.let { loadFinancialData(it.id) }
             } catch (e: Exception) {
                 // Handle error silently or add error state if needed
             }

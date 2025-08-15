@@ -29,10 +29,14 @@ import java.util.*
 fun ProjectDetailScreen(
     project: Project?,
     shifts: List<Shift> = emptyList(),
+    totalIncome: Double = 0.0,
+    totalPayments: Double = 0.0,
     isLoading: Boolean,
     onNavigateBack: () -> Unit,
     onAddShift: () -> Unit,
+    onShiftClick: (Long) -> Unit = {},
     onDeleteShift: (Shift) -> Unit = {},
+    onAddIncome: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -162,6 +166,81 @@ fun ProjectDetailScreen(
                     }
                 }
                 
+                // Financial Summary Card
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "סיכום כספי",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Button(onClick = onAddIncome) {
+                                    Text("הוסף הכנסה")
+                                }
+                            }
+                            
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "סה\"כ הכנסות",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "${String.format("%.2f", totalIncome)} ש\"ח",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                
+                                Column {
+                                    Text(
+                                        text = "סה\"כ תשלומים",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "${String.format("%.2f", totalPayments)} ש\"ח",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                                
+                                Column {
+                                    Text(
+                                        text = "רווח נקי",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    val profit = totalIncome - totalPayments
+                                    Text(
+                                        text = "${String.format("%.2f", profit)} ש\"ח",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (profit >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                
                 item {
                     OutlinedTextField(
                         value = searchQuery,
@@ -195,7 +274,7 @@ fun ProjectDetailScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .combinedClickable(
-                                onClick = { /* Optional: Add shift detail click */ },
+                                onClick = { onShiftClick(shift.id) },
                                 onLongClick = { shiftToDelete = shift }
                             )
                     ) {
@@ -219,21 +298,11 @@ fun ProjectDetailScreen(
                                 )
                             }
                             
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "שכר שעתי: ${shift.payRate} ₪",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Text(
-                                    text = "סה\"כ: ${shift.hours * shift.payRate} ₪",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
+                            Text(
+                                text = "לחץ לצפייה בפרטי התשלום",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
                     }
                 }
