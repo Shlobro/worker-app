@@ -2,7 +2,7 @@ list of TODO's
 1) when adding a shift to a worker that has a reference the user must be prompted and shown the name of the reference and the user should be prompted to enter an amount of how much money the reference gets per hour. this should be added to the cost of that shift and shown visually on the worker card in the shifts area
 2) change the way workers, shifts, projects and events are removed. instead of long tapping you should be able to tap and when it is displaying there should be an icon to delete. keep the scary warning message
 3) currently when adding a project it asks for a type of income and an amount. this should be removed completely. the way the profit from a project should happen is through the screen when clicking on a project where you can add an income and a type of income.
-4) when adding a new project clicking on the calendar icon does nothing. this problem exist when adding a shift as well. ✅ FIXED
+4) when clicking on an existing project there should be a way to close a project, this should be a button that is visible when the project is open. it should also ask for confirmation and then close the project. then in the project list you should see an indicator that the project is over. somewhere there should be information of what date it started and when it ended.
 5) in the shifts screen the plus to add a worker is in the top left which does not make sense, since the workers are in the bottom.
 6) add picture capability to workers, there should be an option to add and view an entire album of pictures. including a share option for a photo.
 7)

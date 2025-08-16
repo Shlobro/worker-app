@@ -15,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.example.workertracking.R
 import com.example.workertracking.data.entity.Worker
 import java.text.SimpleDateFormat
@@ -34,6 +35,7 @@ fun AddShiftScreen(
     var endTimeInput by remember { mutableStateOf("") }
     var hours by remember { mutableStateOf("") }
     var isManualHours by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
     
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
@@ -146,7 +148,7 @@ fun AddShiftScreen(
                 modifier = Modifier.fillMaxWidth(),
                 readOnly = true,
                 trailingIcon = {
-                    IconButton(onClick = { /* TODO: Date picker */ }) {
+                    IconButton(onClick = { showDatePicker = true }) {
                         Icon(
                             imageVector = Icons.Default.DateRange,
                             contentDescription = "בחר תאריך"
@@ -259,4 +261,53 @@ fun AddShiftScreen(
             }
         }
     }
+    
+    // Date Picker Dialog
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate.time
+        )
+        
+        DatePickerDialog(
+            onDateSelected = { dateMillis ->
+                dateMillis?.let {
+                    selectedDate = Date(it)
+                }
+                showDatePicker = false
+            },
+            onDismiss = {
+                showDatePicker = false
+            },
+            datePickerState = datePickerState
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DatePickerDialog(
+    onDateSelected: (Long?) -> Unit,
+    onDismiss: () -> Unit,
+    datePickerState: DatePickerState
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                onDateSelected(datePickerState.selectedDateMillis)
+            }) {
+                Text(stringResource(R.string.select))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+        text = {
+            DatePicker(state = datePickerState)
+        },
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier.padding(16.dp)
+    )
 }

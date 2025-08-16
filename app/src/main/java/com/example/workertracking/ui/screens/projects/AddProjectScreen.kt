@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.example.workertracking.R
 import com.example.workertracking.data.entity.IncomeType
 import java.text.SimpleDateFormat
@@ -30,6 +31,7 @@ fun AddProjectScreen(
     var selectedIncomeType by remember { mutableStateOf(IncomeType.DAILY) }
     var incomeAmount by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
     
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
@@ -79,7 +81,7 @@ fun AddProjectScreen(
                 modifier = Modifier.fillMaxWidth(),
                 readOnly = true,
                 trailingIcon = {
-                    IconButton(onClick = { /* TODO: Date picker */ }) {
+                    IconButton(onClick = { showDatePicker = true }) {
                         Icon(
                             imageVector = Icons.Default.DateRange,
                             contentDescription = stringResource(R.string.select_date)
@@ -143,6 +145,26 @@ fun AddProjectScreen(
             }
         }
     }
+    
+    // Date Picker Dialog
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate.time
+        )
+        
+        DatePickerDialog(
+            onDateSelected = { dateMillis ->
+                dateMillis?.let {
+                    selectedDate = Date(it)
+                }
+                showDatePicker = false
+            },
+            onDismiss = {
+                showDatePicker = false
+            },
+            datePickerState = datePickerState
+        )
+    }
 }
 
 @Composable
@@ -154,5 +176,34 @@ private fun getIncomeTypeDisplayName(incomeType: IncomeType): String {
         IncomeType.MONTHLY -> stringResource(R.string.monthly_rate)
         IncomeType.FIXED -> stringResource(R.string.fixed_amount)
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DatePickerDialog(
+    onDateSelected: (Long?) -> Unit,
+    onDismiss: () -> Unit,
+    datePickerState: DatePickerState
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                onDateSelected(datePickerState.selectedDateMillis)
+            }) {
+                Text(stringResource(R.string.select))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+        text = {
+            DatePicker(state = datePickerState)
+        },
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier.padding(16.dp)
+    )
 }
 
