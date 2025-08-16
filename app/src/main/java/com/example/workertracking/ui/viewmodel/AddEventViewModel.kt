@@ -26,7 +26,9 @@ class AddEventViewModel(
     fun saveEvent(
         name: String,
         date: Date,
-        time: String
+        startTime: String,
+        endTime: String,
+        hours: String
     ) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -34,7 +36,9 @@ class AddEventViewModel(
                 val event = Event(
                     name = name,
                     date = date,
-                    time = time
+                    startTime = startTime,
+                    endTime = endTime,
+                    hours = hours
                 )
                 eventRepository.insertEvent(event)
                 _saveSuccess.value = true

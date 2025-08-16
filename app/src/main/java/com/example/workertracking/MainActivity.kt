@@ -419,8 +419,8 @@ fun WorkerTrackingApp() {
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onSaveEvent = { name, date, time ->
-                        viewModel.saveEvent(name, date, time)
+                    onSaveEvent = { name, date, startTime, endTime, hours ->
+                        viewModel.saveEvent(name, date, startTime, endTime, hours)
                     }
                 )
             }
@@ -451,8 +451,8 @@ fun WorkerTrackingApp() {
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onUpdateEvent = { name, date, time ->
-                        viewModel.updateEvent(name, date, time)
+                    onUpdateEvent = { name, date, startTime, endTime, hours ->
+                        viewModel.updateEvent(name, date, startTime, endTime, hours)
                     }
                 )
             }

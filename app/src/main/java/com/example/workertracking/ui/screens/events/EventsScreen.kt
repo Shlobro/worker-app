@@ -100,7 +100,7 @@ fun EventsScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = event.time,
+                                text = "${event.startTime} - ${event.endTime}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )

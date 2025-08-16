@@ -212,7 +212,7 @@ fun WorkerDetailScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "אירוע: ${event.time}",
+                                text = "אירוע: ${event.startTime} - ${event.endTime}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

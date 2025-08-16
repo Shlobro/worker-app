@@ -2,7 +2,7 @@ list of TODO's
 1) when adding a shift to a worker that has a reference the user must be prompted and shown the name of the reference and the user should be prompted to enter an amount of how much money the reference gets per hour. this should be added to the cost of that shift and shown visually on the worker card in the shifts area
 2) when adding a new event i should be able to add an amount of money that im being paid for the event, when clicking on the event i should see details including how much i need to pay workers and how much im making and how much profit.
 3) in projects i like the way it is showing costs and income, but i should be able to click it and see a list of all the incomes that were added.
-4) when adding a new event, putting in the time it should use the same logic as putting in an hour as the rest of the code. meaning it brings up a number keyboard and i can write 0900 and it will update right away to 09:00. also add a field to write how many hours the event is.
+4) events also need to be deletable like everything else.
 5) event's need to be clickable to open them and see the details, like the project. this should include a list of workers assigned to the event, the ability to add more workers. and the option to edit any and all details of the event. the logic of an event should work more or less like a shift.
 6) add picture capability to workers, there should be an option to add and view an entire album of pictures. including a share option for a photo.
 7) when adding an event it should allow to enter start time and end time. basically an event is exactly like a shift in the logic that runs it, except it stands alone instead of being part of a project.

@@ -10,5 +10,7 @@ data class Event(
     val id: Long = 0,
     val name: String,
     val date: Date,
-    val time: String
+    val startTime: String,
+    val endTime: String,
+    val hours: String
 )

@@ -34,14 +34,16 @@ class EventDetailViewModel(
         }
     }
 
-    fun updateEvent(name: String, date: Date, time: String) {
+    fun updateEvent(name: String, date: Date, startTime: String, endTime: String, hours: String) {
         viewModelScope.launch {
             try {
                 _event.value?.let { currentEvent ->
                     val updatedEvent = currentEvent.copy(
                         name = name,
                         date = date,
-                        time = time
+                        startTime = startTime,
+                        endTime = endTime,
+                        hours = hours
                     )
                     eventRepository.updateEvent(updatedEvent)
                     _event.value = updatedEvent
