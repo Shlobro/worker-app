@@ -77,4 +77,18 @@ class ProjectDetailViewModel(
             }
         }
     }
+    
+    fun closeProject() {
+        viewModelScope.launch {
+            try {
+                _project.value?.let { project ->
+                    projectRepository.closeProject(project.id)
+                    // Reload the project to get updated status
+                    loadProject(project.id)
+                }
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
+    }
 }

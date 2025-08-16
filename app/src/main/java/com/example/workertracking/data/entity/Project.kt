@@ -12,7 +12,9 @@ data class Project(
     val location: String,
     val startDate: Date,
     val incomeType: IncomeType,
-    val incomeAmount: Double
+    val incomeAmount: Double,
+    val status: ProjectStatus = ProjectStatus.ACTIVE,
+    val endDate: Date? = null
 )
 
 enum class IncomeType {
@@ -21,4 +23,9 @@ enum class IncomeType {
     HOURLY,
     MONTHLY,
     FIXED
+}
+
+enum class ProjectStatus {
+    ACTIVE,
+    CLOSED
 }

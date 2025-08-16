@@ -5,6 +5,7 @@ import com.example.workertracking.data.dao.ProjectIncomeDao
 import com.example.workertracking.data.entity.Project
 import com.example.workertracking.data.entity.ProjectIncome
 import kotlinx.coroutines.flow.Flow
+import java.util.Date
 
 class ProjectRepository(
     private val projectDao: ProjectDao,
@@ -20,6 +21,8 @@ class ProjectRepository(
     suspend fun updateProject(project: Project) = projectDao.updateProject(project)
     
     suspend fun deleteProject(project: Project) = projectDao.deleteProject(project)
+    
+    suspend fun closeProject(projectId: Long) = projectDao.closeProject(projectId, Date().time)
     
     suspend fun getTotalProjectIncome(): Double {
         val fixedIncome = projectDao.getTotalFixedProjectIncome() ?: 0.0

@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.example.workertracking.R
 import com.example.workertracking.data.entity.Project
 import com.example.workertracking.data.entity.IncomeType
+import com.example.workertracking.data.entity.ProjectStatus
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -148,11 +149,36 @@ fun ProjectCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = project.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = project.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                Surface(
+                    color = when (project.status) {
+                        ProjectStatus.ACTIVE -> MaterialTheme.colorScheme.primary
+                        ProjectStatus.CLOSED -> MaterialTheme.colorScheme.error
+                    },
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        text = when (project.status) {
+                            ProjectStatus.ACTIVE -> "פעיל"
+                            ProjectStatus.CLOSED -> "סגור"
+                        },
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
             
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -171,11 +197,20 @@ fun ProjectCard(
                 )
             }
             
-            Text(
-                text = "תאריך התחלה: ${dateFormatter.format(project.startDate)}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Column {
+                Text(
+                    text = "תאריך התחלה: ${dateFormatter.format(project.startDate)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (project.endDate != null) {
+                    Text(
+                        text = "תאריך סיום: ${dateFormatter.format(project.endDate)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             
             Row(
                 modifier = Modifier.fillMaxWidth(),

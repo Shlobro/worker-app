@@ -20,6 +20,7 @@ import com.example.workertracking.data.entity.Project
 import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.data.entity.Shift
 import com.example.workertracking.data.entity.IncomeType
+import com.example.workertracking.data.entity.ProjectStatus
 import java.text.DateFormat
 import java.text.NumberFormat
 import java.util.*
@@ -37,10 +38,12 @@ fun ProjectDetailScreen(
     onShiftClick: (Long) -> Unit = {},
     onDeleteShift: (Shift) -> Unit = {},
     onAddIncome: () -> Unit = {},
+    onCloseProject: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var shiftToDelete by remember { mutableStateOf<Shift?>(null) }
+    var showCloseDialog by remember { mutableStateOf(false) }
     
     val filteredShifts = remember(shifts, searchQuery) {
         if (searchQuery.isBlank()) {
@@ -116,6 +119,29 @@ fun ProjectDetailScreen(
                                 
                                 Column {
                                     Text(
+                                        text = "סטטוס",
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
+                                    Text(
+                                        text = when (project.status) {
+                                            ProjectStatus.ACTIVE -> "פעיל"
+                                            ProjectStatus.CLOSED -> "סגור"
+                                        },
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = when (project.status) {
+                                            ProjectStatus.ACTIVE -> MaterialTheme.colorScheme.primary
+                                            ProjectStatus.CLOSED -> MaterialTheme.colorScheme.error
+                                        }
+                                    )
+                                }
+                            }
+                            
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(
                                         text = stringResource(R.string.start_date),
                                         style = MaterialTheme.typography.labelMedium
                                     )
@@ -123,6 +149,19 @@ fun ProjectDetailScreen(
                                         text = DateFormat.getDateInstance().format(project.startDate),
                                         style = MaterialTheme.typography.bodyLarge
                                     )
+                                }
+                                
+                                if (project.endDate != null) {
+                                    Column {
+                                        Text(
+                                            text = "תאריך סיום",
+                                            style = MaterialTheme.typography.labelMedium
+                                        )
+                                        Text(
+                                            text = DateFormat.getDateInstance().format(project.endDate),
+                                            style = MaterialTheme.typography.bodyLarge
+                                        )
+                                    }
                                 }
                             }
                             
@@ -185,8 +224,22 @@ fun ProjectDetailScreen(
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
-                                Button(onClick = onAddIncome) {
-                                    Text("הוסף הכנסה")
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Button(onClick = onAddIncome) {
+                                        Text("הוסף הכנסה")
+                                    }
+                                    if (project.status == ProjectStatus.ACTIVE) {
+                                        Button(
+                                            onClick = { showCloseDialog = true },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.error
+                                            )
+                                        ) {
+                                            Text("סגור פרויקט")
+                                        }
+                                    }
                                 }
                             }
                             
@@ -379,6 +432,38 @@ fun ProjectDetailScreen(
             dismissButton = {
                 TextButton(onClick = { shiftToDelete = null }) {
                     Text(stringResource(R.string.cancel_delete))
+                }
+            }
+        )
+    }
+    
+    // Close project confirmation dialog
+    if (showCloseDialog) {
+        AlertDialog(
+            onDismissRequest = { showCloseDialog = false },
+            title = { Text("סגירת פרויקט") },
+            text = { 
+                Text(
+                    "האם אתה בטוח שברצונך לסגור את הפרויקט? לא ניתן יהיה לבטל פעולה זו.",
+                    color = MaterialTheme.colorScheme.error
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onCloseProject()
+                        showCloseDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("סגור פרויקט")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCloseDialog = false }) {
+                    Text("ביטול")
                 }
             }
         )

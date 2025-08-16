@@ -26,4 +26,7 @@ interface ProjectDao {
 
     @Query("SELECT SUM(incomeAmount) FROM projects WHERE incomeType = 'FIXED'")
     suspend fun getTotalFixedProjectIncome(): Double?
+
+    @Query("UPDATE projects SET status = 'CLOSED', endDate = :endDate WHERE id = :projectId")
+    suspend fun closeProject(projectId: Long, endDate: Long)
 }

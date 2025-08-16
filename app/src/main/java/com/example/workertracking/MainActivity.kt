@@ -215,6 +215,9 @@ fun WorkerTrackingApp() {
                     },
                     onAddIncome = {
                         navController.navigate(Screen.AddIncome.createRoute(projectId))
+                    },
+                    onCloseProject = {
+                        viewModel.closeProject()
                     }
                 )
             }
