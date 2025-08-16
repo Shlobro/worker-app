@@ -1,0 +1,2 @@
+1) I should be able to change the status of a closed project to open
+2) when clicking a project, it should open the project details and not edit it. just like events work.

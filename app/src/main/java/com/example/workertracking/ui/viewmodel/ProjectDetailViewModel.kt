@@ -3,6 +3,7 @@ package com.example.workertracking.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.workertracking.data.entity.Project
+import com.example.workertracking.data.entity.ProjectIncome
 import com.example.workertracking.data.entity.Shift
 import com.example.workertracking.repository.ProjectRepository
 import com.example.workertracking.repository.ShiftRepository
@@ -35,12 +36,19 @@ class ProjectDetailViewModel(
     private val _updateSuccess = MutableStateFlow(false)
     val updateSuccess: StateFlow<Boolean> = _updateSuccess.asStateFlow()
 
+    private val _incomeEntries = MutableStateFlow<List<ProjectIncome>>(emptyList())
+    val incomeEntries: StateFlow<List<ProjectIncome>> = _incomeEntries.asStateFlow()
+
+    private val _currentIncome = MutableStateFlow<ProjectIncome?>(null)
+    val currentIncome: StateFlow<ProjectIncome?> = _currentIncome.asStateFlow()
+
     fun loadProject(projectId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 _project.value = projectRepository.getProjectById(projectId)
                 loadProjectShifts(projectId)
+                loadIncomeEntries(projectId)
                 loadFinancialData(projectId)
             } finally {
                 _isLoading.value = false
@@ -117,5 +125,58 @@ class ProjectDetailViewModel(
     
     fun clearUpdateSuccess() {
         _updateSuccess.value = false
+    }
+    
+    private fun loadIncomeEntries(projectId: Long) {
+        viewModelScope.launch {
+            projectRepository.getIncomesByProject(projectId).collect { incomes ->
+                _incomeEntries.value = incomes
+            }
+        }
+    }
+    
+    fun loadIncomeById(incomeId: Long) {
+        viewModelScope.launch {
+            try {
+                // Find the income in the ProjectIncome DAO
+                val income = projectRepository.getIncomeById(incomeId)
+                _currentIncome.value = income
+                
+                // Load the associated project
+                income?.let {
+                    _project.value = projectRepository.getProjectById(it.projectId)
+                }
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
+    }
+    
+    fun updateIncome(income: ProjectIncome) {
+        viewModelScope.launch {
+            try {
+                projectRepository.updateIncome(income)
+                // Refresh income entries
+                loadIncomeEntries(income.projectId)
+                // Refresh financial data
+                loadFinancialData(income.projectId)
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
+    }
+    
+    fun deleteIncome(income: ProjectIncome) {
+        viewModelScope.launch {
+            try {
+                projectRepository.deleteIncome(income)
+                // Refresh income entries
+                loadIncomeEntries(income.projectId)
+                // Refresh financial data
+                loadFinancialData(income.projectId)
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
     }
 }

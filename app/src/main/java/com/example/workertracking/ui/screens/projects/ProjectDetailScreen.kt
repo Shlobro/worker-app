@@ -1,6 +1,7 @@
 package com.example.workertracking.ui.screens.projects
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -39,6 +40,7 @@ fun ProjectDetailScreen(
     onShiftClick: (Long) -> Unit = {},
     onDeleteShift: (Shift) -> Unit = {},
     onAddIncome: () -> Unit = {},
+    onIncomeHistoryClick: () -> Unit = {},
     onCloseProject: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -182,7 +184,9 @@ fun ProjectDetailScreen(
                 // Financial Summary Card
                 item {
                     Card(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onIncomeHistoryClick() }
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -193,11 +197,18 @@ fun ProjectDetailScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "סיכום כספי",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Column {
+                                    Text(
+                                        text = "סיכום כספי",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "לחץ לצפייה בהיסטוריית הכנסות",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {

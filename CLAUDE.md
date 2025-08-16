@@ -67,7 +67,7 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 - **ProjectIncome**: Individual income entries per project (date, description, amount, units)
 - **Workers**: Worker profiles with phone numbers and optional reference relationships (no payment rates stored)
 - **Shifts**: Individual work sessions linked to projects (no direct worker relationship)
-- **ShiftWorker**: Many-to-many relationship between shifts and workers with payment configuration
+- **ShiftWorker**: Many-to-many relationship between shifts and workers with payment configuration and optional reference payment rates
 - **Events**: One-off events that can have multiple workers
 - **EventWorker**: Many-to-many relationship between events and workers with hourly reference payment rates
 - **Payments**: Payment history and tracking
@@ -105,9 +105,14 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 - **Payment Configuration**: Each worker can have different payment types:
   - **שכר שעתי** (Hourly Rate): payRate × shiftHours
   - **סכום גלובלי** (Global Amount): fixed amount regardless of hours
+- **Reference Worker Payment System**: When adding workers with reference relationships:
+  - Prompt user for reference worker hourly rate during assignment
+  - Display reference worker name and payment information on worker cards
+  - Include reference payments in total shift cost calculation
+  - Reference payments are always calculated hourly (rate × shiftHours)
 - **Search Functionality**: Searchable worker addition with real-time filtering
 - **Individual Control**: Add, edit, or remove workers from shifts independently
-- **Cost Calculation**: Automatic shift cost calculation based on all assigned workers
+- **Cost Calculation**: Automatic shift cost calculation based on all assigned workers including reference payments
 
 ### Event-Worker Relationship  
 - **Direct Assignment**: Workers can be assigned directly to events with hours and hourly rates
@@ -195,9 +200,10 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 1. **Shift Creation**: Create shift without worker selection first
 2. **Worker Assignment**: Click shift to open detail screen for worker management
 3. **Payment Types**: Use "שכר שעתי" and "סכום גלובלי" (not "תשלום קבוע")
-4. **Search Integration**: Implement searchable worker addition dialogs
-5. **Financial Updates**: Ensure financial calculations refresh on worker changes
-6. **Time Formatting**: Implement auto-formatting for time inputs (HHMM → HH:MM)
+4. **Reference Payment System**: Prompt for reference worker rates when adding workers with references
+5. **Search Integration**: Implement searchable worker addition dialogs
+6. **Financial Updates**: Ensure financial calculations refresh on worker changes including reference payments
+7. **Time Formatting**: Implement auto-formatting for time inputs (HHMM → HH:MM)
 
 #### Income Feature Implementation
 1. **Income Tracking**: Create ProjectIncome entries with date, description, amount, units
@@ -230,3 +236,5 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 - update the plan file and claude.md whenever there is anything important changed
 - never build the project. let me run and test
 - Update claude.md after any relevent change
+- make sure to add and edit the english and hebrew strings everytime there is a change that needs it
+- when running the build use cd /c/Users/shlob/AndroidStudioProjects/workerTracking && ./gradlew.bat compileDebugKotlin. since the terminal is powershell

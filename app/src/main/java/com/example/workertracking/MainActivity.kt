@@ -35,6 +35,8 @@ import com.example.workertracking.ui.screens.projects.AddProjectScreen
 import com.example.workertracking.ui.screens.projects.EditProjectScreen
 import com.example.workertracking.ui.screens.projects.ProjectDetailScreen
 import com.example.workertracking.ui.screens.projects.AddIncomeScreen
+import com.example.workertracking.ui.screens.projects.ProjectIncomeListScreen
+import com.example.workertracking.ui.screens.projects.EditIncomeScreen
 import com.example.workertracking.ui.screens.workers.WorkersScreen
 import com.example.workertracking.ui.screens.workers.AddWorkerScreen
 import com.example.workertracking.ui.screens.workers.EditWorkerScreen
@@ -42,6 +44,8 @@ import com.example.workertracking.ui.screens.workers.WorkerDetailScreen
 import com.example.workertracking.ui.screens.events.EventsScreen
 import com.example.workertracking.ui.screens.events.AddEventScreen
 import com.example.workertracking.ui.screens.events.EditEventScreen
+import com.example.workertracking.ui.screens.events.EventDetailScreen
+import com.example.workertracking.ui.screens.events.AddWorkerToEventScreen
 import com.example.workertracking.ui.screens.shifts.AddShiftScreen
 import com.example.workertracking.ui.screens.shifts.EditShiftScreen
 import com.example.workertracking.ui.screens.shifts.ShiftDetailScreen
@@ -57,6 +61,7 @@ import com.example.workertracking.ui.viewmodel.EventDetailViewModel
 import com.example.workertracking.ui.viewmodel.AddShiftViewModel
 import com.example.workertracking.ui.viewmodel.ShiftDetailViewModel
 import com.example.workertracking.ui.viewmodel.AddIncomeViewModel
+import com.example.workertracking.ui.viewmodel.AddWorkerToEventViewModel
 import com.example.workertracking.ui.theme.WorkerTrackingTheme
 
 class MainActivity : ComponentActivity() {
@@ -260,6 +265,9 @@ fun WorkerTrackingApp() {
                     onAddIncome = {
                         navController.navigate(Screen.AddIncome.createRoute(projectId))
                     },
+                    onIncomeHistoryClick = {
+                        navController.navigate(Screen.ProjectIncomeList.createRoute(projectId))
+                    },
                     onCloseProject = {
                         viewModel.closeProject()
                     }
@@ -398,7 +406,7 @@ fun WorkerTrackingApp() {
                         navController.navigate(Screen.AddEvent.route)
                     },
                     onEventClick = { event ->
-                        // TODO: Navigate to event detail screen when implemented
+                        navController.navigate(Screen.EventDetail.createRoute(event.id))
                     }
                 )
             }
@@ -419,8 +427,58 @@ fun WorkerTrackingApp() {
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onSaveEvent = { name, date, startTime, endTime, hours ->
-                        viewModel.saveEvent(name, date, startTime, endTime, hours)
+                    onSaveEvent = { name, date, startTime, endTime, hours, income ->
+                        viewModel.saveEvent(name, date, startTime, endTime, hours, income)
+                    }
+                )
+            }
+            composable(
+                route = Screen.EventDetail.route,
+                arguments = listOf(navArgument("eventId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val eventId = backStackEntry.arguments?.getLong("eventId") ?: 0L
+                val viewModel: EventDetailViewModel = viewModel {
+                    EventDetailViewModel(
+                        application.container.eventRepository,
+                        application.container.workerRepository
+                    )
+                }
+                val event by viewModel.event.collectAsState()
+                val eventWorkers by viewModel.eventWorkers.collectAsState()
+                val totalCost by viewModel.totalCost.collectAsState()
+                val deleteSuccess by viewModel.deleteSuccess.collectAsState()
+                val isLoading by viewModel.isLoading.collectAsState()
+                
+                LaunchedEffect(eventId) {
+                    viewModel.loadEvent(eventId)
+                }
+                
+                LaunchedEffect(deleteSuccess) {
+                    if (deleteSuccess) {
+                        viewModel.clearDeleteSuccess()
+                        navController.popBackStack()
+                    }
+                }
+                
+                EventDetailScreen(
+                    event = event,
+                    eventWorkers = eventWorkers,
+                    totalCost = totalCost,
+                    isLoading = isLoading,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onEditEvent = {
+                        navController.navigate(Screen.EditEvent.createRoute(eventId))
+                    },
+                    onDeleteEvent = {
+                        viewModel.deleteEvent()
+                    },
+                    onAddWorker = {
+                        navController.navigate(Screen.AddWorkerToEvent.createRoute(eventId))
+                    },
+                    onRemoveWorker = { eventWorker ->
+                        viewModel.removeWorkerFromEvent(eventWorker)
                     }
                 )
             }
@@ -430,7 +488,10 @@ fun WorkerTrackingApp() {
             ) { backStackEntry ->
                 val eventId = backStackEntry.arguments?.getLong("eventId") ?: 0L
                 val viewModel: EventDetailViewModel = viewModel {
-                    EventDetailViewModel(application.container.eventRepository)
+                    EventDetailViewModel(
+                        application.container.eventRepository,
+                        application.container.workerRepository
+                    )
                 }
                 val event by viewModel.event.collectAsState()
                 val updateSuccess by viewModel.updateSuccess.collectAsState()
@@ -451,8 +512,8 @@ fun WorkerTrackingApp() {
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onUpdateEvent = { name, date, startTime, endTime, hours ->
-                        viewModel.updateEvent(name, date, startTime, endTime, hours)
+                    onUpdateEvent = { name, date, startTime, endTime, hours, income ->
+                        viewModel.updateEvent(name, date, startTime, endTime, hours, income)
                     }
                 )
             }
@@ -557,8 +618,8 @@ fun WorkerTrackingApp() {
                         onEditShift = {
                             navController.navigate(Screen.EditShift.createRoute(shiftId))
                         },
-                        onAddWorkerToShift = { sId, wId, isHourly, payRate ->
-                            viewModel.addWorkerToShift(sId, wId, isHourly, payRate)
+                        onAddWorkerToShift = { sId, wId, isHourly, payRate, referencePayRate ->
+                            viewModel.addWorkerToShift(sId, wId, isHourly, payRate, referencePayRate)
                         },
                         onRemoveWorkerFromShift = { sId, wId ->
                             viewModel.removeWorkerFromShift(sId, wId)
@@ -594,6 +655,124 @@ fun WorkerTrackingApp() {
                     },
                     onSaveIncome = { pId, date, description, amount, units ->
                         viewModel.saveIncome(pId, date, description, amount, units)
+                    }
+                )
+            }
+            composable(
+                route = Screen.ProjectIncomeList.route,
+                arguments = listOf(navArgument("projectId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val projectId = backStackEntry.arguments?.getLong("projectId") ?: 0L
+                val viewModel: ProjectDetailViewModel = viewModel {
+                    ProjectDetailViewModel(
+                        application.container.projectRepository,
+                        application.container.shiftRepository
+                    )
+                }
+                
+                LaunchedEffect(projectId) {
+                    viewModel.loadProject(projectId)
+                }
+                
+                val project by viewModel.project.collectAsState()
+                val incomeEntries by viewModel.incomeEntries.collectAsState()
+                val isLoading by viewModel.isLoading.collectAsState()
+                
+                ProjectIncomeListScreen(
+                    projectName = project?.name ?: "",
+                    incomeEntries = incomeEntries,
+                    isLoading = isLoading,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onAddIncome = {
+                        navController.navigate(Screen.AddIncome.createRoute(projectId))
+                    },
+                    onEditIncome = { income ->
+                        navController.navigate(Screen.EditIncome.createRoute(income.id))
+                    },
+                    onDeleteIncome = { income ->
+                        viewModel.deleteIncome(income)
+                    }
+                )
+            }
+            composable(
+                route = Screen.EditIncome.route,
+                arguments = listOf(navArgument("incomeId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val incomeId = backStackEntry.arguments?.getLong("incomeId") ?: 0L
+                val viewModel: ProjectDetailViewModel = viewModel {
+                    ProjectDetailViewModel(
+                        application.container.projectRepository,
+                        application.container.shiftRepository
+                    )
+                }
+                
+                LaunchedEffect(incomeId) {
+                    viewModel.loadIncomeById(incomeId)
+                }
+                
+                val income by viewModel.currentIncome.collectAsState()
+                val project by viewModel.project.collectAsState()
+                
+                income?.let { incomeEntry ->
+                    EditIncomeScreen(
+                        income = incomeEntry,
+                        projectName = project?.name ?: "",
+                        onNavigateBack = {
+                            navController.popBackStack()
+                        },
+                        onUpdateIncome = { updatedIncome ->
+                            viewModel.updateIncome(updatedIncome)
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+            composable(
+                route = Screen.AddWorkerToEvent.route,
+                arguments = listOf(navArgument("eventId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val eventId = backStackEntry.arguments?.getLong("eventId") ?: 0L
+                val viewModel: AddWorkerToEventViewModel = viewModel {
+                    AddWorkerToEventViewModel(
+                        application.container.eventRepository,
+                        application.container.workerRepository
+                    )
+                }
+                val availableWorkers by viewModel.availableWorkers.collectAsState()
+                val saveSuccess by viewModel.saveSuccess.collectAsState()
+                
+                // Get event name for display
+                val eventDetailViewModel: EventDetailViewModel = viewModel {
+                    EventDetailViewModel(
+                        application.container.eventRepository,
+                        application.container.workerRepository
+                    )
+                }
+                val event by eventDetailViewModel.event.collectAsState()
+                
+                LaunchedEffect(eventId) {
+                    viewModel.loadAvailableWorkers()
+                    eventDetailViewModel.loadEvent(eventId)
+                }
+                
+                LaunchedEffect(saveSuccess) {
+                    if (saveSuccess) {
+                        viewModel.clearSaveSuccess()
+                        navController.popBackStack()
+                    }
+                }
+                
+                AddWorkerToEventScreen(
+                    eventId = eventId,
+                    eventName = event?.name ?: "",
+                    availableWorkers = availableWorkers,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onAddWorkerToEvent = { _, workerId, hours, payRate ->
+                        viewModel.addWorkerToEvent(eventId, workerId, hours, payRate)
                     }
                 )
             }

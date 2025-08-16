@@ -11,6 +11,9 @@ interface WorkerDao {
 
     @Query("SELECT * FROM workers WHERE id = :id")
     suspend fun getWorkerById(id: Long): Worker?
+    
+    @Query("SELECT * FROM workers WHERE id = :id")
+    fun getWorkerByIdFlow(id: Long): Flow<Worker?>
 
     @Query("SELECT * FROM workers WHERE referenceId = :referenceId")
     suspend fun getWorkersByReference(referenceId: Long): List<Worker>

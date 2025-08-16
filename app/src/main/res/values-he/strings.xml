@@ -30,6 +30,9 @@
     <string name="project_income">הכנסות הפרויקט</string>
     <string name="worker_costs">עלויות עובדים</string>
     <string name="project_profit">רווח הפרויקט</string>
+    <string name="add_income">הוסף הכנסה</string>
+    <string name="edit_income">ערוך הכנסה</string>
+    <string name="income_history">היסטוריית הכנסות</string>
     
     <!-- Workers -->
     <string name="workers_title">עובדים</string>
@@ -117,4 +120,23 @@
     <string name="cancel_delete">בטל</string>
     <string name="delete_project">מחק פרויקט</string>
     <string name="delete_worker">מחק עובד</string>
+    
+    <!-- Event Details -->
+    <string name="event_details">פרטי האירוע</string>
+    <string name="profit">רווח</string>
+    <string name="loss">הפסד</string>
+    <string name="worker_payments">תשלומי עובדים</string>
+    
+    <!-- Photo Gallery -->
+    <string name="worker_photos">תמונות עובד</string>
+    <string name="worker_photos_title">תמונות %1$s</string>
+    <string name="photo_count">%1$d תמונות</string>
+    <string name="no_photos">אין תמונות</string>
+    <string name="add_photo">הוסף תמונה</string>
+    <string name="add_first_photo">הוסף תמונה ראשונה</string>
+    <string name="take_photo">צלם תמונה</string>
+    <string name="worker_photo">תמונת עובד</string>
+    <string name="share_photo">שתף תמונה</string>
+    <string name="delete_photo">מחק תמונה</string>
+    <string name="delete_photo_confirmation">האם אתה בטוח שברצונך למחוק תמונה זו?</string>
 </resources>

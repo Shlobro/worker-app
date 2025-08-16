@@ -9,7 +9,8 @@
       "Bash(\"./gradlew.bat\" assembleDebug)",
       "Bash(copy:*)",
       "Bash(rm:*)",
-      "Bash(gradlew.bat lint:*)"
+      "Bash(gradlew.bat lint:*)",
+      "Bash(gradlew.bat compileDebugKotlin:*)"
     ],
     "deny": [],
     "ask": [],

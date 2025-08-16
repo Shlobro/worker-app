@@ -28,7 +28,8 @@ class AddEventViewModel(
         date: Date,
         startTime: String,
         endTime: String,
-        hours: String
+        hours: String,
+        income: Double
     ) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -38,7 +39,8 @@ class AddEventViewModel(
                     date = date,
                     startTime = startTime,
                     endTime = endTime,
-                    hours = hours
+                    hours = hours,
+                    income = income
                 )
                 eventRepository.insertEvent(event)
                 _saveSuccess.value = true

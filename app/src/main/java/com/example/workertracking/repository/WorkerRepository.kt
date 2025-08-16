@@ -14,6 +14,8 @@ class WorkerRepository(
     
     suspend fun getWorkerById(id: Long): Worker? = workerDao.getWorkerById(id)
     
+    fun getWorkerByIdFlow(id: Long): Flow<Worker?> = workerDao.getWorkerByIdFlow(id)
+    
     suspend fun insertWorker(worker: Worker): Long = workerDao.insertWorker(worker)
     
     suspend fun updateWorker(worker: Worker) = workerDao.updateWorker(worker)

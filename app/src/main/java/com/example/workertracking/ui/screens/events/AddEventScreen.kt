@@ -22,13 +22,14 @@ import java.util.*
 @Composable
 fun AddEventScreen(
     onNavigateBack: () -> Unit,
-    onSaveEvent: (String, Date, String, String, String) -> Unit
+    onSaveEvent: (String, Date, String, String, String, Double) -> Unit
 ) {
     var eventName by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf(Date()) }
     var startTime by remember { mutableStateOf("") }
     var endTime by remember { mutableStateOf("") }
     var hours by remember { mutableStateOf("") }
+    var income by remember { mutableStateOf("") }
     var isAutoCalculate by remember { mutableStateOf(true) }
     
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -194,12 +195,23 @@ fun AddEventScreen(
                 }
             }
             
+            OutlinedTextField(
+                value = income,
+                onValueChange = { income = it },
+                label = { Text("הכנסה מהאירוע") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                placeholder = { Text("0.0") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+            )
+            
             Spacer(modifier = Modifier.height(16.dp))
             
             Button(
                 onClick = {
                     if (eventName.isNotBlank() && startTime.isNotBlank() && endTime.isNotBlank()) {
-                        onSaveEvent(eventName, selectedDate, startTime, endTime, hours)
+                        val incomeValue = income.toDoubleOrNull() ?: 0.0
+                        onSaveEvent(eventName, selectedDate, startTime, endTime, hours, incomeValue)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),

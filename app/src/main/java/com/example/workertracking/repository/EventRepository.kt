@@ -35,6 +35,12 @@ class EventRepository(
     suspend fun getTotalEventCost(eventId: Long): Double? = 
         eventWorkerDao.getTotalCostForEvent(eventId)
     
+    suspend fun getEventProfit(eventId: Long): Double {
+        val event = getEventById(eventId)
+        val totalCost = getTotalEventCost(eventId) ?: 0.0
+        return (event?.income ?: 0.0) - totalCost
+    }
+    
     fun getEventsForWorker(workerId: Long): Flow<List<Event>> = 
         eventDao.getEventsForWorker(workerId)
         

@@ -42,4 +42,13 @@ sealed class Screen(val route: String, val titleRes: Int, val iconRes: Int? = nu
     object AddIncome : Screen("add_income/{projectId}", com.example.workertracking.R.string.add_income) {
         fun createRoute(projectId: Long) = "add_income/$projectId"
     }
+    object ProjectIncomeList : Screen("project_income_list/{projectId}", com.example.workertracking.R.string.income_history) {
+        fun createRoute(projectId: Long) = "project_income_list/$projectId"
+    }
+    object EditIncome : Screen("edit_income/{incomeId}", com.example.workertracking.R.string.edit_income) {
+        fun createRoute(incomeId: Long) = "edit_income/$incomeId"
+    }
+    object AddWorkerToEvent : Screen("add_worker_to_event/{eventId}", com.example.workertracking.R.string.add_worker) {
+        fun createRoute(eventId: Long) = "add_worker_to_event/$eventId"
+    }
 }

@@ -27,5 +27,6 @@ data class ShiftWorker(
     val shiftId: Long,
     val workerId: Long,
     val isHourlyRate: Boolean, // true for hourly, false for fixed amount
-    val payRate: Double // hourly rate or fixed amount
+    val payRate: Double, // hourly rate or fixed amount
+    val referencePayRate: Double? = null // reference worker hourly rate when applicable
 )

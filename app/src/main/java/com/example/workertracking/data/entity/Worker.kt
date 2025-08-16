@@ -3,6 +3,8 @@ package com.example.workertracking.data.entity
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
+import com.example.workertracking.data.Converters
 
 @Entity(
     tableName = "workers",
@@ -15,10 +17,12 @@ import androidx.room.PrimaryKey
         )
     ]
 )
+@TypeConverters(Converters::class)
 data class Worker(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val name: String,
     val phoneNumber: String,
-    val referenceId: Long? = null
+    val referenceId: Long? = null,
+    val photoUris: List<String> = emptyList()
 )

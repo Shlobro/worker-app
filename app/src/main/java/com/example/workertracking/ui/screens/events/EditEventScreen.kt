@@ -25,13 +25,14 @@ import java.util.*
 fun EditEventScreen(
     event: Event?,
     onNavigateBack: () -> Unit,
-    onUpdateEvent: (String, Date, String, String, String) -> Unit
+    onUpdateEvent: (String, Date, String, String, String, Double) -> Unit
 ) {
     var eventName by remember { mutableStateOf(event?.name ?: "") }
     var selectedDate by remember { mutableStateOf(event?.date ?: Date()) }
     var startTime by remember { mutableStateOf(event?.startTime ?: "") }
     var endTime by remember { mutableStateOf(event?.endTime ?: "") }
     var hours by remember { mutableStateOf(event?.hours ?: "") }
+    var income by remember { mutableStateOf(event?.income?.toString() ?: "") }
     var isAutoCalculate by remember { mutableStateOf(true) }
     var showDatePicker by remember { mutableStateOf(false) }
     
@@ -210,12 +211,23 @@ fun EditEventScreen(
                 }
             }
             
+            OutlinedTextField(
+                value = income,
+                onValueChange = { income = it },
+                label = { Text("הכנסה מהאירוע") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                placeholder = { Text("0.0") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+            )
+            
             Spacer(modifier = Modifier.height(16.dp))
             
             Button(
                 onClick = {
                     if (eventName.isNotBlank() && startTime.isNotBlank() && endTime.isNotBlank()) {
-                        onUpdateEvent(eventName, selectedDate, startTime, endTime, hours)
+                        val incomeValue = income.toDoubleOrNull() ?: 0.0
+                        onUpdateEvent(eventName, selectedDate, startTime, endTime, hours, incomeValue)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),

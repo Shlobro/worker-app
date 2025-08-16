@@ -35,6 +35,9 @@ class ProjectRepository(
     suspend fun getTotalIncomeForProject(projectId: Long): Double =
         projectIncomeDao.getTotalIncomeForProject(projectId) ?: 0.0
     
+    suspend fun getIncomeById(incomeId: Long): ProjectIncome? =
+        projectIncomeDao.getIncomeById(incomeId)
+    
     suspend fun insertIncome(income: ProjectIncome): Long = 
         projectIncomeDao.insertIncome(income)
     

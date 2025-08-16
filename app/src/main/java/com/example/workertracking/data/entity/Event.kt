@@ -12,5 +12,6 @@ data class Event(
     val date: Date,
     val startTime: String,
     val endTime: String,
-    val hours: String
+    val hours: String,
+    val income: Double = 0.0
 )
