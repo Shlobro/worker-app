@@ -33,7 +33,7 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 ### Module Structure
 
 #### Data Layer (`com.example.workertracking.data`)
-- **Database**: `WorkerTrackingDatabase` - Room database with TypeConverters (Version 7)
+- **Database**: `WorkerTrackingDatabase` - Room database with TypeConverters (Version 14)
 - **Entities**: Core data models (Project, ProjectIncome, Worker, Shift, ShiftWorker, Event, EventWorker, Payment)
 - **DAOs**: Database access objects for each entity
 - **Converters**: Type converters for Room (date/time handling)
@@ -68,7 +68,7 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 - **Workers**: Worker profiles with phone numbers and optional reference relationships (no payment rates stored)
 - **Shifts**: Individual work sessions linked to projects (no direct worker relationship)
 - **ShiftWorker**: Many-to-many relationship between shifts and workers with payment configuration and optional reference payment rates
-- **Events**: One-off events that can have multiple workers
+- **Events**: One-off events that can have multiple workers with start/end times and duration tracking
 - **EventWorker**: Many-to-many relationship between events and workers with hourly reference payment rates
 - **Payments**: Payment history and tracking
 
@@ -124,7 +124,9 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 - **Event Editing**: Complete edit functionality for events
 - **Event Deletion**: Events can be deleted like other entities
 - **Event Search**: Events are searchable by name
-- **Time Management**: Events have start/end times like shifts
+- **Time Management**: Events have start/end times with smart formatting and auto-calculation like shifts
+- **Smart Time Input**: Auto-formatting for time inputs (HHMM → HH:MM) with validation
+- **Duration Calculation**: Real-time hours calculation from start/end times with manual override capability
 
 ### Financial Management System
 
@@ -161,10 +163,11 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 - **Number Keyboard**: Numeric keypad for time inputs
 
 #### Automatic Hours Calculation
-- **Real-time Calculation**: Hours computed from start/end times
+- **Real-time Calculation**: Hours computed from start/end times for both shifts and events
 - **Cross-midnight Support**: Handles shifts spanning midnight
 - **Manual Override**: Users can edit hours manually for special cases
 - **Smart Reset**: "חשב אוטומטית" button to return to automatic calculation
+- **Event Integration**: Same time management features available for events as shifts
 
 ### Development Guidelines
 
@@ -204,6 +207,15 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 5. **Search Integration**: Implement searchable worker addition dialogs
 6. **Financial Updates**: Ensure financial calculations refresh on worker changes including reference payments
 7. **Time Formatting**: Implement auto-formatting for time inputs (HHMM → HH:MM)
+
+#### Event Feature Implementation (✅ COMPLETED)
+1. **Event Time Management**: Events have startTime, endTime, and hours fields with smart formatting
+2. **Time Input Auto-formatting**: Automatic conversion of HHMM → HH:MM format with validation
+3. **Duration Calculation**: Real-time hours calculation from start/end times with manual override
+4. **AddEventScreen**: Complete time input functionality with auto-calculation
+5. **EditEventScreen**: Full editing capabilities with date picker and time management
+6. **Database Integration**: Events table updated with time fields (database version 14)
+7. **Smart Reset**: "חשב אוטומטית" button for returning to automatic time calculation
 
 #### Income Feature Implementation
 1. **Income Tracking**: Create ProjectIncome entries with date, description, amount, units
