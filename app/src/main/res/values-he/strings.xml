@@ -109,4 +109,6 @@
     <string name="delete_shift_message">האם אתה בטוח שברצונך למחוק את המשמרת? פעולה זו לא ניתנת לביטול.</string>
     <string name="confirm_delete">מחק</string>
     <string name="cancel_delete">בטל</string>
+    <string name="delete_project">מחק פרויקט</string>
+    <string name="delete_worker">מחק עובד</string>
 </resources>
