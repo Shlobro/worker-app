@@ -40,11 +40,23 @@ class WorkerDetailViewModel(
     private val _updateSuccess = MutableStateFlow(false)
     val updateSuccess: StateFlow<Boolean> = _updateSuccess.asStateFlow()
 
+    private val _referenceWorker = MutableStateFlow<Worker?>(null)
+    val referenceWorker: StateFlow<Worker?> = _referenceWorker.asStateFlow()
+
     fun loadWorker(workerId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                _worker.value = workerRepository.getWorkerById(workerId)
+                val worker = workerRepository.getWorkerById(workerId)
+                _worker.value = worker
+                
+                // Load reference worker if exists
+                worker?.referenceId?.let { referenceId ->
+                    _referenceWorker.value = workerRepository.getWorkerById(referenceId)
+                } ?: run {
+                    _referenceWorker.value = null
+                }
+                
                 loadWorkerProjectsAndEvents(workerId)
                 loadAllWorkers()
             } finally {

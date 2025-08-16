@@ -29,6 +29,7 @@ import com.example.workertracking.data.entity.Event
 @Composable
 fun WorkerDetailScreen(
     worker: Worker?,
+    referenceWorker: Worker? = null,
     projects: List<Project> = emptyList(),
     events: List<Event> = emptyList(),
     isLoading: Boolean,
@@ -148,9 +149,9 @@ fun WorkerDetailScreen(
                                 )
                             }
                             
-                            if (worker.referenceId != null) {
+                            if (worker.referenceId != null && referenceWorker != null) {
                                 Text(
-                                    text = "יש מפנה",
+                                    text = stringResource(R.string.worker_of, referenceWorker.name),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.secondary
                                 )
@@ -279,7 +280,7 @@ fun WorkerDetailScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Worker not found",
+                    text = stringResource(R.string.worker_not_found),
                     style = MaterialTheme.typography.bodyLarge
                 )
             }

@@ -139,4 +139,8 @@
     <string name="share_photo">שתף תמונה</string>
     <string name="delete_photo">מחק תמונה</string>
     <string name="delete_photo_confirmation">האם אתה בטוח שברצונך למחוק תמונה זו?</string>
+    <string name="worker_not_found">עובד לא נמצא</string>
+    <string name="search_projects_events">חפש פרויקטים ואירועים</string>
+    <string name="worker_projects_events">פרויקטים ואירועים של העובד</string>
+    <string name="worker_of">עובד של %1$s</string>
 </resources>

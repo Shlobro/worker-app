@@ -374,6 +374,7 @@ fun WorkerTrackingApp() {
                 val projects by viewModel.projects.collectAsState()
                 val events by viewModel.events.collectAsState()
                 val isLoading by viewModel.isLoading.collectAsState()
+                val referenceWorker by viewModel.referenceWorker.collectAsState()
                 
                 LaunchedEffect(workerId) {
                     viewModel.loadWorker(workerId)
@@ -381,6 +382,7 @@ fun WorkerTrackingApp() {
                 
                 WorkerDetailScreen(
                     worker = worker,
+                    referenceWorker = referenceWorker,
                     projects = projects,
                     events = events,
                     isLoading = isLoading,

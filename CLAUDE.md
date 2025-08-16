@@ -250,3 +250,8 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 - Update claude.md after any relevent change
 - make sure to add and edit the english and hebrew strings everytime there is a change that needs it
 - when running the build use cd /c/Users/shlob/AndroidStudioProjects/workerTracking && ./gradlew.bat compileDebugKotlin. since the terminal is powershell
+
+### Important String Resource Guidelines
+- **Critical**: This app is designed to be fully in Hebrew. Both `values/strings.xml` (default) and `values-he/strings.xml` should contain Hebrew text
+- **Common Mistake**: DO NOT put English text in `values/strings.xml` - it should contain Hebrew text just like `values-he/strings.xml`
+- **Reason**: The app is Hebrew-first, so the default string resources should be in Hebrew to ensure proper display regardless of locale settings
