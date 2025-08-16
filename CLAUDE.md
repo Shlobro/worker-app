@@ -206,3 +206,4 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 - **Lifecycle ViewModel**: State management
 - **Kotlin Coroutines**: Asynchronous programming
 - update the plan file and claude.md whenever there is anything important changed
+- never build the project. let me run and test

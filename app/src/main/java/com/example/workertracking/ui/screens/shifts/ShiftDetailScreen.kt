@@ -71,15 +71,17 @@ fun ShiftDetailScreen(
                         )
                     }
                 },
-                actions = {
-                    IconButton(onClick = { showAddWorkerDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "הוסף עובד"
-                        )
-                    }
-                }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddWorkerDialog = true }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "הוסף עובד"
+                )
+            }
         }
     ) { paddingValues ->
         LazyColumn(
@@ -147,11 +149,18 @@ fun ShiftDetailScreen(
                                 text = "אין עובדים במשמרת זו",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Text(
-                                text = "לחץ על + כדי להוסיף עובדים",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = { showAddWorkerDialog = true }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("הוסף עובד ראשון")
+                            }
                         }
                     }
                 }

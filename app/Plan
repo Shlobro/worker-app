@@ -3,7 +3,7 @@ list of TODO's
 2)
 3) currently when adding a project it asks for a type of income and an amount. this should be removed completely. the way the profit from a project should happen is through the screen when clicking on a project where you can add an income and a type of income.
 4) when clicking on an existing project there should be a way to close a project, this should be a button that is visible when the project is open. it should also ask for confirmation and then close the project. then in the project list you should see an indicator that the project is over. somewhere there should be information of what date it started and when it ended.
-5) in the shifts screen the plus to add a worker is in the top left which does not make sense, since the workers are in the bottom.
+5)
 6) add picture capability to workers, there should be an option to add and view an entire album of pictures. including a share option for a photo.
 7) when adding an event it should allow to enter start time and end time. basically an event is exactly like a shift in the logic that runs it, except it stands alone instead of being part of a project.
 8) events and projects need to be searchable.
