@@ -98,6 +98,18 @@
     <!-- Dashboard Cards -->
     <string name="financial_summary">סיכום כספי</string>
     <string name="recent_activity">פעילות אחרונה</string>
+    <string name="total_revenue">סה"כ הכנסות</string>
+    <string name="total_expenses">סה"כ הוצאות</string>
+    <string name="money_owed_tracking">מעקב חובות</string>
+    <string name="total_pending_payments">סה"כ תשלומים ממתינים</string>
+    <string name="active_projects">פרויקטים פעילים</string>
+    <string name="upcoming_events">אירועים קרובים</string>
+    <string name="no_active_projects">אין פרויקטים פעילים</string>
+    <string name="no_upcoming_events">אין אירועים קרובים</string>
+    <string name="view_all">הצג הכל</string>
+    <string name="active">פעיל</string>
+    <string name="filter_by_date">סנן לפי תאריך</string>
+    <string name="clear_filter">נקה סינון</string>
     
     <!-- Content Descriptions -->
     <string name="back">חזור</string>

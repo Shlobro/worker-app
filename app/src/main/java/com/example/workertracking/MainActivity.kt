@@ -62,6 +62,7 @@ import com.example.workertracking.ui.viewmodel.AddShiftViewModel
 import com.example.workertracking.ui.viewmodel.ShiftDetailViewModel
 import com.example.workertracking.ui.viewmodel.AddIncomeViewModel
 import com.example.workertracking.ui.viewmodel.AddWorkerToEventViewModel
+import com.example.workertracking.ui.viewmodel.DashboardViewModel
 import com.example.workertracking.ui.theme.WorkerTrackingTheme
 
 class MainActivity : ComponentActivity() {
@@ -140,7 +141,30 @@ fun WorkerTrackingApp() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Dashboard.route) {
-                DashboardScreen()
+                val viewModel: DashboardViewModel = viewModel {
+                    DashboardViewModel(
+                        application.container.projectRepository,
+                        application.container.shiftRepository,
+                        application.container.eventRepository,
+                        application.container.workerRepository
+                    )
+                }
+                
+                DashboardScreen(
+                    viewModel = viewModel,
+                    onProjectClick = { projectId ->
+                        navController.navigate(Screen.ProjectDetail.createRoute(projectId))
+                    },
+                    onEventClick = { eventId ->
+                        navController.navigate(Screen.EventDetail.createRoute(eventId))
+                    },
+                    onViewAllProjects = {
+                        navController.navigate(Screen.Projects.route)
+                    },
+                    onViewAllEvents = {
+                        navController.navigate(Screen.Events.route)
+                    }
+                )
             }
             composable(Screen.Projects.route) {
                 val viewModel: ProjectsViewModel = viewModel {
