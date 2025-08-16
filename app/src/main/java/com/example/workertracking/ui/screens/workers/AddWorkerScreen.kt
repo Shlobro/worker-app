@@ -4,16 +4,22 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.example.workertracking.R
 import com.example.workertracking.data.entity.Worker
+import com.example.workertracking.ui.components.SearchableWorkerSelector
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,7 +31,7 @@ fun AddWorkerScreen(
     var workerName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var selectedReferenceWorker by remember { mutableStateOf<Worker?>(null) }
-    var expanded by remember { mutableStateOf(false) }
+    var showWorkerSelector by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
@@ -66,41 +72,37 @@ fun AddWorkerScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
             )
             
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
+            Box {
                 OutlinedTextField(
                     value = selectedReferenceWorker?.name ?: stringResource(R.string.no_reference),
                     onValueChange = { },
                     readOnly = true,
                     label = { Text(stringResource(R.string.reference_worker)) },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.no_reference)) },
-                        onClick = {
-                            selectedReferenceWorker = null
-                            expanded = false
-                        }
-                    )
-                    availableWorkers.forEach { worker ->
-                        DropdownMenuItem(
-                            text = { Text(worker.name) },
-                            onClick = {
-                                selectedReferenceWorker = worker
-                                expanded = false
+                    trailingIcon = {
+                        if (selectedReferenceWorker != null) {
+                            IconButton(onClick = { selectedReferenceWorker = null }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear selection")
                             }
-                        )
-                    }
-                }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { showWorkerSelector = true }
+                )
+            }
+            
+            if (showWorkerSelector) {
+                SearchableWorkerSelector(
+                    workers = availableWorkers,
+                    onWorkerSelected = { worker ->
+                        selectedReferenceWorker = worker
+                        showWorkerSelector = false
+                    },
+                    onDismiss = { showWorkerSelector = false }
+                )
             }
             
             Spacer(modifier = Modifier.height(16.dp))
