@@ -20,7 +20,6 @@ import com.example.workertracking.R
 import com.example.workertracking.data.entity.Project
 import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.data.entity.Shift
-import com.example.workertracking.data.entity.IncomeType
 import com.example.workertracking.data.entity.ProjectStatus
 import java.text.DateFormat
 import java.text.NumberFormat
@@ -174,43 +173,6 @@ fun ProjectDetailScreen(
                                             style = MaterialTheme.typography.bodyLarge
                                         )
                                     }
-                                }
-                            }
-                            
-                            HorizontalDivider()
-                            
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column {
-                                    Text(
-                                        text = stringResource(R.string.income_type),
-                                        style = MaterialTheme.typography.labelMedium
-                                    )
-                                    Text(
-                                        text = when (project.incomeType) {
-                                            IncomeType.DAILY -> "יומי"
-                                            IncomeType.WEEKLY -> "שבועי"
-                                            IncomeType.HOURLY -> "שעתי"
-                                            IncomeType.MONTHLY -> "חודשי"
-                                            IncomeType.FIXED -> "קבוע"
-                                        },
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                }
-                                
-                                Column {
-                                    Text(
-                                        text = stringResource(R.string.amount),
-                                        style = MaterialTheme.typography.labelMedium
-                                    )
-                                    Text(
-                                        text = "${NumberFormat.getCurrencyInstance(Locale("he", "IL")).format(project.incomeAmount)}",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
                                 }
                             }
                         }

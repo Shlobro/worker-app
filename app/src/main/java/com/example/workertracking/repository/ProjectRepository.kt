@@ -25,9 +25,7 @@ class ProjectRepository(
     suspend fun closeProject(projectId: Long) = projectDao.closeProject(projectId, Date().time)
     
     suspend fun getTotalProjectIncome(): Double {
-        val fixedIncome = projectDao.getTotalFixedProjectIncome() ?: 0.0
-        val variableIncome = projectDao.getTotalProjectIncomeExcludingFixed() ?: 0.0
-        return fixedIncome + variableIncome
+        return projectIncomeDao.getTotalIncomeAllProjects() ?: 0.0
     }
     
     // Project Income methods

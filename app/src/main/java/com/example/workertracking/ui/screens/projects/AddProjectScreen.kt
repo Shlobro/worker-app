@@ -2,7 +2,6 @@ package com.example.workertracking.ui.screens.projects
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -11,11 +10,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.example.workertracking.R
-import com.example.workertracking.data.entity.IncomeType
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -23,14 +20,11 @@ import java.util.*
 @Composable
 fun AddProjectScreen(
     onNavigateBack: () -> Unit,
-    onSaveProject: (String, String, Date, IncomeType, Double) -> Unit
+    onSaveProject: (String, String, Date) -> Unit
 ) {
     var projectName by remember { mutableStateOf("") }
     var projectLocation by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf(Date()) }
-    var selectedIncomeType by remember { mutableStateOf(IncomeType.DAILY) }
-    var incomeAmount by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -90,56 +84,16 @@ fun AddProjectScreen(
                 }
             )
             
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
-                OutlinedTextField(
-                    value = getIncomeTypeDisplayName(selectedIncomeType),
-                    onValueChange = { },
-                    readOnly = true,
-                    label = { Text(stringResource(R.string.income_type)) },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    IncomeType.values().forEach { incomeType ->
-                        DropdownMenuItem(
-                            text = { Text(getIncomeTypeDisplayName(incomeType)) },
-                            onClick = {
-                                selectedIncomeType = incomeType
-                                expanded = false
-                            }
-                        )
-                    }
-                }
-            }
-            
-            OutlinedTextField(
-                value = incomeAmount,
-                onValueChange = { incomeAmount = it },
-                label = { Text("${getIncomeTypeDisplayName(selectedIncomeType)} (${stringResource(R.string.currency_symbol)})") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true
-            )
-            
             Spacer(modifier = Modifier.height(16.dp))
             
             Button(
                 onClick = {
-                    if (projectName.isNotBlank() && projectLocation.isNotBlank() && incomeAmount.isNotBlank()) {
-                        val amount = incomeAmount.toDoubleOrNull() ?: 0.0
-                        onSaveProject(projectName, projectLocation, selectedDate, selectedIncomeType, amount)
+                    if (projectName.isNotBlank() && projectLocation.isNotBlank()) {
+                        onSaveProject(projectName, projectLocation, selectedDate)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = projectName.isNotBlank() && projectLocation.isNotBlank() && incomeAmount.isNotBlank()
+                enabled = projectName.isNotBlank() && projectLocation.isNotBlank()
             ) {
                 Text(stringResource(R.string.save))
             }
@@ -164,17 +118,6 @@ fun AddProjectScreen(
             },
             datePickerState = datePickerState
         )
-    }
-}
-
-@Composable
-private fun getIncomeTypeDisplayName(incomeType: IncomeType): String {
-    return when (incomeType) {
-        IncomeType.DAILY -> stringResource(R.string.daily_rate)
-        IncomeType.WEEKLY -> stringResource(R.string.weekly_rate)
-        IncomeType.HOURLY -> stringResource(R.string.hourly_rate)
-        IncomeType.MONTHLY -> stringResource(R.string.monthly_rate)
-        IncomeType.FIXED -> stringResource(R.string.fixed_amount)
     }
 }
 

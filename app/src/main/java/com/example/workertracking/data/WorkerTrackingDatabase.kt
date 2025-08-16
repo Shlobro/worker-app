@@ -21,7 +21,7 @@ import com.example.workertracking.data.entity.*
         EventWorker::class,
         Payment::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -158,13 +158,32 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Remove incomeType and incomeAmount columns from projects table
+                database.execSQL("""
+                    CREATE TABLE projects_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        location TEXT NOT NULL,
+                        startDate INTEGER NOT NULL,
+                        status TEXT NOT NULL DEFAULT 'ACTIVE',
+                        endDate INTEGER
+                    )
+                """)
+                database.execSQL("INSERT INTO projects_new (id, name, location, startDate, status, endDate) SELECT id, name, location, startDate, status, endDate FROM projects")
+                database.execSQL("DROP TABLE projects")
+                database.execSQL("ALTER TABLE projects_new RENAME TO projects")
+            }
+        }
+
         fun getDatabase(context: Context): WorkerTrackingDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     WorkerTrackingDatabase::class.java,
                     "worker_tracking_database"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9).build()
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10).build()
                 INSTANCE = instance
                 instance
             }

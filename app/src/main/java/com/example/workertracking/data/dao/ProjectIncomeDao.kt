@@ -15,6 +15,9 @@ interface ProjectIncomeDao {
     @Query("SELECT SUM(amount * units) FROM project_income WHERE projectId = :projectId")
     suspend fun getTotalIncomeForProject(projectId: Long): Double?
 
+    @Query("SELECT SUM(amount * units) FROM project_income")
+    suspend fun getTotalIncomeAllProjects(): Double?
+
     @Insert
     suspend fun insertIncome(income: ProjectIncome): Long
 

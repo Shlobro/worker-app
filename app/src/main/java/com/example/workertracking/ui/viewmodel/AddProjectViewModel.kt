@@ -2,7 +2,6 @@ package com.example.workertracking.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.workertracking.data.entity.IncomeType
 import com.example.workertracking.data.entity.Project
 import com.example.workertracking.repository.ProjectRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,9 +26,7 @@ class AddProjectViewModel(
     fun saveProject(
         name: String,
         location: String,
-        startDate: Date,
-        incomeType: IncomeType,
-        incomeAmount: Double
+        startDate: Date
     ) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -37,9 +34,7 @@ class AddProjectViewModel(
                 val project = Project(
                     name = name,
                     location = location,
-                    startDate = startDate,
-                    incomeType = incomeType,
-                    incomeAmount = incomeAmount
+                    startDate = startDate
                 )
                 projectRepository.insertProject(project)
                 _saveSuccess.value = true

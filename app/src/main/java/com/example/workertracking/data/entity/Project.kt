@@ -11,8 +11,6 @@ data class Project(
     val name: String,
     val location: String,
     val startDate: Date,
-    val incomeType: IncomeType,
-    val incomeAmount: Double,
     val status: ProjectStatus = ProjectStatus.ACTIVE,
     val endDate: Date? = null
 )

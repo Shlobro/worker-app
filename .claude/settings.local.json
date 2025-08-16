@@ -12,6 +12,9 @@
       "Bash(gradlew.bat lint:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "C:\\c\\Users\\shlob\\AndroidStudioProjects"
+    ]
   }
 }

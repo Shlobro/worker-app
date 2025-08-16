@@ -17,7 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.workertracking.R
 import com.example.workertracking.data.entity.Project
-import com.example.workertracking.data.entity.IncomeType
 import com.example.workertracking.data.entity.ProjectStatus
 import java.text.SimpleDateFormat
 import java.util.*
@@ -214,22 +213,9 @@ fun ProjectCard(
             
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = getIncomeTypeDisplayName(project.incomeType),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = "₪${String.format("%.2f", project.incomeAmount)}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
                 IconButton(onClick = onDelete) {
                     Icon(
                         imageVector = Icons.Default.Delete,
@@ -239,16 +225,5 @@ fun ProjectCard(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun getIncomeTypeDisplayName(incomeType: IncomeType): String {
-    return when (incomeType) {
-        IncomeType.DAILY -> stringResource(R.string.daily_rate)
-        IncomeType.WEEKLY -> stringResource(R.string.weekly_rate)
-        IncomeType.HOURLY -> stringResource(R.string.hourly_rate)
-        IncomeType.MONTHLY -> stringResource(R.string.monthly_rate)
-        IncomeType.FIXED -> stringResource(R.string.fixed_amount)
     }
 }

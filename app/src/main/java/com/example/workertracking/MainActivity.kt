@@ -174,8 +174,8 @@ fun WorkerTrackingApp() {
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onSaveProject = { name, location, startDate, incomeType, incomeAmount ->
-                        viewModel.saveProject(name, location, startDate, incomeType, incomeAmount)
+                    onSaveProject = { name, location, startDate ->
+                        viewModel.saveProject(name, location, startDate)
                     }
                 )
             }
@@ -209,8 +209,8 @@ fun WorkerTrackingApp() {
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onUpdateProject = { name, location, startDate, incomeType, incomeAmount ->
-                        viewModel.updateProject(name, location, startDate, incomeType, incomeAmount)
+                    onUpdateProject = { name, location, startDate ->
+                        viewModel.updateProject(name, location, startDate)
                     }
                 )
             }

@@ -63,7 +63,7 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 ### Key Technical Decisions
 
 #### Database Schema
-- **Projects**: Store project details with base income information
+- **Projects**: Store project details (name, location, dates, status) - income managed separately through ProjectIncome
 - **ProjectIncome**: Individual income entries per project (date, description, amount, units)
 - **Workers**: Worker profiles with phone numbers and optional reference relationships (no payment rates stored)
 - **Shifts**: Individual work sessions linked to projects (no direct worker relationship)

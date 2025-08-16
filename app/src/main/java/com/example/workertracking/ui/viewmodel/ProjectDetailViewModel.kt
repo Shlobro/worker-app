@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.workertracking.data.entity.Project
 import com.example.workertracking.data.entity.Shift
-import com.example.workertracking.data.entity.IncomeType
 import com.example.workertracking.repository.ProjectRepository
 import com.example.workertracking.repository.ShiftRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -97,16 +96,14 @@ class ProjectDetailViewModel(
         }
     }
     
-    fun updateProject(name: String, location: String, startDate: Date, incomeType: IncomeType, incomeAmount: Double) {
+    fun updateProject(name: String, location: String, startDate: Date) {
         viewModelScope.launch {
             try {
                 _project.value?.let { currentProject ->
                     val updatedProject = currentProject.copy(
                         name = name,
                         location = location,
-                        startDate = startDate,
-                        incomeType = incomeType,
-                        incomeAmount = incomeAmount
+                        startDate = startDate
                     )
                     projectRepository.updateProject(updatedProject)
                     _project.value = updatedProject
