@@ -87,15 +87,16 @@
   - ✅ Auto-calculate event duration
 - **UI Requirements**: ✅ Time input fields with auto-formatting
 
-### 8. Search Functionality for Events and Projects
+### 8. Search Functionality for Events and Projects ✅ COMPLETED
 **Goal**: Add search capability to events and projects
 - **Task**: Implement search functionality
 - **Implementation**:
-  - Add search field to EventListScreen
-  - Add search field to ProjectListScreen
-  - Implement real-time filtering by name
-  - Use case-insensitive search
-- **UI Requirements**: Search bars in list screens with real-time filtering
+  - ✅ Add search field to EventsScreen
+  - ✅ Add search field to ProjectsScreen
+  - ✅ Implement real-time filtering by name (events) and name/location (projects)
+  - ✅ Use case-insensitive search
+  - ✅ Add Hebrew string resources for search functionality
+- **UI Requirements**: ✅ Search bars in list screens with real-time filtering
 
 ### 9. Complete Dashboard Redesign
 **Goal**: Rebuild dashboard with comprehensive analytics

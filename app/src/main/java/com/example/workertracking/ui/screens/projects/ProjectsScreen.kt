@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,7 +31,20 @@ fun ProjectsScreen(
     onProjectClick: (Project) -> Unit = {},
     onDeleteProject: (Project) -> Unit = {}
 ) {
+    var searchQuery by remember { mutableStateOf("") }
     var projectToDelete by remember { mutableStateOf<Project?>(null) }
+    
+    val filteredProjects = remember(projects, searchQuery) {
+        if (searchQuery.isBlank()) {
+            projects
+        } else {
+            projects.filter { project ->
+                project.name.contains(searchQuery, ignoreCase = true) ||
+                project.location.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
+    
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
@@ -51,6 +65,34 @@ fun ProjectsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
+            }
+        } else if (filteredProjects.isEmpty() && projects.isNotEmpty() && searchQuery.isNotBlank()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp)
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text(stringResource(R.string.search_projects)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.no_data),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         } else if (projects.isEmpty()) {
             Column(
@@ -83,7 +125,19 @@ fun ProjectsScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(projects) { project ->
+                item {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = { Text(stringResource(R.string.search_projects)) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                
+                items(filteredProjects) { project ->
                     ProjectCard(
                         project = project,
                         onClick = { onProjectClick(project) },

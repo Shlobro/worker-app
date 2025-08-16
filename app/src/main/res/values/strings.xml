@@ -106,6 +106,8 @@
     <!-- Worker specific -->
     <string name="no_reference">ללא מפנה</string>
     <string name="search_workers">חפש עובדים...</string>
+    <string name="search_events">חפש אירועים...</string>
+    <string name="search_projects">חפש פרויקטים...</string>
     <string name="call_worker">התקשר לעובד</string>
     <string name="worker_projects_events">פרויקטים ואירועים</string>
     <string name="search_projects_events">חפש פרויקטים ואירועים...</string>

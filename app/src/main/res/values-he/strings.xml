@@ -108,6 +108,8 @@
     <string name="no_reference">ללא מפנה</string>
     <string name="reference_percentage">אחוז המפנה (%)</string>
     <string name="search_workers">חפש עובדים</string>
+    <string name="search_events">חפש אירועים</string>
+    <string name="search_projects">חפש פרויקטים</string>
     <string name="call_worker">התקשר לעובד</string>
     
     <!-- Delete Confirmation -->

@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +27,19 @@ fun EventsScreen(
     onAddEvent: () -> Unit = {},
     onEventClick: (Event) -> Unit = {}
 ) {
+    var searchQuery by remember { mutableStateOf("") }
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    
+    val filteredEvents = remember(events, searchQuery) {
+        if (searchQuery.isBlank()) {
+            events
+        } else {
+            events.filter { event ->
+                event.name.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
+    
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
@@ -47,6 +60,34 @@ fun EventsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
+            }
+        } else if (filteredEvents.isEmpty() && events.isNotEmpty() && searchQuery.isNotBlank()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp)
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text(stringResource(R.string.search_events)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.no_data),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         } else if (events.isEmpty()) {
             Column(
@@ -79,7 +120,19 @@ fun EventsScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(events) { event ->
+                item {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = { Text(stringResource(R.string.search_events)) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                
+                items(filteredEvents) { event ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
