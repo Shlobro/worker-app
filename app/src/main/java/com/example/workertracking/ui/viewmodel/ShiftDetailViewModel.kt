@@ -7,12 +7,15 @@ import com.example.workertracking.data.entity.ShiftWorker
 import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.repository.ShiftRepository
 import com.example.workertracking.repository.WorkerRepository
+import com.example.workertracking.repository.ProjectRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.Date
 
 class ShiftDetailViewModel(
     private val shiftRepository: ShiftRepository,
-    private val workerRepository: WorkerRepository
+    private val workerRepository: WorkerRepository,
+    private val projectRepository: ProjectRepository
 ) : ViewModel() {
     
     private val _isLoading = MutableStateFlow(false)
@@ -29,6 +32,9 @@ class ShiftDetailViewModel(
     
     private val _allWorkers = MutableStateFlow<List<Worker>>(emptyList())
     val allWorkers: StateFlow<List<Worker>> = _allWorkers.asStateFlow()
+
+    private val _updateSuccess = MutableStateFlow(false)
+    val updateSuccess: StateFlow<Boolean> = _updateSuccess.asStateFlow()
     
     fun loadShiftDetails(shiftId: Long) {
         viewModelScope.launch {
@@ -116,6 +122,31 @@ class ShiftDetailViewModel(
                 _shiftWorkers.value = shiftWorkersWithWorkerInfo
             }
         }
+    }
+    
+    fun updateShift(name: String, date: Date, startTime: String, endTime: String, hours: Double) {
+        viewModelScope.launch {
+            try {
+                _shift.value?.let { currentShift ->
+                    val updatedShift = currentShift.copy(
+                        name = name,
+                        date = date,
+                        startTime = startTime,
+                        endTime = endTime,
+                        hours = hours
+                    )
+                    shiftRepository.updateShift(updatedShift)
+                    _shift.value = updatedShift
+                    _updateSuccess.value = true
+                }
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+    
+    fun clearUpdateSuccess() {
+        _updateSuccess.value = false
     }
     
     fun clearError() {

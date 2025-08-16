@@ -32,14 +32,18 @@ import com.example.workertracking.ui.navigation.bottomNavItems
 import com.example.workertracking.ui.screens.dashboard.DashboardScreen
 import com.example.workertracking.ui.screens.projects.ProjectsScreen
 import com.example.workertracking.ui.screens.projects.AddProjectScreen
+import com.example.workertracking.ui.screens.projects.EditProjectScreen
 import com.example.workertracking.ui.screens.projects.ProjectDetailScreen
 import com.example.workertracking.ui.screens.projects.AddIncomeScreen
 import com.example.workertracking.ui.screens.workers.WorkersScreen
 import com.example.workertracking.ui.screens.workers.AddWorkerScreen
+import com.example.workertracking.ui.screens.workers.EditWorkerScreen
 import com.example.workertracking.ui.screens.workers.WorkerDetailScreen
 import com.example.workertracking.ui.screens.events.EventsScreen
 import com.example.workertracking.ui.screens.events.AddEventScreen
+import com.example.workertracking.ui.screens.events.EditEventScreen
 import com.example.workertracking.ui.screens.shifts.AddShiftScreen
+import com.example.workertracking.ui.screens.shifts.EditShiftScreen
 import com.example.workertracking.ui.screens.shifts.ShiftDetailScreen
 import com.example.workertracking.ui.viewmodel.ProjectsViewModel
 import com.example.workertracking.ui.viewmodel.AddProjectViewModel
@@ -48,6 +52,7 @@ import com.example.workertracking.ui.viewmodel.WorkersViewModel
 import com.example.workertracking.ui.viewmodel.AddWorkerViewModel
 import com.example.workertracking.ui.viewmodel.WorkerDetailViewModel
 import com.example.workertracking.ui.viewmodel.AddEventViewModel
+import com.example.workertracking.ui.viewmodel.EventDetailViewModel
 import com.example.workertracking.ui.viewmodel.AddShiftViewModel
 import com.example.workertracking.ui.viewmodel.ShiftDetailViewModel
 import com.example.workertracking.ui.viewmodel.AddIncomeViewModel
@@ -175,6 +180,41 @@ fun WorkerTrackingApp() {
                 )
             }
             composable(
+                route = Screen.EditProject.route,
+                arguments = listOf(navArgument("projectId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val projectId = backStackEntry.arguments?.getLong("projectId") ?: 0L
+                val viewModel: ProjectDetailViewModel = viewModel {
+                    ProjectDetailViewModel(
+                        application.container.projectRepository,
+                        application.container.shiftRepository
+                    )
+                }
+                val project by viewModel.project.collectAsState()
+                val updateSuccess by viewModel.updateSuccess.collectAsState()
+                
+                LaunchedEffect(projectId) {
+                    viewModel.loadProject(projectId)
+                }
+                
+                LaunchedEffect(updateSuccess) {
+                    if (updateSuccess) {
+                        viewModel.clearUpdateSuccess()
+                        navController.popBackStack()
+                    }
+                }
+                
+                EditProjectScreen(
+                    project = project,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onUpdateProject = { name, location, startDate, incomeType, incomeAmount ->
+                        viewModel.updateProject(name, location, startDate, incomeType, incomeAmount)
+                    }
+                )
+            }
+            composable(
                 route = Screen.ProjectDetail.route,
                 arguments = listOf(navArgument("projectId") { type = NavType.LongType })
             ) { backStackEntry ->
@@ -203,6 +243,9 @@ fun WorkerTrackingApp() {
                     isLoading = isLoading,
                     onNavigateBack = {
                         navController.popBackStack()
+                    },
+                    onEditProject = {
+                        navController.navigate(Screen.EditProject.createRoute(projectId))
                     },
                     onAddShift = {
                         navController.navigate(Screen.AddShift.createRoute(projectId))
@@ -267,6 +310,45 @@ fun WorkerTrackingApp() {
                 )
             }
             composable(
+                route = Screen.EditWorker.route,
+                arguments = listOf(navArgument("workerId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val workerId = backStackEntry.arguments?.getLong("workerId") ?: 0L
+                val viewModel: WorkerDetailViewModel = viewModel {
+                    WorkerDetailViewModel(
+                        application.container.workerRepository,
+                        application.container.projectRepository,
+                        application.container.eventRepository,
+                        application.container.shiftRepository
+                    )
+                }
+                val worker by viewModel.worker.collectAsState()
+                val allWorkers by viewModel.allWorkers.collectAsState()
+                val updateSuccess by viewModel.updateSuccess.collectAsState()
+                
+                LaunchedEffect(workerId) {
+                    viewModel.loadWorker(workerId)
+                }
+                
+                LaunchedEffect(updateSuccess) {
+                    if (updateSuccess) {
+                        viewModel.clearUpdateSuccess()
+                        navController.popBackStack()
+                    }
+                }
+                
+                EditWorkerScreen(
+                    worker = worker,
+                    availableWorkers = allWorkers,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onUpdateWorker = { name, phoneNumber, referenceId ->
+                        viewModel.updateWorker(name, phoneNumber, referenceId)
+                    }
+                )
+            }
+            composable(
                 route = Screen.WorkerDetail.route,
                 arguments = listOf(navArgument("workerId") { type = NavType.LongType })
             ) { backStackEntry ->
@@ -295,6 +377,9 @@ fun WorkerTrackingApp() {
                     isLoading = isLoading,
                     onNavigateBack = {
                         navController.popBackStack()
+                    },
+                    onEditWorker = {
+                        navController.navigate(Screen.EditWorker.createRoute(workerId))
                     }
                 )
             }
@@ -324,6 +409,38 @@ fun WorkerTrackingApp() {
                     },
                     onSaveEvent = { name, date, time ->
                         viewModel.saveEvent(name, date, time)
+                    }
+                )
+            }
+            composable(
+                route = Screen.EditEvent.route,
+                arguments = listOf(navArgument("eventId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val eventId = backStackEntry.arguments?.getLong("eventId") ?: 0L
+                val viewModel: EventDetailViewModel = viewModel {
+                    EventDetailViewModel(application.container.eventRepository)
+                }
+                val event by viewModel.event.collectAsState()
+                val updateSuccess by viewModel.updateSuccess.collectAsState()
+                
+                LaunchedEffect(eventId) {
+                    viewModel.loadEvent(eventId)
+                }
+                
+                LaunchedEffect(updateSuccess) {
+                    if (updateSuccess) {
+                        viewModel.clearUpdateSuccess()
+                        navController.popBackStack()
+                    }
+                }
+                
+                EditEventScreen(
+                    event = event,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onUpdateEvent = { name, date, time ->
+                        viewModel.updateEvent(name, date, time)
                     }
                 )
             }
@@ -358,6 +475,45 @@ fun WorkerTrackingApp() {
                 )
             }
             composable(
+                route = Screen.EditShift.route,
+                arguments = listOf(navArgument("shiftId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val shiftId = backStackEntry.arguments?.getLong("shiftId") ?: 0L
+                val viewModel: ShiftDetailViewModel = viewModel {
+                    ShiftDetailViewModel(
+                        application.container.shiftRepository,
+                        application.container.workerRepository,
+                        application.container.projectRepository
+                    )
+                }
+                val shift by viewModel.shift.collectAsState()
+                val updateSuccess by viewModel.updateSuccess.collectAsState()
+                
+                LaunchedEffect(shiftId) {
+                    viewModel.loadShiftDetails(shiftId)
+                }
+                
+                LaunchedEffect(updateSuccess) {
+                    if (updateSuccess) {
+                        viewModel.clearUpdateSuccess()
+                        navController.popBackStack()
+                    }
+                }
+                
+                shift?.let { currentShift ->
+                    EditShiftScreen(
+                        shift = currentShift,
+                        projectName = "פרויקט", // TODO: Get actual project name
+                        onNavigateBack = {
+                            navController.popBackStack()
+                        },
+                        onUpdateShift = { name, date, startTime, endTime, hours ->
+                            viewModel.updateShift(name, date, startTime, endTime, hours)
+                        }
+                    )
+                }
+            }
+            composable(
                 route = Screen.ShiftDetail.route,
                 arguments = listOf(navArgument("shiftId") { type = NavType.LongType })
             ) { backStackEntry ->
@@ -365,7 +521,8 @@ fun WorkerTrackingApp() {
                 val viewModel: ShiftDetailViewModel = viewModel {
                     ShiftDetailViewModel(
                         application.container.shiftRepository,
-                        application.container.workerRepository
+                        application.container.workerRepository,
+                        application.container.projectRepository
                     )
                 }
                 val shift by viewModel.shift.collectAsState()
@@ -384,6 +541,9 @@ fun WorkerTrackingApp() {
                         allWorkers = allWorkers,
                         onNavigateBack = {
                             navController.popBackStack()
+                        },
+                        onEditShift = {
+                            navController.navigate(Screen.EditShift.createRoute(shiftId))
                         },
                         onAddWorkerToShift = { sId, wId, isHourly, payRate ->
                             viewModel.addWorkerToShift(sId, wId, isHourly, payRate)

@@ -34,14 +34,29 @@ class WorkerDetailViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _allWorkers = MutableStateFlow<List<Worker>>(emptyList())
+    val allWorkers: StateFlow<List<Worker>> = _allWorkers.asStateFlow()
+
+    private val _updateSuccess = MutableStateFlow(false)
+    val updateSuccess: StateFlow<Boolean> = _updateSuccess.asStateFlow()
+
     fun loadWorker(workerId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 _worker.value = workerRepository.getWorkerById(workerId)
                 loadWorkerProjectsAndEvents(workerId)
+                loadAllWorkers()
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    private fun loadAllWorkers() {
+        viewModelScope.launch {
+            workerRepository.getAllWorkers().collect { workers ->
+                _allWorkers.value = workers
             }
         }
     }
@@ -59,5 +74,28 @@ class WorkerDetailViewModel(
                 _events.value = events
             }
         }
+    }
+    
+    fun updateWorker(name: String, phoneNumber: String, referenceId: Long?) {
+        viewModelScope.launch {
+            try {
+                _worker.value?.let { currentWorker ->
+                    val updatedWorker = currentWorker.copy(
+                        name = name,
+                        phoneNumber = phoneNumber,
+                        referenceId = referenceId
+                    )
+                    workerRepository.updateWorker(updatedWorker)
+                    _worker.value = updatedWorker
+                    _updateSuccess.value = true
+                }
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
+    }
+    
+    fun clearUpdateSuccess() {
+        _updateSuccess.value = false
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -33,6 +34,7 @@ fun ShiftDetailScreen(
     shiftWorkers: List<Pair<ShiftWorker, Worker>>,
     allWorkers: List<Worker>,
     onNavigateBack: () -> Unit,
+    onEditShift: () -> Unit = {},
     onAddWorkerToShift: (Long, Long, Boolean, Double) -> Unit,
     onRemoveWorkerFromShift: (Long, Long) -> Unit,
     onUpdateWorkerPayment: (ShiftWorker) -> Unit
@@ -71,6 +73,14 @@ fun ShiftDetailScreen(
                         )
                     }
                 },
+                actions = {
+                    IconButton(onClick = onEditShift) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.edit_shift)
+                        )
+                    }
+                }
             )
         },
         floatingActionButton = {

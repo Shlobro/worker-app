@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,6 +35,7 @@ fun ProjectDetailScreen(
     totalPayments: Double = 0.0,
     isLoading: Boolean,
     onNavigateBack: () -> Unit,
+    onEditProject: () -> Unit = {},
     onAddShift: () -> Unit,
     onShiftClick: (Long) -> Unit = {},
     onDeleteShift: (Shift) -> Unit = {},
@@ -66,6 +68,16 @@ fun ProjectDetailScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Navigate back"
                         )
+                    }
+                },
+                actions = {
+                    if (project != null) {
+                        IconButton(onClick = onEditProject) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.edit_project)
+                            )
+                        }
                     }
                 }
             )

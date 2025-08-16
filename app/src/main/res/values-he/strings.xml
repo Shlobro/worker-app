@@ -17,6 +17,7 @@
     <!-- Projects -->
     <string name="projects_title">פרויקטים</string>
     <string name="add_project">הוסף פרויקט</string>
+    <string name="edit_project">ערוך פרויקט</string>
     <string name="project_name">שם הפרויקט</string>
     <string name="project_location">מיקום הפרויקט</string>
     <string name="start_date">תאריך התחלה</string>
@@ -33,7 +34,9 @@
     <!-- Workers -->
     <string name="workers_title">עובדים</string>
     <string name="add_worker">הוסף עובד</string>
+    <string name="edit_worker">ערוך עובד</string>
     <string name="worker_name">שם העובד</string>
+    <string name="phone_number">מספר טלפון</string>
     <string name="contact_info">פרטי התקשרות</string>
     <string name="reference_worker">עובד מפנה</string>
     <string name="total_owed">סה\"כ חוב</string>
@@ -44,6 +47,8 @@
     <!-- Shifts -->
     <string name="shifts_title">משמרות</string>
     <string name="add_shift">הוסף משמרת</string>
+    <string name="edit_shift">ערוך משמרת</string>
+    <string name="shift_detail">פרטי משמרת</string>
     <string name="shift_date">תאריך המשמרת</string>
     <string name="start_time">שעת התחלה</string>
     <string name="end_time">שעת סיום</string>
@@ -54,6 +59,7 @@
     <!-- Events -->
     <string name="events_title">אירועים</string>
     <string name="add_event">הוסף אירוע</string>
+    <string name="edit_event">ערוך אירוע</string>
     <string name="event_name">שם האירוע</string>
     <string name="event_date">תאריך האירוע</string>
     <string name="event_time">שעת האירוע</string>

@@ -47,10 +47,10 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 #### Presentation Layer (`com.example.workertracking.ui`)
 - **Screens**: Feature-based screen composables organized by domain
   - Dashboard: Financial overview and main navigation
-  - Projects: Project management (list, add, detail) with financial tracking
-  - Shifts: Individual shift management with multi-worker support and payment configuration
-  - Workers: Worker management (list, add, detail)
-  - Events: Event management (list, add)
+  - Projects: Project management (list, add, edit, detail) with financial tracking
+  - Shifts: Individual shift management with multi-worker support and payment configuration (add, edit)
+  - Workers: Worker management (list, add, edit, detail)
+  - Events: Event management (list, add, edit)
   - Income: Project income entry and tracking
 - **ViewModels**: UI state management following MVVM pattern
 - **Navigation**: Bottom navigation with Jetpack Navigation Compose
@@ -74,8 +74,9 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 
 #### Navigation Structure
 - Bottom navigation for main screens (Dashboard, Projects, Workers, Events)
-- Hierarchical navigation for add/detail screens
+- Hierarchical navigation for add/edit/detail screens
 - Conditional bottom bar display (hidden on secondary screens)
+- Full edit capability for all entity types (Projects, Workers, Events, Shifts)
 
 #### State Management
 - ViewModels use StateFlow for reactive UI updates
@@ -193,6 +194,16 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 3. **Unit Calculations**: Show real-time total (amount × units)
 4. **Financial Integration**: Include in project profit calculations
 5. **Navigation**: Add income via "הוסף הכנסה" button in project details
+
+#### Edit Feature Implementation (✅ COMPLETED)
+1. **EditProjectScreen**: Full project editing with name, location, date, income type, and amount
+2. **EditWorkerScreen**: Worker editing with name, phone number, and reference worker selection
+3. **EditEventScreen**: Event editing with name, date, and time with date picker
+4. **EditShiftScreen**: Comprehensive shift editing with time formatting and auto-calculation
+5. **Navigation Support**: All edit screens integrated with proper navigation routes
+6. **String Resources**: Added Hebrew strings for all edit operations ("ערוך פרויקט", "ערוך עובד", etc.)
+7. **Validation**: Proper input validation and error handling in all edit screens
+8. **Consistency**: Edit screens follow same patterns as Add screens for consistent UX
 
 ### Target API Levels
 - **minSdk**: 26 (Android 8.0)

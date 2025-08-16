@@ -4,12 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.workertracking.data.entity.Project
 import com.example.workertracking.data.entity.Shift
+import com.example.workertracking.data.entity.IncomeType
 import com.example.workertracking.repository.ProjectRepository
 import com.example.workertracking.repository.ShiftRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Date
 
 class ProjectDetailViewModel(
     private val projectRepository: ProjectRepository,
@@ -30,6 +32,9 @@ class ProjectDetailViewModel(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _updateSuccess = MutableStateFlow(false)
+    val updateSuccess: StateFlow<Boolean> = _updateSuccess.asStateFlow()
 
     fun loadProject(projectId: Long) {
         viewModelScope.launch {
@@ -90,5 +95,30 @@ class ProjectDetailViewModel(
                 // Handle error silently or add error state if needed
             }
         }
+    }
+    
+    fun updateProject(name: String, location: String, startDate: Date, incomeType: IncomeType, incomeAmount: Double) {
+        viewModelScope.launch {
+            try {
+                _project.value?.let { currentProject ->
+                    val updatedProject = currentProject.copy(
+                        name = name,
+                        location = location,
+                        startDate = startDate,
+                        incomeType = incomeType,
+                        incomeAmount = incomeAmount
+                    )
+                    projectRepository.updateProject(updatedProject)
+                    _project.value = updatedProject
+                    _updateSuccess.value = true
+                }
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
+    }
+    
+    fun clearUpdateSuccess() {
+        _updateSuccess.value = false
     }
 }
