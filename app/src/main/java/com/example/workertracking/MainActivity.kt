@@ -48,6 +48,7 @@ import com.example.workertracking.ui.screens.shifts.ShiftDetailScreen
 import com.example.workertracking.ui.viewmodel.ProjectsViewModel
 import com.example.workertracking.ui.viewmodel.AddProjectViewModel
 import com.example.workertracking.ui.viewmodel.ProjectDetailViewModel
+import com.example.workertracking.ui.viewmodel.EventsViewModel
 import com.example.workertracking.ui.viewmodel.WorkersViewModel
 import com.example.workertracking.ui.viewmodel.AddWorkerViewModel
 import com.example.workertracking.ui.viewmodel.WorkerDetailViewModel
@@ -384,9 +385,20 @@ fun WorkerTrackingApp() {
                 )
             }
             composable(Screen.Events.route) {
+                val viewModel: EventsViewModel = viewModel {
+                    EventsViewModel(application.container.eventRepository)
+                }
+                val events by viewModel.events.collectAsState()
+                val isLoading by viewModel.isLoading.collectAsState()
+                
                 EventsScreen(
+                    events = events,
+                    isLoading = isLoading,
                     onAddEvent = {
                         navController.navigate(Screen.AddEvent.route)
+                    },
+                    onEventClick = { event ->
+                        // TODO: Navigate to event detail screen when implemented
                     }
                 )
             }

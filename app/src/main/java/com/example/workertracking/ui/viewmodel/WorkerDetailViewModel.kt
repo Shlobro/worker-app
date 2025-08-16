@@ -68,9 +68,8 @@ class WorkerDetailViewModel(
             _projects.value = emptyList()
         }
         viewModelScope.launch {
-            // Load events for this worker through EventWorker
-            // For now, load all events - TODO: filter by worker
-            eventRepository.getAllEvents().collect { events ->
+            // Load only events where this worker is assigned
+            eventRepository.getEventsForWorker(workerId).collect { events ->
                 _events.value = events
             }
         }

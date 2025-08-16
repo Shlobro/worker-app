@@ -20,4 +20,12 @@ interface EventDao {
 
     @Delete
     suspend fun deleteEvent(event: Event)
+    
+    @Query("""
+        SELECT DISTINCT e.* FROM events e 
+        INNER JOIN event_workers ew ON e.id = ew.eventId 
+        WHERE ew.workerId = :workerId 
+        ORDER BY e.date DESC
+    """)
+    fun getEventsForWorker(workerId: Long): Flow<List<Event>>
 }
