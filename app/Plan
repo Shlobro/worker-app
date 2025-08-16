@@ -1,10 +1,141 @@
-list of TODO's
-1) when adding a shift to a worker that has a reference the user must be prompted and shown the name of the reference and the user should be prompted to enter an amount of how much money the reference gets per hour. this should be added to the cost of that shift and shown visually on the worker card in the shifts area
-2) when adding a new event i should be able to add an amount of money that im being paid for the event, when clicking on the event i should see details including how much i need to pay workers and how much im making and how much profit.
-3) in projects i like the way it is showing costs and income, but i should be able to click it and see a list of all the incomes that were added.
-4) events also need to be deletable like everything else.
-5) event's need to be clickable to open them and see the details, like the project. this should include a list of workers assigned to the event, the ability to add more workers. and the option to edit any and all details of the event. the logic of an event should work more or less like a shift.
-6) add picture capability to workers, there should be an option to add and view an entire album of pictures. including a share option for a photo.
-7) when adding an event it should allow to enter start time and end time. basically an event is exactly like a shift in the logic that runs it, except it stands alone instead of being part of a project.
-8) events and projects need to be searchable.
-9) the dashboard should be remade completely. there should be an option to see revenue, expenses and profit allowing to filter for specific dates. and there should be a list of active projects and current and future events. there should also be money owned and to whom.
+# Worker Tracking App - Development Plan
+
+## Priority 1: Critical Features
+
+### 1. Reference Worker Payment System
+**Goal**: Implement reference worker fee calculation during shift assignment
+- **Task**: When adding a worker with a reference to a shift, prompt user for reference hourly rate
+- **Implementation**: 
+  - Add reference payment field to ShiftWorker entity
+  - Create prompt dialog during worker assignment
+  - Show reference worker name and payment input
+  - Include reference cost in shift total calculation
+  - Display reference payments visually on worker cards in shift area
+- **UI Requirements**: Clear visual indication of reference payments on worker cards
+
+### 2. Event Income and Profit Tracking
+**Goal**: Add financial tracking to events similar to projects
+- **Task**: Implement event payment amounts and profit calculation
+- **Implementation**:
+  - Add income field to Event entity
+  - Create event profit calculation (income - worker payments)
+  - Display financial summary in event details
+  - Show profit/loss with color indicators
+- **UI Requirements**: Event details screen showing income, worker costs, and profit
+
+### 3. Project Income History View
+**Goal**: Make project income entries clickable and viewable
+- **Task**: Create detailed income history screen
+- **Implementation**:
+  - Make income summary in project details clickable
+  - Create ProjectIncomeListScreen showing all income entries
+  - Display date, description, amount, and units for each entry
+  - Add ability to edit/delete individual income entries
+- **UI Requirements**: List view with income entry details and edit/delete actions
+
+## Priority 2: Essential Features
+
+### 4. Event Deletion Functionality
+**Goal**: Allow events to be deleted like other entities
+- **Task**: Implement delete functionality for events
+- **Implementation**:
+  - Add delete option in event detail screen
+  - Cascade delete EventWorker relationships
+  - Add confirmation dialog
+  - Update event list after deletion
+- **UI Requirements**: Delete button in event details with confirmation
+
+### 5. Event Detail and Management Screen
+**Goal**: Create comprehensive event detail screen
+- **Task**: Build event detail screen with full management capabilities
+- **Implementation**:
+  - Create EventDetailScreen similar to project details
+  - Show event info, assigned workers, and financial summary
+  - Add ability to assign/remove workers from event
+  - Include edit and delete options
+  - Show worker list with hours and payment rates
+- **UI Requirements**: Full-featured detail screen with worker management
+
+### 6. Worker Photo Album System
+**Goal**: Add photo management for workers
+- **Task**: Implement photo album functionality for workers
+- **Implementation**:
+  - Add photo storage capability to Worker entity
+  - Create photo gallery screen for each worker
+  - Implement photo capture/selection from gallery
+  - Add photo sharing functionality
+  - Display worker photos in worker details
+- **UI Requirements**: Photo gallery with add, view, and share options
+
+## Priority 3: Enhanced Features
+
+### 7. Event Time Management
+**Goal**: Add start/end time tracking to events
+- **Task**: Implement time fields for events
+- **Implementation**:
+  - Add startTime and endTime fields to Event entity
+  - Update AddEventScreen and EditEventScreen with time inputs
+  - Implement smart time formatting (HHMM → HH:MM)
+  - Auto-calculate event duration
+- **UI Requirements**: Time input fields with auto-formatting
+
+### 8. Search Functionality for Events and Projects
+**Goal**: Add search capability to events and projects
+- **Task**: Implement search functionality
+- **Implementation**:
+  - Add search field to EventListScreen
+  - Add search field to ProjectListScreen
+  - Implement real-time filtering by name
+  - Use case-insensitive search
+- **UI Requirements**: Search bars in list screens with real-time filtering
+
+### 9. Complete Dashboard Redesign
+**Goal**: Rebuild dashboard with comprehensive analytics
+- **Task**: Create new dashboard with financial analytics
+- **Implementation**:
+  - Design new dashboard layout
+  - Add revenue/expenses/profit summary with date filtering
+  - Display active projects list
+  - Show current and future events
+  - Add money owed tracking section
+  - Implement date range picker for filtering
+- **UI Requirements**: Modern analytics dashboard with charts and filters
+
+## Implementation Notes
+
+### Database Changes Required
+- Add reference payment fields to ShiftWorker entity
+- Add income field to Event entity
+- Add photo storage fields to Worker entity
+- Add time fields to Event entity
+- Update database version and migrations
+
+### UI/UX Considerations
+- Maintain Hebrew localization for all new features
+- Follow Material 3 design principles
+- Ensure consistent navigation patterns
+- Add proper loading states and error handling
+- Use existing theme components
+
+### Technical Requirements
+- Update repositories with new functionality
+- Create new ViewModels for complex screens
+- Implement proper state management
+- Add photo handling permissions and storage
+- Ensure data integrity with proper relationships
+
+### Testing Strategy
+- Test database migrations thoroughly
+- Verify financial calculations accuracy
+- Test photo upload/sharing functionality
+- Validate search performance
+- Test time input formatting
+
+## Success Criteria
+Each feature should be:
+- ✅ Fully functional with no crashes
+- ✅ Properly localized in Hebrew
+- ✅ Following existing UI patterns
+- ✅ Integrated with navigation system
+- ✅ Tested with sample data
+- ✅ Performance optimized

@@ -90,6 +90,8 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 - **Worker Details**: Clicking on a worker shows their details and only projects they participate in through shifts
 - **Payment Rates**: Payment rates are set per shift or per event, NOT stored on worker entity
 - **Database Schema**: Worker entity uses `phoneNumber` field without any payment rate fields
+- **Photo Management**: Workers can have photo albums with sharing capabilities
+- **Reference Worker Prompts**: When adding shifts for workers with references, prompt for reference payment rate
 
 ### Project-Worker Relationship (Through Shifts Only)
 - **No Direct Assignment**: Workers cannot be added directly to projects
@@ -112,6 +114,12 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 - **Payment Per Event**: Each worker-event assignment has specific hours and pay rate
 - **Total Calculation**: Event total cost calculated as (hours × hourly rate) per worker
 - **EventWorker Entity**: Links events to workers with hours and pay rate
+- **Event Income**: Events have payment amounts for profit calculation
+- **Event Details**: Full event detail screens with worker management
+- **Event Editing**: Complete edit functionality for events
+- **Event Deletion**: Events can be deleted like other entities
+- **Event Search**: Events are searchable by name
+- **Time Management**: Events have start/end times like shifts
 
 ### Financial Management System
 
@@ -133,9 +141,12 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 - **Visual Indicators**: Color-coded profit/loss display (green/red)
 
 #### Financial UI Components
-- **Project Detail Financial Summary**: Shows income, payments, and profit
+- **Project Detail Financial Summary**: Shows income, payments, and profit with clickable income history
 - **Add Income Screen**: User-friendly income entry with unit calculations
 - **Shift Detail Financial Impact**: See how workers affect project profitability
+- **Dashboard Analytics**: Complete dashboard remake with revenue/expenses/profit filtering by dates
+- **Active Projects Overview**: Display of current projects and upcoming events
+- **Money Owed Tracking**: Outstanding payments and debt management
 
 ### Time Input Enhancement
 
