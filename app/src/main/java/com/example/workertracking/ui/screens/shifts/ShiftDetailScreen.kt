@@ -58,7 +58,11 @@ fun ShiftDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("פרטי משמרת") },
+                title = { 
+                    Text(
+                        if (shift.name.isNotBlank()) shift.name else "פרטי משמרת"
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -98,6 +102,9 @@ fun ShiftDetailScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
+                        if (shift.name.isNotBlank()) {
+                            Text("שם: ${shift.name}")
+                        }
                         Text("תאריך: ${dateFormatter.format(shift.date)}")
                         Text("שעת התחלה: ${shift.startTime}")
                         Text("שעת סיום: ${shift.endTime}")

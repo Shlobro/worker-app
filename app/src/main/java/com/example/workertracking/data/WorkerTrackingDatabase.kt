@@ -21,7 +21,7 @@ import com.example.workertracking.data.entity.*
         EventWorker::class,
         Payment::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -143,13 +143,20 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add name column to shifts table
+                database.execSQL("ALTER TABLE shifts ADD COLUMN name TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun getDatabase(context: Context): WorkerTrackingDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     WorkerTrackingDatabase::class.java,
                     "worker_tracking_database"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7).build()
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8).build()
                 INSTANCE = instance
                 instance
             }

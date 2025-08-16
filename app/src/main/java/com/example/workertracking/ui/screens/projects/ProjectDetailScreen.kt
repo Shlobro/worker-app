@@ -282,14 +282,22 @@ fun ProjectDetailScreen(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            if (shift.name.isNotBlank()) {
+                                Text(
+                                    text = shift.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
                                     text = DateFormat.getDateInstance().format(shift.date),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    style = if (shift.name.isNotBlank()) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.titleMedium,
+                                    fontWeight = if (shift.name.isNotBlank()) FontWeight.Normal else FontWeight.Bold
                                 )
                                 Text(
                                     text = "${shift.startTime} (${shift.hours}h)",

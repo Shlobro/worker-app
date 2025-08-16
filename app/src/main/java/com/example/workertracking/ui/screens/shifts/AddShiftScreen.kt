@@ -26,8 +26,9 @@ fun AddShiftScreen(
     projectId: Long,
     projectName: String,
     onNavigateBack: () -> Unit,
-    onSaveShift: (Long, Date, String, String, Double) -> Unit
+    onSaveShift: (Long, String, Date, String, String, Double) -> Unit
 ) {
+    var shiftName by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf(Date()) }
     var startTimeInput by remember { mutableStateOf("") }
     var endTimeInput by remember { mutableStateOf("") }
@@ -129,6 +130,15 @@ fun AddShiftScreen(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
+            
+            OutlinedTextField(
+                value = shiftName,
+                onValueChange = { shiftName = it },
+                label = { Text("שם המשמרת") },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("למשל: משמרת בוקר, משמרת ערב") }
+            )
+            
             OutlinedTextField(
                 value = dateFormatter.format(selectedDate),
                 onValueChange = { },
@@ -226,17 +236,19 @@ fun AddShiftScreen(
             Button(
                 onClick = {
                     val shiftHours = hours.toDoubleOrNull()
-                    if (shiftHours != null && 
+                    if (shiftName.isNotBlank() &&
+                        shiftHours != null && 
                         startTimeInput.isNotBlank() && 
                         endTimeInput.isNotBlank() && 
                         shiftHours > 0 &&
                         startTimeInput.matches(Regex("\\d{2}:\\d{2}")) &&
                         endTimeInput.matches(Regex("\\d{2}:\\d{2}"))) {
-                        onSaveShift(projectId, selectedDate, startTimeInput, endTimeInput, shiftHours)
+                        onSaveShift(projectId, shiftName, selectedDate, startTimeInput, endTimeInput, shiftHours)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = startTimeInput.isNotBlank() && 
+                enabled = shiftName.isNotBlank() &&
+                          startTimeInput.isNotBlank() && 
                           endTimeInput.isNotBlank() &&
                           hours.toDoubleOrNull() != null && 
                           hours.toDoubleOrNull()!! > 0 &&

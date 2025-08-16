@@ -20,6 +20,7 @@ data class Shift(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val projectId: Long,
+    val name: String,
     val date: Date,
     val startTime: String,
     val endTime: String,

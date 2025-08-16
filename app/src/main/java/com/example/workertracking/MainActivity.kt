@@ -349,8 +349,8 @@ fun WorkerTrackingApp() {
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onSaveShift = { pId, date, startTime, endTime, hours ->
-                        viewModel.saveShift(pId, date, startTime, endTime, hours)
+                    onSaveShift = { pId, name, date, startTime, endTime, hours ->
+                        viewModel.saveShift(pId, name, date, startTime, endTime, hours)
                     }
                 )
             }

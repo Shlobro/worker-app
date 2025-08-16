@@ -25,6 +25,7 @@ class AddShiftViewModel(
     
     fun saveShift(
         projectId: Long,
+        name: String,
         date: Date,
         startTime: String,
         endTime: String,
@@ -35,6 +36,7 @@ class AddShiftViewModel(
             try {
                 val shift = Shift(
                     projectId = projectId,
+                    name = name,
                     date = date,
                     startTime = startTime,
                     endTime = endTime,
