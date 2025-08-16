@@ -23,10 +23,19 @@ fun EditWorkerScreen(
     onNavigateBack: () -> Unit,
     onUpdateWorker: (String, String, Long?) -> Unit
 ) {
-    var workerName by remember { mutableStateOf(worker?.name ?: "") }
-    var phoneNumber by remember { mutableStateOf(worker?.phoneNumber ?: "") }
-    var selectedReferenceWorker by remember { 
-        mutableStateOf(availableWorkers.find { it.id == worker?.referenceId })
+    var workerName by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
+    var selectedReferenceWorker by remember { mutableStateOf<Worker?>(null) }
+    
+    // Update fields when worker data becomes available
+    LaunchedEffect(worker, availableWorkers) {
+        worker?.let {
+            workerName = it.name
+            phoneNumber = it.phoneNumber
+            selectedReferenceWorker = availableWorkers.find { availableWorker -> 
+                availableWorker.id == it.referenceId 
+            }
+        }
     }
     var expanded by remember { mutableStateOf(false) }
     

@@ -2,7 +2,7 @@ list of TODO's
 1) when adding a shift to a worker that has a reference the user must be prompted and shown the name of the reference and the user should be prompted to enter an amount of how much money the reference gets per hour. this should be added to the cost of that shift and shown visually on the worker card in the shifts area
 2) adding a new event doesn't work at all. and yet they appear in the list for all workers. this needs to be fixed so that when adding a new event only if a worker is added to that event does it appear in that workers list of events and projects.
 3) currently when adding a project it asks for a type of income and an amount. this should be removed completely. the way the profit from a project should happen is through the screen when clicking on a project where you can add an income and a type of income.
-5) when editing a project it should fill in the fields with the current values. currently it just shows empty fields. same issue for workers.
+4) when choosing a reference for a worker, there can't just be a dropdown of all the worker that is too much to scroll. it has to be searchable.
 6) add picture capability to workers, there should be an option to add and view an entire album of pictures. including a share option for a photo.
 7) when adding an event it should allow to enter start time and end time. basically an event is exactly like a shift in the logic that runs it, except it stands alone instead of being part of a project.
 8) events and projects need to be searchable.

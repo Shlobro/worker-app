@@ -27,11 +27,22 @@ fun EditProjectScreen(
     onNavigateBack: () -> Unit,
     onUpdateProject: (String, String, Date, IncomeType, Double) -> Unit
 ) {
-    var projectName by remember { mutableStateOf(project?.name ?: "") }
-    var projectLocation by remember { mutableStateOf(project?.location ?: "") }
-    var selectedDate by remember { mutableStateOf(project?.startDate ?: Date()) }
-    var selectedIncomeType by remember { mutableStateOf(project?.incomeType ?: IncomeType.DAILY) }
-    var incomeAmount by remember { mutableStateOf(project?.incomeAmount?.toString() ?: "") }
+    var projectName by remember { mutableStateOf("") }
+    var projectLocation by remember { mutableStateOf("") }
+    var selectedDate by remember { mutableStateOf(Date()) }
+    var selectedIncomeType by remember { mutableStateOf(IncomeType.DAILY) }
+    var incomeAmount by remember { mutableStateOf("") }
+    
+    // Update fields when project data becomes available
+    LaunchedEffect(project) {
+        project?.let {
+            projectName = it.name
+            projectLocation = it.location
+            selectedDate = it.startDate
+            selectedIncomeType = it.incomeType
+            incomeAmount = it.incomeAmount.toString()
+        }
+    }
     var expanded by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     
