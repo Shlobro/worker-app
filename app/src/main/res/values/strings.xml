@@ -139,10 +139,10 @@
     <string name="delete_event">מחק אירוע</string>
     
     <!-- Event Details -->
-    <string name="event_details">Event Details</string>
-    <string name="profit">Profit</string>
-    <string name="loss">Loss</string>
-    <string name="worker_payments">Worker Payments</string>
+    <string name="event_details">פרטי האירוע</string>
+    <string name="profit">רווח</string>
+    <string name="loss">הפסד</string>
+    <string name="worker_payments">תשלומי עובדים</string>
     <string name="no_workers_assigned">אין עובדים משויכים</string>
     <string name="remove_worker">הסר עובד</string>
     
