@@ -7,13 +7,16 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -160,7 +163,7 @@ fun FinancialSummaryCard(
                 label = stringResource(R.string.total_expenses),
                 amount = formatCurrency(totalExpenses),
                 color = MaterialTheme.colorScheme.error,
-                icon = Icons.Default.Delete
+                icon = Icons.Default.ArrowDropDown
             )
             
             HorizontalDivider()
@@ -169,7 +172,7 @@ fun FinancialSummaryCard(
                 label = if (netProfit >= 0) stringResource(R.string.net_profit) else stringResource(R.string.net_loss),
                 amount = formatCurrency(kotlin.math.abs(netProfit)),
                 color = if (netProfit >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                icon = if (netProfit >= 0) Icons.Default.Add else Icons.Default.Delete,
+                icon = if (netProfit >= 0) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 isTotal = true
             )
         }
@@ -307,7 +310,7 @@ fun ActiveProjectsCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Search,
+                        imageVector = Icons.Default.Build,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
