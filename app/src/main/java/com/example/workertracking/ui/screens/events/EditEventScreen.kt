@@ -27,15 +27,6 @@ fun EditEventScreen(
     onNavigateBack: () -> Unit,
     onUpdateEvent: (String, Date, String, String, String, Double) -> Unit
 ) {
-    var eventName by remember { mutableStateOf(event?.name ?: "") }
-    var selectedDate by remember { mutableStateOf(event?.date ?: Date()) }
-    var startTime by remember { mutableStateOf(event?.startTime ?: "") }
-    var endTime by remember { mutableStateOf(event?.endTime ?: "") }
-    var hours by remember { mutableStateOf(event?.hours ?: "") }
-    var income by remember { mutableStateOf(event?.income?.toString() ?: "") }
-    var isAutoCalculate by remember { mutableStateOf(true) }
-    var showDatePicker by remember { mutableStateOf(false) }
-    
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
     fun formatTimeInput(input: String): String {
@@ -89,6 +80,36 @@ fun EditEventScreen(
             }
         } catch (e: Exception) {
             return ""
+        }
+    }
+    
+    // State variables initialized after function definitions
+    var eventName by remember { mutableStateOf("") }
+    var selectedDate by remember { mutableStateOf(Date()) }
+    var startTime by remember { mutableStateOf("") }
+    var endTime by remember { mutableStateOf("") }
+    var hours by remember { mutableStateOf("") }
+    var income by remember { mutableStateOf("") }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var isAutoCalculate by remember { mutableStateOf(true) }
+    
+    // Initialize state when event becomes available
+    LaunchedEffect(event) {
+        event?.let { eventData ->
+            eventName = eventData.name
+            selectedDate = eventData.date
+            startTime = eventData.startTime
+            endTime = eventData.endTime
+            hours = eventData.hours
+            income = eventData.income.toString()
+            
+            // Determine if we should auto-calculate based on whether current hours match calculated hours
+            isAutoCalculate = if (eventData.startTime.isNotBlank() && eventData.endTime.isNotBlank() && eventData.hours.isNotBlank()) {
+                val calculatedHours = calculateHours(eventData.startTime, eventData.endTime)
+                calculatedHours == eventData.hours
+            } else {
+                true
+            }
         }
     }
     

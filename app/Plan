@@ -1,2 +1,4 @@
-1) when editing a project, it should use the current values as the default values
+1) when editing an event, it should use the current values as the default values and not have everything blank <----
 2) when clicking on an even, profit is in english instead of hebrew and so is worker payment.
+3) in the unpaid shifts section, there should be more details about the shift.
+4) in the control panel where it shows all the financials, i hate the icons used, use better icons.
