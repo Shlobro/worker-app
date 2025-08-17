@@ -25,7 +25,16 @@ interface EventWorkerDao {
     @Query("DELETE FROM event_workers WHERE eventId = :eventId")
     suspend fun deleteAllWorkersFromEvent(eventId: Long)
 
-    @Query("SELECT SUM(hours * payRate) FROM event_workers WHERE eventId = :eventId")
+    @Query("""
+        SELECT SUM(
+            CASE 
+                WHEN isHourlyRate = 1 THEN hours * payRate 
+                ELSE payRate 
+            END + 
+            COALESCE(hours * referencePayRate, 0.0)
+        ) 
+        FROM event_workers WHERE eventId = :eventId
+    """)
     suspend fun getTotalCostForEvent(eventId: Long): Double?
 
     @Query("UPDATE event_workers SET isPaid = :isPaid WHERE id = :id")

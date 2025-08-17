@@ -44,6 +44,7 @@ class AddWorkerToEventViewModel(
                     eventId = eventId,
                     workerId = workerId,
                     hours = hours,
+                    isHourlyRate = true, // Default to hourly rate for backward compatibility
                     payRate = payRate
                 )
                 

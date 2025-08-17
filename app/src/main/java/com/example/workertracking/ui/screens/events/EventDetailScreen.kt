@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import com.example.workertracking.R
 import com.example.workertracking.data.entity.Event
 import com.example.workertracking.data.entity.EventWorker
+import com.example.workertracking.data.entity.Worker
+import com.example.workertracking.ui.components.AddWorkerDialog
 import com.example.workertracking.ui.viewmodel.EventWorkerWithName
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -28,17 +30,25 @@ import java.util.Locale
 fun EventDetailScreen(
     event: Event?,
     eventWorkers: List<EventWorkerWithName> = emptyList(),
+    allWorkers: List<Worker> = emptyList(),
     totalCost: Double = 0.0,
     isLoading: Boolean,
     onNavigateBack: () -> Unit,
     onEditEvent: () -> Unit = {},
     onDeleteEvent: () -> Unit = {},
-    onAddWorker: () -> Unit = {},
+    onAddWorkerToEvent: (Long, Long, Double, Boolean, Double, Double?) -> Unit = { _, _, _, _, _, _ -> }, // eventId, workerId, hours, isHourlyRate, payRate, refPayRate
     onRemoveWorker: (EventWorker) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showAddWorkerDialog by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    
+    val filteredWorkers = allWorkers.filter { worker ->
+        worker.name.contains(searchQuery, ignoreCase = true) &&
+        eventWorkers.none { it.eventWorker.workerId == worker.id }
+    }
     
     Scaffold(
         topBar = {
@@ -245,7 +255,7 @@ fun EventDetailScreen(
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
-                                IconButton(onClick = onAddWorker) {
+                                IconButton(onClick = { showAddWorkerDialog = true }) {
                                     Icon(
                                         imageVector = Icons.Default.Add,
                                         contentDescription = stringResource(R.string.add_worker)
@@ -262,6 +272,23 @@ fun EventDetailScreen(
                                 )
                             } else {
                                 eventWorkers.forEach { workerWithName ->
+                                    // Calculate total payment including reference payment
+                                    val workerPayment = if (workerWithName.eventWorker.isHourlyRate) {
+                                        workerWithName.eventWorker.hours * workerWithName.eventWorker.payRate
+                                    } else {
+                                        workerWithName.eventWorker.payRate
+                                    }
+                                    val referencePayment = workerWithName.eventWorker.referencePayRate?.let { refRate ->
+                                        workerWithName.eventWorker.hours * refRate
+                                    } ?: 0.0
+                                    val totalPayment = workerPayment + referencePayment
+                                    
+                                    // Find reference worker if exists
+                                    val worker = allWorkers.find { it.id == workerWithName.eventWorker.workerId }
+                                    val referenceWorker = worker?.referenceId?.let { refId ->
+                                        allWorkers.find { it.id == refId }
+                                    }
+                                    
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -274,17 +301,30 @@ fun EventDetailScreen(
                                                 fontWeight = FontWeight.Medium
                                             )
                                             Text(
-                                                text = "${workerWithName.eventWorker.hours} שעות • ₪${workerWithName.eventWorker.payRate}/שעה",
+                                                text = if (workerWithName.eventWorker.isHourlyRate) {
+                                                    "${workerWithName.eventWorker.hours} שעות • ₪${workerWithName.eventWorker.payRate}/שעה"
+                                                } else {
+                                                    "${workerWithName.eventWorker.hours} שעות • ₪${workerWithName.eventWorker.payRate} (סכום קבוע)"
+                                                },
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
+                                            
+                                            // Show reference payment if exists
+                                            if (workerWithName.eventWorker.referencePayRate != null && referenceWorker != null) {
+                                                Text(
+                                                    text = "תשלום מפנה (${referenceWorker.name}): ₪${workerWithName.eventWorker.referencePayRate}/שעה",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.secondary
+                                                )
+                                            }
                                         }
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
                                             Text(
-                                                text = "₪${String.format("%.2f", workerWithName.eventWorker.hours * workerWithName.eventWorker.payRate)}",
+                                                text = "₪${String.format("%.2f", totalPayment)}",
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Medium
                                             )
@@ -309,6 +349,29 @@ fun EventDetailScreen(
                 }
             }
         }
+    }
+    
+    // Add Worker Dialog
+    if (showAddWorkerDialog && event != null) {
+        AddWorkerDialog(
+            workers = filteredWorkers,
+            allWorkers = allWorkers,
+            searchQuery = searchQuery,
+            onSearchQueryChange = { searchQuery = it },
+            onDismiss = { 
+                showAddWorkerDialog = false
+                searchQuery = ""
+            },
+            onAddWorker = { workerId, isHourlyRate, payRate, refPayRate ->
+                onAddWorkerToEvent(event.id, workerId, event.hours.toDoubleOrNull() ?: 0.0, isHourlyRate, payRate, refPayRate)
+                showAddWorkerDialog = false
+                searchQuery = ""
+            },
+            title = "הוסף עובד לאירוע",
+            showPaymentType = true, // Events now support both hourly and fixed amounts
+            showHours = false, // Use event's hours automatically
+            eventHours = event.hours.toDoubleOrNull() ?: 0.0 // Pass event duration
+        )
     }
     
     // Delete Confirmation Dialog

@@ -45,7 +45,6 @@ import com.example.workertracking.ui.screens.events.EventsScreen
 import com.example.workertracking.ui.screens.events.AddEventScreen
 import com.example.workertracking.ui.screens.events.EditEventScreen
 import com.example.workertracking.ui.screens.events.EventDetailScreen
-import com.example.workertracking.ui.screens.events.AddWorkerToEventScreen
 import com.example.workertracking.ui.screens.shifts.AddShiftScreen
 import com.example.workertracking.ui.screens.shifts.EditShiftScreen
 import com.example.workertracking.ui.screens.shifts.ShiftDetailScreen
@@ -62,7 +61,6 @@ import com.example.workertracking.ui.viewmodel.EventDetailViewModel
 import com.example.workertracking.ui.viewmodel.AddShiftViewModel
 import com.example.workertracking.ui.viewmodel.ShiftDetailViewModel
 import com.example.workertracking.ui.viewmodel.AddIncomeViewModel
-import com.example.workertracking.ui.viewmodel.AddWorkerToEventViewModel
 import com.example.workertracking.ui.viewmodel.MoneyOwedViewModel
 import com.example.workertracking.ui.viewmodel.DashboardViewModel
 import com.example.workertracking.ui.theme.WorkerTrackingTheme
@@ -511,6 +509,7 @@ fun WorkerTrackingApp() {
                 }
                 val event by viewModel.event.collectAsState()
                 val eventWorkers by viewModel.eventWorkers.collectAsState()
+                val allWorkers by viewModel.allWorkers.collectAsState()
                 val totalCost by viewModel.totalCost.collectAsState()
                 val deleteSuccess by viewModel.deleteSuccess.collectAsState()
                 val isLoading by viewModel.isLoading.collectAsState()
@@ -529,6 +528,7 @@ fun WorkerTrackingApp() {
                 EventDetailScreen(
                     event = event,
                     eventWorkers = eventWorkers,
+                    allWorkers = allWorkers,
                     totalCost = totalCost,
                     isLoading = isLoading,
                     onNavigateBack = {
@@ -540,8 +540,8 @@ fun WorkerTrackingApp() {
                     onDeleteEvent = {
                         viewModel.deleteEvent()
                     },
-                    onAddWorker = {
-                        navController.navigate(Screen.AddWorkerToEvent.createRoute(eventId))
+                    onAddWorkerToEvent = { eId, workerId, hours, isHourlyRate, payRate, referencePayRate ->
+                        viewModel.addWorkerToEvent(eId, workerId, hours, isHourlyRate, payRate, referencePayRate)
                     },
                     onRemoveWorker = { eventWorker ->
                         viewModel.removeWorkerFromEvent(eventWorker)
@@ -794,53 +794,6 @@ fun WorkerTrackingApp() {
                         }
                     )
                 }
-            }
-            composable(
-                route = Screen.AddWorkerToEvent.route,
-                arguments = listOf(navArgument("eventId") { type = NavType.LongType })
-            ) { backStackEntry ->
-                val eventId = backStackEntry.arguments?.getLong("eventId") ?: 0L
-                val viewModel: AddWorkerToEventViewModel = viewModel {
-                    AddWorkerToEventViewModel(
-                        application.container.eventRepository,
-                        application.container.workerRepository
-                    )
-                }
-                val availableWorkers by viewModel.availableWorkers.collectAsState()
-                val saveSuccess by viewModel.saveSuccess.collectAsState()
-                
-                // Get event name for display
-                val eventDetailViewModel: EventDetailViewModel = viewModel {
-                    EventDetailViewModel(
-                        application.container.eventRepository,
-                        application.container.workerRepository
-                    )
-                }
-                val event by eventDetailViewModel.event.collectAsState()
-                
-                LaunchedEffect(eventId) {
-                    viewModel.loadAvailableWorkers()
-                    eventDetailViewModel.loadEvent(eventId)
-                }
-                
-                LaunchedEffect(saveSuccess) {
-                    if (saveSuccess) {
-                        viewModel.clearSaveSuccess()
-                        navController.popBackStack()
-                    }
-                }
-                
-                AddWorkerToEventScreen(
-                    eventId = eventId,
-                    eventName = event?.name ?: "",
-                    availableWorkers = availableWorkers,
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    },
-                    onAddWorkerToEvent = { _, workerId, hours, payRate ->
-                        viewModel.addWorkerToEvent(eventId, workerId, hours, payRate)
-                    }
-                )
             }
             composable(Screen.MoneyOwed.route) {
                 val viewModel: MoneyOwedViewModel = viewModel {

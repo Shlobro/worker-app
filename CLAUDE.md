@@ -305,6 +305,7 @@ Comprehensive debt tracking system that monitors outstanding payments to workers
 
 **Event Payments**:
 - Always hourly calculation: `hours × payRate`
+- Reference Payments: `referencePayRate × hours` (when worker has reference)
 
 #### Navigation Routes
 - `MoneyOwedScreen`: Accessible from dashboard debt card
@@ -323,6 +324,69 @@ Added comprehensive Hebrew strings for:
 - Payment status changes immediately refresh dependent screens
 - Database migration handles existing data automatically
 - Backwards compatible with previous app versions
+
+### Event-Worker Relationship Enhancement (Version 17) (✅ COMPLETED)
+
+#### Overview
+Enhanced event worker assignment to match shift worker functionality, including reference worker support and unified UI experience.
+
+#### Database Schema Changes
+- **Database Version**: Upgraded to 17
+- **EventWorker Table**: 
+  - Added `referencePayRate` DOUBLE field for storing hourly reference worker payment rates (Version 16)
+  - Added `isHourlyRate` BOOLEAN field for payment type selection (Version 17)
+- **Migration 15→16**: Adds referencePayRate column to existing event_workers table
+- **Migration 16→17**: Adds isHourlyRate column (defaults to true for backward compatibility)
+
+#### Core Features
+- **Unified Worker Assignment**: Events now use the same dialog interface as shifts for consistency
+- **Payment Type Selection**: Events support both hourly rates and fixed amounts (just like shifts)
+- **Reference Worker Support**: When adding workers with reference relationships, prompts for reference worker hourly rate
+- **Automatic Hours Calculation**: Workers are assigned to events using the event's duration automatically (like shifts)
+- **Event Hours Display**: Dialog shows the event's duration that will be used for calculation
+- **Payment Calculation**: Total event cost includes both worker payments and reference payments with proper payment type handling
+- **Real-time Payment Preview**: Dialog shows total payment calculation before confirmation (handles both hourly and fixed amounts)
+- **Real-time Updates**: Financial calculations automatically refresh when workers are added/removed
+
+#### UI Components
+
+**Shared AddWorkerDialog Component**:
+- Reusable dialog for both shift and event worker assignment
+- Supports payment type selection (hourly/fixed amounts) for both shifts and events
+- Built-in worker search functionality with real-time filtering
+- Reference worker payment prompts when applicable
+- Automatic hours calculation based on event/shift duration
+- Real-time payment calculation preview including reference payments
+
+**EventDetailScreen Enhancements**:
+- Direct worker assignment through dialog (no separate screen navigation)
+- Payment type display (hourly rate vs. fixed amount)
+- Display of reference worker information and payments
+- Total payment calculations including reference amounts with proper payment type handling
+- Worker cards show payment type, worker payment, and reference payment details
+
+#### Payment Calculation Updates
+**EventWorkerDao**:
+- Updated total cost query to handle payment types and reference payments:
+  ```sql
+  SELECT SUM(
+      CASE 
+          WHEN isHourlyRate = 1 THEN hours * payRate 
+          ELSE payRate 
+      END + 
+      COALESCE(hours * referencePayRate, 0.0)
+  ) FROM event_workers WHERE eventId = :eventId
+  ```
+
+**EventDetailViewModel**:
+- Enhanced `addWorkerToEvent` method to support payment types and reference payment rates
+- Added `allWorkers` state for worker reference lookups  
+- Real-time cost calculations include reference payments with proper payment type handling
+
+#### Navigation Simplification
+- Removed separate `AddWorkerToEventScreen` navigation
+- Integrated worker assignment directly into event detail screen via dialog
+- Simplified navigation routes and removed unused AddWorkerToEvent screen
 
 ### Target API Levels
 - **minSdk**: 26 (Android 8.0)

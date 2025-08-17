@@ -24,6 +24,7 @@ import com.example.workertracking.R
 import com.example.workertracking.data.entity.Shift
 import com.example.workertracking.data.entity.ShiftWorker
 import com.example.workertracking.data.entity.Worker
+import com.example.workertracking.ui.components.AddWorkerDialog
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -196,7 +197,7 @@ fun ShiftDetailScreen(
     }
     
     if (showAddWorkerDialog) {
-        AddWorkerToShiftDialog(
+        AddWorkerDialog(
             workers = filteredWorkers,
             allWorkers = allWorkers,
             searchQuery = searchQuery,
@@ -209,7 +210,10 @@ fun ShiftDetailScreen(
                 onAddWorkerToShift(shift.id, workerId, isHourly, payRate, refPayRate)
                 showAddWorkerDialog = false
                 searchQuery = ""
-            }
+            },
+            title = "הוסף עובד למשמרת",
+            showPaymentType = true,
+            showHours = false
         )
     }
 }
@@ -316,171 +320,6 @@ private fun ShiftWorkerCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AddWorkerToShiftDialog(
-    workers: List<Worker>,
-    allWorkers: List<Worker>,
-    searchQuery: String,
-    onSearchQueryChange: (String) -> Unit,
-    onDismiss: () -> Unit,
-    onAddWorker: (Long, Boolean, Double, Double?) -> Unit
-) {
-    var selectedWorker by remember { mutableStateOf<Worker?>(null) }
-    var isHourlyRate by remember { mutableStateOf(true) }
-    var payRate by remember { mutableStateOf("") }
-    var referencePayRate by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("הוסף עובד למשמרת") },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = onSearchQueryChange,
-                    label = { Text("חפש עובדים") },
-                    leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-                
-                LazyColumn(
-                    modifier = Modifier.height(200.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    items(workers) { worker ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            onClick = { selectedWorker = worker }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = selectedWorker?.id == worker.id,
-                                    onClick = { selectedWorker = worker }
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column {
-                                    Text(
-                                        text = worker.name,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = worker.phoneNumber,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    // Show reference worker if exists
-                                    worker.referenceId?.let { referenceId ->
-                                        val referenceWorker = allWorkers.find { it.id == referenceId }
-                                        referenceWorker?.let { ref ->
-                                            Text(
-                                                text = "עובד מפנה: ${ref.name}",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.secondary
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                if (selectedWorker != null) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
-                            onClick = { isHourlyRate = true },
-                            label = { Text("שכר שעתי") },
-                            selected = isHourlyRate
-                        )
-                        FilterChip(
-                            onClick = { isHourlyRate = false },
-                            label = { Text("סכום גלובלי") },
-                            selected = !isHourlyRate
-                        )
-                    }
-                    
-                    OutlinedTextField(
-                        value = payRate,
-                        onValueChange = { payRate = it },
-                        label = { 
-                            Text(if (isHourlyRate) "שכר שעתי (ש\"ח)" else "סכום גלובלי (ש\"ח)")
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true
-                    )
-                    
-                    // Show reference payment field if worker has a reference
-                    selectedWorker?.referenceId?.let { referenceId ->
-                        val referenceWorker = allWorkers.find { it.id == referenceId }
-                        referenceWorker?.let { refWorker ->
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "תשלום לעובד מפנה: ${refWorker.name}",
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
-                            OutlinedTextField(
-                                value = referencePayRate,
-                                onValueChange = { referencePayRate = it },
-                                label = { 
-                                    Text("שכר שעתי לעובד מפנה (ש\"ח)")
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                singleLine = true
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    selectedWorker?.let { worker ->
-                        val rate = payRate.toDoubleOrNull()
-                        val refRate = if (worker.referenceId != null && referencePayRate.isNotBlank()) {
-                            referencePayRate.toDoubleOrNull()
-                        } else null
-                        
-                        if (rate != null && rate > 0 && 
-                            (worker.referenceId == null || refRate != null)) {
-                            onAddWorker(worker.id, isHourlyRate, rate, refRate)
-                        }
-                    }
-                },
-                enabled = selectedWorker != null && 
-                         payRate.toDoubleOrNull() != null && 
-                         payRate.toDoubleOrNull()!! > 0 &&
-                         (selectedWorker?.referenceId == null || 
-                          (referencePayRate.isNotBlank() && referencePayRate.toDoubleOrNull() != null))
-            ) {
-                Text("הוסף")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("ביטול")
-            }
-        }
-    )
-}
 
 @Composable
 private fun EditWorkerPaymentDialog(

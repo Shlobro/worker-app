@@ -42,6 +42,9 @@ class EventDetailViewModel(
     private val _deleteSuccess = MutableStateFlow(false)
     val deleteSuccess: StateFlow<Boolean> = _deleteSuccess.asStateFlow()
 
+    private val _allWorkers = MutableStateFlow<List<Worker>>(emptyList())
+    val allWorkers: StateFlow<List<Worker>> = _allWorkers.asStateFlow()
+
     fun loadEvent(eventId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -49,8 +52,17 @@ class EventDetailViewModel(
                 _event.value = eventRepository.getEventById(eventId)
                 loadEventWorkers(eventId)
                 loadTotalCost(eventId)
+                loadAllWorkers()
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    private suspend fun loadAllWorkers() {
+        viewModelScope.launch {
+            workerRepository.getAllWorkers().collect { workers ->
+                _allWorkers.value = workers
             }
         }
     }
@@ -118,14 +130,16 @@ class EventDetailViewModel(
         _deleteSuccess.value = false
     }
 
-    fun addWorkerToEvent(eventId: Long, workerId: Long, hours: Double, payRate: Double) {
+    fun addWorkerToEvent(eventId: Long, workerId: Long, hours: Double, isHourlyRate: Boolean, payRate: Double, referencePayRate: Double? = null) {
         viewModelScope.launch {
             try {
                 val eventWorker = EventWorker(
                     eventId = eventId,
                     workerId = workerId,
                     hours = hours,
-                    payRate = payRate
+                    isHourlyRate = isHourlyRate,
+                    payRate = payRate,
+                    referencePayRate = referencePayRate
                 )
                 eventRepository.insertEventWorker(eventWorker)
                 loadEventWorkers(eventId)
