@@ -2,6 +2,7 @@ package com.example.workertracking.data.dao
 
 import androidx.room.*
 import com.example.workertracking.data.entity.EventWorker
+import com.example.workertracking.data.entity.UnpaidEventWorkerInfo
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -26,4 +27,27 @@ interface EventWorkerDao {
 
     @Query("SELECT SUM(hours * payRate) FROM event_workers WHERE eventId = :eventId")
     suspend fun getTotalCostForEvent(eventId: Long): Double?
+
+    @Query("UPDATE event_workers SET isPaid = :isPaid WHERE id = :id")
+    suspend fun updatePaymentStatus(id: Long, isPaid: Boolean)
+
+    @Query("""
+        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName 
+        FROM event_workers ew
+        INNER JOIN workers w ON ew.workerId = w.id
+        INNER JOIN events e ON ew.eventId = e.id
+        WHERE ew.isPaid = 0
+        ORDER BY e.date DESC
+    """)
+    suspend fun getUnpaidEventWorkers(): List<UnpaidEventWorkerInfo>
+
+    @Query("""
+        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName 
+        FROM event_workers ew
+        INNER JOIN workers w ON ew.workerId = w.id
+        INNER JOIN events e ON ew.eventId = e.id
+        WHERE ew.workerId = :workerId AND ew.isPaid = 0
+        ORDER BY e.date DESC
+    """)
+    suspend fun getUnpaidEventWorkersForWorker(workerId: Long): List<UnpaidEventWorkerInfo>
 }

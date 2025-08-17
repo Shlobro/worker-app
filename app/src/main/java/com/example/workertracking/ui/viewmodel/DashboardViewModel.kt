@@ -8,8 +8,10 @@ import com.example.workertracking.repository.EventRepository
 import com.example.workertracking.repository.ProjectRepository
 import com.example.workertracking.repository.ShiftRepository
 import com.example.workertracking.repository.WorkerRepository
+import com.example.workertracking.di.AppContainer
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import java.time.Instant
 import java.util.*
 
@@ -42,7 +44,8 @@ class DashboardViewModel(
     private val projectRepository: ProjectRepository,
     private val shiftRepository: ShiftRepository,
     private val eventRepository: EventRepository,
-    private val workerRepository: WorkerRepository
+    private val workerRepository: WorkerRepository,
+    private val appContainer: AppContainer
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -53,6 +56,27 @@ class DashboardViewModel(
 
     init {
         loadDashboardData()
+        startPeriodicRefresh()
+        listenToRefreshTrigger()
+    }
+    
+    private fun listenToRefreshTrigger() {
+        viewModelScope.launch {
+            appContainer.dashboardRefreshTrigger.collect {
+                refreshData()
+            }
+        }
+    }
+    
+    private fun startPeriodicRefresh() {
+        viewModelScope.launch {
+            while (true) {
+                delay(10000) // Refresh every 10 seconds
+                if (!_uiState.value.isLoading) {
+                    loadDashboardData()
+                }
+            }
+        }
     }
 
     fun setDateFilter(startDate: Date?, endDate: Date?) {
@@ -163,19 +187,13 @@ class DashboardViewModel(
         }
 
     private fun calculateTotalOwed(): Flow<Double> = flow {
-        // This would calculate total money owed to workers
-        // For now, we'll use shift costs as unpaid amounts
-        val totalShiftCosts = shiftRepository.getAllShifts().first()
-            .sumOf { shift ->
-                shiftRepository.getTotalCostForShift(shift.id) ?: 0.0
-            }
-        
-        val totalEventCosts = eventRepository.getAllEvents().first()
-            .sumOf { event ->
-                eventRepository.getTotalEventCost(event.id) ?: 0.0
-            }
-        
-        emit(totalShiftCosts + totalEventCosts)
+        // Calculate actual unpaid amounts from WorkerRepository
+        val totalOwed = workerRepository.getTotalPaymentsOwed()
+        emit(totalOwed)
+    }
+    
+    fun refreshData() {
+        loadDashboardData()
     }
 
     suspend fun getProjectSummaries(): List<ProjectSummary> {

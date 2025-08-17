@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,11 +23,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.workertracking.R
 import com.example.workertracking.data.entity.Worker
+import com.example.workertracking.data.entity.WorkerWithDebt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkersScreen(
     workers: List<Worker> = emptyList(),
+    workersWithDebt: List<WorkerWithDebt> = emptyList(),
     isLoading: Boolean = false,
     onAddWorker: () -> Unit = {},
     onWorkerClick: (Worker) -> Unit = {},
@@ -41,6 +44,16 @@ fun WorkersScreen(
         } else {
             workers.filter { worker ->
                 worker.name.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
+    
+    val filteredWorkersWithDebt = remember(workersWithDebt, searchQuery) {
+        if (searchQuery.isBlank()) {
+            workersWithDebt
+        } else {
+            workersWithDebt.filter { workerWithDebt ->
+                workerWithDebt.worker.name.contains(searchQuery, ignoreCase = true)
             }
         }
     }
@@ -136,11 +149,13 @@ fun WorkersScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
                 
-                items(filteredWorkers) { worker ->
+                items(filteredWorkersWithDebt) { workerWithDebt ->
                     WorkerCard(
-                        worker = worker,
-                        onClick = { onWorkerClick(worker) },
-                        onDelete = { workerToDelete = worker }
+                        worker = workerWithDebt.worker,
+                        totalOwed = workerWithDebt.totalOwed,
+                        unpaidCount = workerWithDebt.unpaidShiftsCount + workerWithDebt.unpaidEventsCount,
+                        onClick = { onWorkerClick(workerWithDebt.worker) },
+                        onDelete = { workerToDelete = workerWithDebt.worker }
                     )
                 }
             }
@@ -184,6 +199,8 @@ fun WorkersScreen(
 @Composable
 fun WorkerCard(
     worker: Worker,
+    totalOwed: Double = 0.0,
+    unpaidCount: Int = 0,
     onClick: () -> Unit,
     onDelete: () -> Unit = {}
 ) {
@@ -254,6 +271,13 @@ fun WorkerCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
+                    if (unpaidCount > 0) {
+                        Text(
+                            text = "$unpaidCount ${stringResource(R.string.unpaid)} תשלומים",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -264,12 +288,25 @@ fun WorkerCard(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Text(
-                            text = "₪0.00",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            if (totalOwed > 0) {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                            Text(
+                                text = "₪${String.format("%.2f", totalOwed)}",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (totalOwed > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
                 IconButton(onClick = onDelete) {

@@ -27,5 +27,6 @@ data class EventWorker(
     val eventId: Long,
     val workerId: Long,
     val hours: Double,
-    val payRate: Double
+    val payRate: Double,
+    val isPaid: Boolean = false // payment status
 )

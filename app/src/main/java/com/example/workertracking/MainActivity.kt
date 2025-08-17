@@ -49,6 +49,7 @@ import com.example.workertracking.ui.screens.events.AddWorkerToEventScreen
 import com.example.workertracking.ui.screens.shifts.AddShiftScreen
 import com.example.workertracking.ui.screens.shifts.EditShiftScreen
 import com.example.workertracking.ui.screens.shifts.ShiftDetailScreen
+import com.example.workertracking.ui.screens.MoneyOwedScreen
 import com.example.workertracking.ui.viewmodel.ProjectsViewModel
 import com.example.workertracking.ui.viewmodel.AddProjectViewModel
 import com.example.workertracking.ui.viewmodel.ProjectDetailViewModel
@@ -62,6 +63,7 @@ import com.example.workertracking.ui.viewmodel.AddShiftViewModel
 import com.example.workertracking.ui.viewmodel.ShiftDetailViewModel
 import com.example.workertracking.ui.viewmodel.AddIncomeViewModel
 import com.example.workertracking.ui.viewmodel.AddWorkerToEventViewModel
+import com.example.workertracking.ui.viewmodel.MoneyOwedViewModel
 import com.example.workertracking.ui.viewmodel.DashboardViewModel
 import com.example.workertracking.ui.theme.WorkerTrackingTheme
 
@@ -146,7 +148,8 @@ fun WorkerTrackingApp() {
                         application.container.projectRepository,
                         application.container.shiftRepository,
                         application.container.eventRepository,
-                        application.container.workerRepository
+                        application.container.workerRepository,
+                        application.container
                     )
                 }
                 
@@ -163,6 +166,9 @@ fun WorkerTrackingApp() {
                     },
                     onViewAllEvents = {
                         navController.navigate(Screen.Events.route)
+                    },
+                    onMoneyOwedClick = {
+                        navController.navigate(Screen.MoneyOwed.route)
                     }
                 )
             }
@@ -302,10 +308,12 @@ fun WorkerTrackingApp() {
                     WorkersViewModel(application.container.workerRepository)
                 }
                 val workers by viewModel.workers.collectAsState()
+                val workersWithDebt by viewModel.workersWithDebt.collectAsState()
                 val isLoading by viewModel.isLoading.collectAsState()
                 
                 WorkersScreen(
                     workers = workers,
+                    workersWithDebt = workersWithDebt,
                     isLoading = isLoading,
                     onAddWorker = {
                         navController.navigate(Screen.AddWorker.route)
@@ -339,6 +347,58 @@ fun WorkerTrackingApp() {
                     },
                     onSaveWorker = { name, phoneNumber, referenceId ->
                         viewModel.saveWorker(name, phoneNumber, referenceId)
+                    }
+                )
+            }
+            composable(
+                route = Screen.WorkerDetail.route,
+                arguments = listOf(navArgument("workerId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val workerId = backStackEntry.arguments?.getLong("workerId") ?: 0L
+                val viewModel: WorkerDetailViewModel = viewModel {
+                    WorkerDetailViewModel(
+                        application.container.workerRepository,
+                        application.container.projectRepository,
+                        application.container.eventRepository,
+                        application.container.shiftRepository
+                    )
+                }
+                val worker by viewModel.worker.collectAsState()
+                val referenceWorker by viewModel.referenceWorker.collectAsState()
+                val projects by viewModel.projects.collectAsState()
+                val events by viewModel.events.collectAsState()
+                val isLoading by viewModel.isLoading.collectAsState()
+                val unpaidShifts by viewModel.unpaidShifts.collectAsState()
+                val unpaidEvents by viewModel.unpaidEvents.collectAsState()
+                val totalOwed by viewModel.totalOwed.collectAsState()
+                
+                LaunchedEffect(workerId) {
+                    viewModel.loadWorker(workerId)
+                }
+                
+                WorkerDetailScreen(
+                    worker = worker,
+                    referenceWorker = referenceWorker,
+                    projects = projects,
+                    events = events,
+                    isLoading = isLoading,
+                    unpaidShifts = unpaidShifts,
+                    unpaidEvents = unpaidEvents,
+                    totalOwed = totalOwed,
+                    onNavigateBack = {
+                        application.container.triggerDashboardRefresh()
+                        navController.popBackStack()
+                    },
+                    onEditWorker = {
+                        navController.navigate(Screen.EditWorker.createRoute(workerId))
+                    },
+                    onMarkShiftAsPaid = { shiftWorkerId ->
+                        viewModel.markShiftAsPaid(shiftWorkerId)
+                        application.container.triggerDashboardRefresh()
+                    },
+                    onMarkEventAsPaid = { eventWorkerId ->
+                        viewModel.markEventAsPaid(eventWorkerId)
+                        application.container.triggerDashboardRefresh()
                     }
                 )
             }
@@ -800,6 +860,22 @@ fun WorkerTrackingApp() {
                     onAddWorkerToEvent = { _, workerId, hours, payRate ->
                         viewModel.addWorkerToEvent(eventId, workerId, hours, payRate)
                     }
+                )
+            }
+            composable(Screen.MoneyOwed.route) {
+                val viewModel: MoneyOwedViewModel = viewModel {
+                    MoneyOwedViewModel.Factory(application.container.workerRepository, application.container).create(MoneyOwedViewModel::class.java)
+                }
+                
+                MoneyOwedScreen(
+                    onNavigateBack = {
+                        application.container.triggerDashboardRefresh()
+                        navController.popBackStack()
+                    },
+                    onWorkerClick = { workerId ->
+                        navController.navigate(Screen.WorkerDetail.createRoute(workerId))
+                    },
+                    viewModel = viewModel
                 )
             }
         }

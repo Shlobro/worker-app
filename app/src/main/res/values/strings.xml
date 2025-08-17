@@ -159,4 +159,17 @@
     <string name="delete_photo_confirmation">האם אתה בטוח שברצונך למחוק תמונה זו?</string>
     <string name="worker_not_found">Worker not found</string>
     <string name="worker_of">עובד של %1$s</string>
+    
+    <!-- Money Owed / Debt Tracking -->
+    <string name="money_owed">חובות</string>
+    <string name="total_debt">סה"כ חוב</string>
+    <string name="unpaid_shifts">משמרות שלא שולמו</string>
+    <string name="unpaid_events">אירועים שלא שולמו</string>
+    <string name="mark_as_paid">סמן כשולם</string>
+    <string name="no_outstanding_payments">אין תשלומים ממתינים</string>
+    <string name="all_payments_up_to_date">כל התשלומים מעודכנים</string>
+    <string name="outstanding_amount">סכום ממתין</string>
+    <string name="debt_status">סטטוס חוב</string>
+    <string name="paid">שולם</string>
+    <string name="unpaid">לא שולם</string>
 </resources>

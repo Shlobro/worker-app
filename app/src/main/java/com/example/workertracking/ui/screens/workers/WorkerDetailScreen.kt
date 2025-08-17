@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Person
@@ -24,6 +25,10 @@ import com.example.workertracking.R
 import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.data.entity.Project
 import com.example.workertracking.data.entity.Event
+import com.example.workertracking.data.entity.UnpaidShiftWorkerInfo
+import com.example.workertracking.data.entity.UnpaidEventWorkerInfo
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,9 +38,14 @@ fun WorkerDetailScreen(
     projects: List<Project> = emptyList(),
     events: List<Event> = emptyList(),
     isLoading: Boolean,
+    unpaidShifts: List<UnpaidShiftWorkerInfo> = emptyList(),
+    unpaidEvents: List<UnpaidEventWorkerInfo> = emptyList(),
+    totalOwed: Double = 0.0,
     onNavigateBack: () -> Unit,
     onEditWorker: () -> Unit = {},
     onViewPhotos: () -> Unit = {},
+    onMarkShiftAsPaid: (Long) -> Unit = {},
+    onMarkEventAsPaid: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -155,6 +165,79 @@ fun WorkerDetailScreen(
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.secondary
                                 )
+                            }
+                        }
+                    }
+                }
+                
+                // Money owed section
+                if (totalOwed > 0 || unpaidShifts.isNotEmpty() || unpaidEvents.isNotEmpty()) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.outstanding_amount),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                                
+                                Text(
+                                    text = "₪${String.format("%.2f", totalOwed)}",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                
+                                if (unpaidShifts.isNotEmpty()) {
+                                    Text(
+                                        text = stringResource(R.string.unpaid_shifts),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                    
+                                    unpaidShifts.forEach { unpaidShift ->
+                                        WorkerDebtCard(
+                                            type = "shift",
+                                            projectName = unpaidShift.projectName,
+                                            date = unpaidShift.shiftDate,
+                                            amount = if (unpaidShift.shiftWorker.isHourlyRate) {
+                                                unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
+                                            } else {
+                                                unpaidShift.shiftWorker.payRate
+                                            },
+                                            onMarkAsPaid = { onMarkShiftAsPaid(unpaidShift.shiftWorker.id) }
+                                        )
+                                    }
+                                }
+                                
+                                if (unpaidEvents.isNotEmpty()) {
+                                    Text(
+                                        text = stringResource(R.string.unpaid_events),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                    
+                                    unpaidEvents.forEach { unpaidEvent ->
+                                        WorkerDebtCard(
+                                            type = "event",
+                                            projectName = unpaidEvent.eventName,
+                                            date = unpaidEvent.eventDate,
+                                            amount = unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate,
+                                            onMarkAsPaid = { onMarkEventAsPaid(unpaidEvent.eventWorker.id) }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -283,6 +366,69 @@ fun WorkerDetailScreen(
                     text = stringResource(R.string.worker_not_found),
                     style = MaterialTheme.typography.bodyLarge
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WorkerDebtCard(
+    type: String,
+    projectName: String,
+    date: Long,
+    amount: Double,
+    onMarkAsPaid: () -> Unit
+) {
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = projectName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = dateFormat.format(Date(date)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "₪${String.format("%.2f", amount)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.error
+                )
+                FilledTonalButton(
+                    onClick = onMarkAsPaid,
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.mark_as_paid),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             }
         }
     }

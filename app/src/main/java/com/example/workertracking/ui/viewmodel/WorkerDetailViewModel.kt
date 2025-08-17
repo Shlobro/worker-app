@@ -6,6 +6,8 @@ import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.data.entity.Project
 import com.example.workertracking.data.entity.Event
 import com.example.workertracking.data.entity.Shift
+import com.example.workertracking.data.entity.UnpaidShiftWorkerInfo
+import com.example.workertracking.data.entity.UnpaidEventWorkerInfo
 import com.example.workertracking.repository.WorkerRepository
 import com.example.workertracking.repository.ProjectRepository
 import com.example.workertracking.repository.EventRepository
@@ -43,6 +45,15 @@ class WorkerDetailViewModel(
     private val _referenceWorker = MutableStateFlow<Worker?>(null)
     val referenceWorker: StateFlow<Worker?> = _referenceWorker.asStateFlow()
 
+    private val _unpaidShifts = MutableStateFlow<List<UnpaidShiftWorkerInfo>>(emptyList())
+    val unpaidShifts: StateFlow<List<UnpaidShiftWorkerInfo>> = _unpaidShifts.asStateFlow()
+
+    private val _unpaidEvents = MutableStateFlow<List<UnpaidEventWorkerInfo>>(emptyList())
+    val unpaidEvents: StateFlow<List<UnpaidEventWorkerInfo>> = _unpaidEvents.asStateFlow()
+
+    private val _totalOwed = MutableStateFlow(0.0)
+    val totalOwed: StateFlow<Double> = _totalOwed.asStateFlow()
+
     fun loadWorker(workerId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -59,6 +70,7 @@ class WorkerDetailViewModel(
                 
                 loadWorkerProjectsAndEvents(workerId)
                 loadAllWorkers()
+                loadUnpaidItems(workerId)
             } finally {
                 _isLoading.value = false
             }
@@ -108,5 +120,59 @@ class WorkerDetailViewModel(
     
     fun clearUpdateSuccess() {
         _updateSuccess.value = false
+    }
+
+    private fun loadUnpaidItems(workerId: Long) {
+        viewModelScope.launch {
+            try {
+                val unpaidShifts = workerRepository.getUnpaidShiftWorkersForWorker(workerId)
+                val unpaidEvents = workerRepository.getUnpaidEventWorkersForWorker(workerId)
+                
+                _unpaidShifts.value = unpaidShifts
+                _unpaidEvents.value = unpaidEvents
+                
+                val shiftTotal = unpaidShifts.sumOf { unpaidShift ->
+                    if (unpaidShift.shiftWorker.isHourlyRate) {
+                        unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
+                    } else {
+                        unpaidShift.shiftWorker.payRate
+                    }
+                }
+                
+                val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
+                    unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
+                }
+                
+                _totalOwed.value = shiftTotal + eventTotal
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
+    }
+
+    fun markShiftAsPaid(shiftWorkerId: Long) {
+        viewModelScope.launch {
+            try {
+                workerRepository.markShiftWorkerAsPaid(shiftWorkerId)
+                _worker.value?.let { worker ->
+                    loadUnpaidItems(worker.id) // Refresh the data
+                }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun markEventAsPaid(eventWorkerId: Long) {
+        viewModelScope.launch {
+            try {
+                workerRepository.markEventWorkerAsPaid(eventWorkerId)
+                _worker.value?.let { worker ->
+                    loadUnpaidItems(worker.id) // Refresh the data
+                }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
     }
 }

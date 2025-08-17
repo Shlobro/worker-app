@@ -40,10 +40,12 @@ fun DashboardScreen(
     onProjectClick: (Long) -> Unit = {},
     onEventClick: (Long) -> Unit = {},
     onViewAllProjects: () -> Unit = {},
-    onViewAllEvents: () -> Unit = {}
+    onViewAllEvents: () -> Unit = {},
+    onMoneyOwedClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val dateFilter by viewModel.dateFilter.collectAsState()
+    
     
     LazyColumn(
         modifier = Modifier
@@ -88,7 +90,8 @@ fun DashboardScreen(
         item {
             MoneyOwedCard(
                 totalOwed = uiState.totalOwed,
-                isLoading = uiState.isLoading
+                isLoading = uiState.isLoading,
+                onClick = onMoneyOwedClick
             )
         }
         
@@ -216,10 +219,13 @@ fun FinancialSummaryItem(
 @Composable
 fun MoneyOwedCard(
     totalOwed: Double,
-    isLoading: Boolean
+    isLoading: Boolean,
+    onClick: () -> Unit = {}
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.errorContainer

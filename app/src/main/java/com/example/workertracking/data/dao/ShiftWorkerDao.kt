@@ -3,6 +3,7 @@ package com.example.workertracking.data.dao
 import androidx.room.*
 import com.example.workertracking.data.entity.ShiftWorker
 import com.example.workertracking.data.entity.Worker
+import com.example.workertracking.data.entity.UnpaidShiftWorkerInfo
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -37,4 +38,29 @@ interface ShiftWorkerDao {
 
     @Query("SELECT SUM(CASE WHEN isHourlyRate = 1 THEN payRate * (SELECT hours FROM shifts WHERE id = :shiftId) ELSE payRate END) FROM shift_workers WHERE shiftId = :shiftId")
     suspend fun getTotalCostForShift(shiftId: Long): Double?
+
+    @Query("UPDATE shift_workers SET isPaid = :isPaid WHERE id = :id")
+    suspend fun updatePaymentStatus(id: Long, isPaid: Boolean)
+
+    @Query("""
+        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours 
+        FROM shift_workers sw
+        INNER JOIN workers w ON sw.workerId = w.id
+        INNER JOIN shifts s ON sw.shiftId = s.id
+        INNER JOIN projects p ON s.projectId = p.id
+        WHERE sw.isPaid = 0
+        ORDER BY s.date DESC
+    """)
+    suspend fun getUnpaidShiftWorkers(): List<UnpaidShiftWorkerInfo>
+
+    @Query("""
+        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours 
+        FROM shift_workers sw
+        INNER JOIN workers w ON sw.workerId = w.id
+        INNER JOIN shifts s ON sw.shiftId = s.id
+        INNER JOIN projects p ON s.projectId = p.id
+        WHERE sw.workerId = :workerId AND sw.isPaid = 0
+        ORDER BY s.date DESC
+    """)
+    suspend fun getUnpaidShiftWorkersForWorker(workerId: Long): List<UnpaidShiftWorkerInfo>
 }

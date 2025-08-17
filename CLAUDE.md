@@ -246,6 +246,84 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 9. **Loading States**: Proper loading indicators and empty state handling
 10. **Hebrew Localization**: All new strings added to both values and values-he resources
 
+### Debt Tracking System (Version 15) (✅ COMPLETED)
+
+#### Overview
+Comprehensive debt tracking system that monitors outstanding payments to workers across shifts and events, providing clear visibility into payment obligations and enabling mark-as-paid functionality.
+
+#### Database Schema Changes
+- **Database Version**: Upgraded to 15
+- **ShiftWorker Table**: Added `isPaid` BOOLEAN field (default: false)
+- **EventWorker Table**: Added `isPaid` BOOLEAN field (default: false)
+- **Migration 14→15**: Automatically adds isPaid columns to existing data with default false values
+
+#### Core Entities
+- **UnpaidShiftWorkerInfo**: Combines ShiftWorker with worker name, shift date, project name, and shift hours
+- **UnpaidEventWorkerInfo**: Combines EventWorker with worker name, event date, and event name
+- **WorkerWithDebt**: Aggregates worker info with total debt and unpaid item counts
+
+#### Repository Enhancements
+**WorkerRepository** debt-related methods:
+- `getTotalPaymentsOwed()`: Calculates total unpaid amounts across all workers
+- `getUnpaidShiftWorkers()`: Returns all unpaid shift assignments
+- `getUnpaidEventWorkers()`: Returns all unpaid event assignments
+- `getUnpaidShiftWorkersForWorker(workerId)`: Returns unpaid shifts for specific worker
+- `getUnpaidEventWorkersForWorker(workerId)`: Returns unpaid events for specific worker
+- `markShiftWorkerAsPaid(shiftWorkerId)`: Marks shift payment as completed
+- `markEventWorkerAsPaid(eventWorkerId)`: Marks event payment as completed
+
+#### UI Components
+
+**MoneyOwedScreen**:
+- Comprehensive debt overview with total amount
+- Separate sections for unpaid shifts and events
+- Individual payment cards with mark-as-paid functionality
+- Navigation to worker details
+- Empty state when no debts exist
+
+**WorkerDetailScreen Enhancements**:
+- Debt summary card showing total owed amount
+- Unpaid shifts and events listed separately
+- Mark-as-paid buttons for individual items
+- Color-coded debt indicators (red for amounts owed)
+
+**WorkersScreen Enhancements**:
+- Debt indicators on worker cards
+- Warning icons for workers with outstanding payments
+- Unpaid item counts displayed
+- Color-coded total owed amounts
+
+**Dashboard Integration**:
+- Clickable money owed card navigates to detailed debt view
+- Real-time debt totals in financial summary
+
+#### Payment Calculation Logic
+**Shift Payments**:
+- Hourly Rate: `payRate × shiftHours`
+- Fixed Amount: `payRate` (regardless of hours)
+- Reference Payments: `referencePayRate × shiftHours` (always hourly)
+
+**Event Payments**:
+- Always hourly calculation: `hours × payRate`
+
+#### Navigation Routes
+- `MoneyOwedScreen`: Accessible from dashboard debt card
+- Worker detail navigation from debt screens
+- Seamless integration with existing navigation structure
+
+#### String Resources
+Added comprehensive Hebrew strings for:
+- Debt tracking interface elements
+- Payment status indicators
+- Mark-as-paid functionality
+- Empty states and confirmations
+
+#### Implementation Notes
+- All debt calculations are real-time and reactive
+- Payment status changes immediately refresh dependent screens
+- Database migration handles existing data automatically
+- Backwards compatible with previous app versions
+
 ### Target API Levels
 - **minSdk**: 26 (Android 8.0)
 - **targetSdk**: 35 (Android 15)
