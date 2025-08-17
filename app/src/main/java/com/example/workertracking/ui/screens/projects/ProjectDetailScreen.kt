@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -36,6 +37,7 @@ fun ProjectDetailScreen(
     isLoading: Boolean,
     onNavigateBack: () -> Unit,
     onEditProject: () -> Unit = {},
+    onDeleteProject: () -> Unit = {},
     onAddShift: () -> Unit,
     onShiftClick: (Long) -> Unit = {},
     onDeleteShift: (Shift) -> Unit = {},
@@ -47,6 +49,7 @@ fun ProjectDetailScreen(
     var searchQuery by remember { mutableStateOf("") }
     var shiftToDelete by remember { mutableStateOf<Shift?>(null) }
     var showCloseDialog by remember { mutableStateOf(false) }
+    var showDeleteProjectDialog by remember { mutableStateOf(false) }
     
     val filteredShifts = remember(shifts, searchQuery) {
         if (searchQuery.isBlank()) {
@@ -77,6 +80,13 @@ fun ProjectDetailScreen(
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = stringResource(R.string.edit_project)
+                            )
+                        }
+                        IconButton(onClick = { showDeleteProjectDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.delete_project),
+                                tint = MaterialTheme.colorScheme.error
                             )
                         }
                     }
@@ -449,6 +459,38 @@ fun ProjectDetailScreen(
             dismissButton = {
                 TextButton(onClick = { showCloseDialog = false }) {
                     Text("ביטול")
+                }
+            }
+        )
+    }
+    
+    // Delete project confirmation dialog
+    if (showDeleteProjectDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteProjectDialog = false },
+            title = { Text(stringResource(R.string.delete_confirmation_title)) },
+            text = { 
+                Text(
+                    stringResource(R.string.delete_project_message, project?.name ?: ""),
+                    color = MaterialTheme.colorScheme.error
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDeleteProject()
+                        showDeleteProjectDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(stringResource(R.string.confirm_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteProjectDialog = false }) {
+                    Text(stringResource(R.string.cancel_delete))
                 }
             }
         )

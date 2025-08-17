@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Person
@@ -45,12 +46,14 @@ fun WorkerDetailScreen(
     totalOwed: Double = 0.0,
     onNavigateBack: () -> Unit,
     onEditWorker: () -> Unit = {},
+    onDeleteWorker: () -> Unit = {},
     onViewPhotos: () -> Unit = {},
     onMarkShiftAsPaid: (Long) -> Unit = {},
     onMarkEventAsPaid: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    var showDeleteDialog by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -71,6 +74,13 @@ fun WorkerDetailScreen(
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = stringResource(R.string.edit_worker)
+                            )
+                        }
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.delete_worker),
+                                tint = MaterialTheme.colorScheme.error
                             )
                         }
                     }
@@ -283,9 +293,9 @@ fun WorkerDetailScreen(
                         }
                         
                         items(allShifts) { shiftInfo ->
-                            WorkHistoryCard(
+                            WorkerHistoryCard(
                                 type = "shift",
-                                name = shiftInfo.projectName,
+                                projectName = shiftInfo.projectName,
                                 date = shiftInfo.shiftDate,
                                 amount = if (shiftInfo.shiftWorker.isHourlyRate) {
                                     shiftInfo.shiftWorker.payRate * shiftInfo.shiftHours
@@ -312,9 +322,9 @@ fun WorkerDetailScreen(
                         }
                         
                         items(allEvents) { eventInfo ->
-                            WorkHistoryCard(
+                            WorkerHistoryCard(
                                 type = "event",
-                                name = eventInfo.eventName,
+                                projectName = eventInfo.eventName,
                                 date = eventInfo.eventDate,
                                 amount = eventInfo.eventWorker.hours * eventInfo.eventWorker.payRate,
                                 isPaid = eventInfo.eventWorker.isPaid,
@@ -348,6 +358,38 @@ fun WorkerDetailScreen(
                 )
             }
         }
+    }
+    
+    // Delete confirmation dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text(stringResource(R.string.delete_confirmation_title)) },
+            text = { 
+                Text(
+                    stringResource(R.string.delete_worker_message, worker?.name ?: ""),
+                    color = MaterialTheme.colorScheme.error
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDeleteWorker()
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(stringResource(R.string.confirm_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(stringResource(R.string.cancel_delete))
+                }
+            }
+        )
     }
 }
 
@@ -415,9 +457,9 @@ private fun WorkerDebtCard(
 }
 
 @Composable
-private fun WorkHistoryCard(
+private fun WorkerHistoryCard(
     type: String,
-    name: String,
+    projectName: String,
     date: Long,
     amount: Double,
     isPaid: Boolean,
@@ -438,13 +480,13 @@ private fun WorkHistoryCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = name,
+                    text = projectName,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
                 )

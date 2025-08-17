@@ -283,6 +283,10 @@ fun WorkerTrackingApp() {
                     onEditProject = {
                         navController.navigate(Screen.EditProject.createRoute(projectId))
                     },
+                    onDeleteProject = {
+                        viewModel.deleteProject()
+                        navController.popBackStack()
+                    },
                     onAddShift = {
                         navController.navigate(Screen.AddShift.createRoute(projectId))
                     },
@@ -396,6 +400,11 @@ fun WorkerTrackingApp() {
                     onEditWorker = {
                         navController.navigate(Screen.EditWorker.createRoute(workerId))
                     },
+                    onDeleteWorker = {
+                        viewModel.deleteWorker()
+                        application.container.triggerDashboardRefresh()
+                        navController.popBackStack()
+                    },
                     onMarkShiftAsPaid = { shiftWorkerId ->
                         viewModel.markShiftAsPaid(shiftWorkerId)
                         application.container.triggerDashboardRefresh()
@@ -460,6 +469,10 @@ fun WorkerTrackingApp() {
                     },
                     onEventClick = { event ->
                         navController.navigate(Screen.EventDetail.createRoute(event.id))
+                    },
+                    onDeleteEvent = { event ->
+                        viewModel.deleteEvent(event)
+                        application.container.triggerDashboardRefresh()
                     }
                 )
             }

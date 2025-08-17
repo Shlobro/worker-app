@@ -104,6 +104,18 @@ class ProjectDetailViewModel(
         }
     }
     
+    fun deleteProject() {
+        viewModelScope.launch {
+            try {
+                _project.value?.let { project ->
+                    projectRepository.deleteProject(project)
+                }
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
+    }
+    
     fun updateProject(name: String, location: String, startDate: Date) {
         viewModelScope.launch {
             try {

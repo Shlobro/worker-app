@@ -136,6 +136,7 @@
     <string name="cancel_delete">בטל</string>
     <string name="delete_project">מחק פרויקט</string>
     <string name="delete_worker">מחק עובד</string>
+    <string name="delete_event">מחק אירוע</string>
     
     <!-- Event Details -->
     <string name="event_details">Event Details</string>

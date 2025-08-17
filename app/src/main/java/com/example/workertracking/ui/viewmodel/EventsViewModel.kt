@@ -40,4 +40,15 @@ class EventsViewModel(
     fun refreshEvents() {
         loadEvents()
     }
+    
+    fun deleteEvent(event: Event) {
+        viewModelScope.launch {
+            try {
+                eventRepository.deleteEvent(event)
+                // Events will be automatically refreshed due to the collect call in loadEvents()
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
+    }
 }

@@ -128,6 +128,18 @@ class WorkerDetailViewModel(
     fun clearUpdateSuccess() {
         _updateSuccess.value = false
     }
+    
+    fun deleteWorker() {
+        viewModelScope.launch {
+            try {
+                _worker.value?.let { worker ->
+                    workerRepository.deleteWorker(worker)
+                }
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
+    }
 
     private fun loadUnpaidItems(workerId: Long) {
         viewModelScope.launch {
