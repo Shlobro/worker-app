@@ -40,6 +40,8 @@ fun WorkerDetailScreen(
     isLoading: Boolean,
     unpaidShifts: List<UnpaidShiftWorkerInfo> = emptyList(),
     unpaidEvents: List<UnpaidEventWorkerInfo> = emptyList(),
+    allShifts: List<UnpaidShiftWorkerInfo> = emptyList(),
+    allEvents: List<UnpaidEventWorkerInfo> = emptyList(),
     totalOwed: Double = 0.0,
     onNavigateBack: () -> Unit,
     onEditWorker: () -> Unit = {},
@@ -48,29 +50,7 @@ fun WorkerDetailScreen(
     onMarkEventAsPaid: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var searchQuery by remember { mutableStateOf("") }
     val context = LocalContext.current
-    
-    val filteredProjects = remember(projects, searchQuery) {
-        if (searchQuery.isBlank()) {
-            projects
-        } else {
-            projects.filter { project ->
-                project.name.contains(searchQuery, ignoreCase = true) ||
-                project.location.contains(searchQuery, ignoreCase = true)
-            }
-        }
-    }
-    
-    val filteredEvents = remember(events, searchQuery) {
-        if (searchQuery.isBlank()) {
-            events
-        } else {
-            events.filter { event ->
-                event.name.contains(searchQuery, ignoreCase = true)
-            }
-        }
-    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -281,73 +261,73 @@ fun WorkerDetailScreen(
                     }
                 }
                 
-                item {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        label = { Text(stringResource(R.string.search_projects_events)) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                }
-                
-                item {
-                    Text(
-                        text = stringResource(R.string.worker_projects_events),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                
-                items(filteredProjects) { project ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = project.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "פרויקט: ${project.location}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-                
-                items(filteredEvents) { event ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = event.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "אירוע: ${event.startTime} - ${event.endTime}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-                
-                if (filteredProjects.isEmpty() && filteredEvents.isEmpty() && searchQuery.isNotBlank()) {
+                // Work History section
+                if (allShifts.isNotEmpty() || allEvents.isNotEmpty()) {
                     item {
                         Text(
-                            text = stringResource(R.string.no_data),
+                            text = stringResource(R.string.work_history),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    
+                    // All shifts history
+                    if (allShifts.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.all_shifts),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                        
+                        items(allShifts) { shiftInfo ->
+                            WorkHistoryCard(
+                                type = "shift",
+                                name = shiftInfo.projectName,
+                                date = shiftInfo.shiftDate,
+                                amount = if (shiftInfo.shiftWorker.isHourlyRate) {
+                                    shiftInfo.shiftWorker.payRate * shiftInfo.shiftHours
+                                } else {
+                                    shiftInfo.shiftWorker.payRate
+                                },
+                                isPaid = shiftInfo.shiftWorker.isPaid,
+                                onMarkAsPaid = if (!shiftInfo.shiftWorker.isPaid) {
+                                    { onMarkShiftAsPaid(shiftInfo.shiftWorker.id) }
+                                } else null
+                            )
+                        }
+                    }
+                    
+                    // All events history
+                    if (allEvents.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.all_events),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                        
+                        items(allEvents) { eventInfo ->
+                            WorkHistoryCard(
+                                type = "event",
+                                name = eventInfo.eventName,
+                                date = eventInfo.eventDate,
+                                amount = eventInfo.eventWorker.hours * eventInfo.eventWorker.payRate,
+                                isPaid = eventInfo.eventWorker.isPaid,
+                                onMarkAsPaid = if (!eventInfo.eventWorker.isPaid) {
+                                    { onMarkEventAsPaid(eventInfo.eventWorker.id) }
+                                } else null
+                            )
+                        }
+                    }
+                } else {
+                    item {
+                        Text(
+                            text = stringResource(R.string.no_work_history),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.fillMaxWidth()
@@ -428,6 +408,87 @@ private fun WorkerDebtCard(
                         text = stringResource(R.string.mark_as_paid),
                         style = MaterialTheme.typography.labelSmall
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WorkHistoryCard(
+    type: String,
+    name: String,
+    date: Long,
+    amount: Double,
+    isPaid: Boolean,
+    onMarkAsPaid: (() -> Unit)? = null
+) {
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isPaid) {
+                MaterialTheme.colorScheme.surfaceVariant
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = dateFormat.format(Date(date)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (isPaid) {
+                    Text(
+                        text = stringResource(R.string.paid),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "₪${String.format("%.2f", amount)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isPaid) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.error
+                    }
+                )
+                if (!isPaid && onMarkAsPaid != null) {
+                    FilledTonalButton(
+                        onClick = onMarkAsPaid,
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.mark_as_paid),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
                 }
             }
         }

@@ -76,4 +76,12 @@ class WorkerRepository(
     suspend fun markEventWorkerAsPaid(eventWorkerId: Long) {
         eventWorkerDao.updatePaymentStatus(eventWorkerId, true)
     }
+
+    suspend fun getAllShiftWorkersForWorker(workerId: Long): List<UnpaidShiftWorkerInfo> {
+        return shiftWorkerDao.getAllShiftWorkersForWorker(workerId)
+    }
+
+    suspend fun getAllEventWorkersForWorker(workerId: Long): List<UnpaidEventWorkerInfo> {
+        return eventWorkerDao.getAllEventWorkersForWorker(workerId)
+    }
 }

@@ -370,6 +370,8 @@ fun WorkerTrackingApp() {
                 val isLoading by viewModel.isLoading.collectAsState()
                 val unpaidShifts by viewModel.unpaidShifts.collectAsState()
                 val unpaidEvents by viewModel.unpaidEvents.collectAsState()
+                val allShifts by viewModel.allShifts.collectAsState()
+                val allEvents by viewModel.allEvents.collectAsState()
                 val totalOwed by viewModel.totalOwed.collectAsState()
                 
                 LaunchedEffect(workerId) {
@@ -384,6 +386,8 @@ fun WorkerTrackingApp() {
                     isLoading = isLoading,
                     unpaidShifts = unpaidShifts,
                     unpaidEvents = unpaidEvents,
+                    allShifts = allShifts,
+                    allEvents = allEvents,
                     totalOwed = totalOwed,
                     onNavigateBack = {
                         application.container.triggerDashboardRefresh()
@@ -438,43 +442,6 @@ fun WorkerTrackingApp() {
                     },
                     onUpdateWorker = { name, phoneNumber, referenceId ->
                         viewModel.updateWorker(name, phoneNumber, referenceId)
-                    }
-                )
-            }
-            composable(
-                route = Screen.WorkerDetail.route,
-                arguments = listOf(navArgument("workerId") { type = NavType.LongType })
-            ) { backStackEntry ->
-                val workerId = backStackEntry.arguments?.getLong("workerId") ?: 0L
-                val viewModel: WorkerDetailViewModel = viewModel {
-                    WorkerDetailViewModel(
-                        application.container.workerRepository,
-                        application.container.projectRepository,
-                        application.container.eventRepository,
-                        application.container.shiftRepository
-                    )
-                }
-                val worker by viewModel.worker.collectAsState()
-                val projects by viewModel.projects.collectAsState()
-                val events by viewModel.events.collectAsState()
-                val isLoading by viewModel.isLoading.collectAsState()
-                val referenceWorker by viewModel.referenceWorker.collectAsState()
-                
-                LaunchedEffect(workerId) {
-                    viewModel.loadWorker(workerId)
-                }
-                
-                WorkerDetailScreen(
-                    worker = worker,
-                    referenceWorker = referenceWorker,
-                    projects = projects,
-                    events = events,
-                    isLoading = isLoading,
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    },
-                    onEditWorker = {
-                        navController.navigate(Screen.EditWorker.createRoute(workerId))
                     }
                 )
             }

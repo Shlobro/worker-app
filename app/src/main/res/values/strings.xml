@@ -172,4 +172,8 @@
     <string name="debt_status">סטטוס חוב</string>
     <string name="paid">שולם</string>
     <string name="unpaid">לא שולם</string>
+    <string name="work_history">היסטוריית עבודה</string>
+    <string name="all_shifts">כל המשמרות</string>
+    <string name="all_events">כל האירועים</string>
+    <string name="no_work_history">אין היסטוריית עבודה</string>
 </resources>

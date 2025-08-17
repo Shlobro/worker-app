@@ -54,6 +54,12 @@ class WorkerDetailViewModel(
     private val _totalOwed = MutableStateFlow(0.0)
     val totalOwed: StateFlow<Double> = _totalOwed.asStateFlow()
 
+    private val _allShifts = MutableStateFlow<List<UnpaidShiftWorkerInfo>>(emptyList())
+    val allShifts: StateFlow<List<UnpaidShiftWorkerInfo>> = _allShifts.asStateFlow()
+
+    private val _allEvents = MutableStateFlow<List<UnpaidEventWorkerInfo>>(emptyList())
+    val allEvents: StateFlow<List<UnpaidEventWorkerInfo>> = _allEvents.asStateFlow()
+
     fun loadWorker(workerId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -71,6 +77,7 @@ class WorkerDetailViewModel(
                 loadWorkerProjectsAndEvents(workerId)
                 loadAllWorkers()
                 loadUnpaidItems(workerId)
+                loadCompleteHistory(workerId)
             } finally {
                 _isLoading.value = false
             }
@@ -150,12 +157,27 @@ class WorkerDetailViewModel(
         }
     }
 
+    private fun loadCompleteHistory(workerId: Long) {
+        viewModelScope.launch {
+            try {
+                val allShifts = workerRepository.getAllShiftWorkersForWorker(workerId)
+                val allEvents = workerRepository.getAllEventWorkersForWorker(workerId)
+                
+                _allShifts.value = allShifts
+                _allEvents.value = allEvents
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
+    }
+
     fun markShiftAsPaid(shiftWorkerId: Long) {
         viewModelScope.launch {
             try {
                 workerRepository.markShiftWorkerAsPaid(shiftWorkerId)
                 _worker.value?.let { worker ->
                     loadUnpaidItems(worker.id) // Refresh the data
+                    loadCompleteHistory(worker.id) // Refresh complete history too
                 }
             } catch (e: Exception) {
                 // Handle error
@@ -169,6 +191,7 @@ class WorkerDetailViewModel(
                 workerRepository.markEventWorkerAsPaid(eventWorkerId)
                 _worker.value?.let { worker ->
                     loadUnpaidItems(worker.id) // Refresh the data
+                    loadCompleteHistory(worker.id) // Refresh complete history too
                 }
             } catch (e: Exception) {
                 // Handle error
