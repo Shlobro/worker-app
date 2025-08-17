@@ -192,6 +192,11 @@ private fun UnpaidShiftCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Text(
+                        text = "${unpaidShift.startTime} - ${unpaidShift.endTime}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 
                 Column(horizontalAlignment = Alignment.End) {

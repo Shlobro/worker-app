@@ -43,7 +43,7 @@ interface ShiftWorkerDao {
     suspend fun updatePaymentStatus(id: Long, isPaid: Boolean)
 
     @Query("""
-        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours 
+        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime 
         FROM shift_workers sw
         INNER JOIN workers w ON sw.workerId = w.id
         INNER JOIN shifts s ON sw.shiftId = s.id
@@ -54,7 +54,7 @@ interface ShiftWorkerDao {
     suspend fun getUnpaidShiftWorkers(): List<UnpaidShiftWorkerInfo>
 
     @Query("""
-        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours 
+        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime 
         FROM shift_workers sw
         INNER JOIN workers w ON sw.workerId = w.id
         INNER JOIN shifts s ON sw.shiftId = s.id
@@ -65,7 +65,7 @@ interface ShiftWorkerDao {
     suspend fun getUnpaidShiftWorkersForWorker(workerId: Long): List<UnpaidShiftWorkerInfo>
 
     @Query("""
-        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours 
+        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime 
         FROM shift_workers sw
         INNER JOIN workers w ON sw.workerId = w.id
         INNER JOIN shifts s ON sw.shiftId = s.id

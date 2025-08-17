@@ -7,7 +7,9 @@ data class UnpaidShiftWorkerInfo(
     val workerName: String,
     val shiftDate: Long,
     val projectName: String,
-    val shiftHours: Double
+    val shiftHours: Double,
+    val startTime: String,
+    val endTime: String
 )
 
 data class UnpaidEventWorkerInfo(
