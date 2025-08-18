@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.example.workertracking.R
 import java.text.SimpleDateFormat
 import java.util.*
@@ -30,6 +31,7 @@ fun AddEventScreen(
     var endTime by remember { mutableStateOf("") }
     var hours by remember { mutableStateOf("") }
     var income by remember { mutableStateOf("") }
+    var showDatePicker by remember { mutableStateOf(false) }
     var isAutoCalculate by remember { mutableStateOf(true) }
     
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -133,10 +135,12 @@ fun AddEventScreen(
                 modifier = Modifier.fillMaxWidth(),
                 readOnly = true,
                 trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.DateRange,
-                        contentDescription = null
-                    )
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = stringResource(R.string.select_date)
+                        )
+                    }
                 }
             )
             
@@ -221,4 +225,53 @@ fun AddEventScreen(
             }
         }
     }
+    
+    // Date Picker Dialog
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate.time
+        )
+        
+        DatePickerDialog(
+            onDateSelected = { dateMillis ->
+                dateMillis?.let {
+                    selectedDate = Date(it)
+                }
+                showDatePicker = false
+            },
+            onDismiss = {
+                showDatePicker = false
+            },
+            datePickerState = datePickerState
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DatePickerDialog(
+    onDateSelected: (Long?) -> Unit,
+    onDismiss: () -> Unit,
+    datePickerState: DatePickerState
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                onDateSelected(datePickerState.selectedDateMillis)
+            }) {
+                Text(stringResource(R.string.select))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+        text = {
+            DatePicker(state = datePickerState)
+        },
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier.padding(16.dp)
+    )
 }
