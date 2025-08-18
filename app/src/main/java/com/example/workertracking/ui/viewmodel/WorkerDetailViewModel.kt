@@ -151,15 +151,19 @@ class WorkerDetailViewModel(
                 _unpaidEvents.value = unpaidEvents
                 
                 val shiftTotal = unpaidShifts.sumOf { unpaidShift ->
-                    if (unpaidShift.shiftWorker.isHourlyRate) {
+                    (if (unpaidShift.shiftWorker.isHourlyRate) {
                         unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
                     } else {
                         unpaidShift.shiftWorker.payRate
-                    }
+                    }) + ((unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours)
                 }
                 
                 val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
-                    unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
+                    (if (unpaidEvent.eventWorker.isHourlyRate) {
+                        unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
+                    } else {
+                        unpaidEvent.eventWorker.payRate
+                    }) + ((unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours)
                 }
                 
                 _totalOwed.value = shiftTotal + eventTotal
