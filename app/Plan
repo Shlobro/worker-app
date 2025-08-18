@@ -4,4 +4,3 @@ the phone problem is not fixed for the employer. meaning the first digit after t
 when entering an hour in the time field, it bounces the number put after the colon bounces to the end. so 20:40 becomes 20:04. fix this using the same logic as the phone numbers
 the hour field must enforce xx:xx format. if the user tries to enter a different format it should not allow it.
 in the employer card, all the logic for the numbers of how much was made how much was spent and how much profit is not working.
-when using global payment for a worker, the dashboard calculates that amount times the amount of hours instead of just that number.

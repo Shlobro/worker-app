@@ -36,7 +36,16 @@ interface ShiftWorkerDao {
     @Query("DELETE FROM shift_workers WHERE shiftId = :shiftId AND workerId = :workerId")
     suspend fun removeWorkerFromShift(shiftId: Long, workerId: Long)
 
-    @Query("SELECT SUM(CASE WHEN isHourlyRate = 1 THEN payRate * (SELECT hours FROM shifts WHERE id = :shiftId) ELSE payRate END) FROM shift_workers WHERE shiftId = :shiftId")
+    @Query("""
+        SELECT SUM(
+            CASE 
+                WHEN isHourlyRate = 1 THEN payRate * (SELECT hours FROM shifts WHERE id = :shiftId) 
+                ELSE payRate 
+            END + 
+            COALESCE((SELECT hours FROM shifts WHERE id = :shiftId) * referencePayRate, 0.0)
+        ) 
+        FROM shift_workers WHERE shiftId = :shiftId
+    """)
     suspend fun getTotalCostForShift(shiftId: Long): Double?
 
     @Query("UPDATE shift_workers SET isPaid = :isPaid WHERE id = :id")

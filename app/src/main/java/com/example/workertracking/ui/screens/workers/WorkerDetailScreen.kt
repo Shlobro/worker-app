@@ -200,11 +200,11 @@ fun WorkerDetailScreen(
                                             type = "shift",
                                             projectName = unpaidShift.projectName,
                                             date = unpaidShift.shiftDate,
-                                            amount = if (unpaidShift.shiftWorker.isHourlyRate) {
+                                            amount = (if (unpaidShift.shiftWorker.isHourlyRate) {
                                                 unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
                                             } else {
                                                 unpaidShift.shiftWorker.payRate
-                                            },
+                                            }) + ((unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours),
                                             onMarkAsPaid = { onMarkShiftAsPaid(unpaidShift.shiftWorker.id) }
                                         )
                                     }
@@ -223,7 +223,11 @@ fun WorkerDetailScreen(
                                             type = "event",
                                             projectName = unpaidEvent.eventName,
                                             date = unpaidEvent.eventDate,
-                                            amount = unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate,
+                                            amount = (if (unpaidEvent.eventWorker.isHourlyRate) {
+                                                unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
+                                            } else {
+                                                unpaidEvent.eventWorker.payRate
+                                            }) + ((unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours),
                                             onMarkAsPaid = { onMarkEventAsPaid(unpaidEvent.eventWorker.id) }
                                         )
                                     }
@@ -297,11 +301,11 @@ fun WorkerDetailScreen(
                                 type = "shift",
                                 projectName = shiftInfo.projectName,
                                 date = shiftInfo.shiftDate,
-                                amount = if (shiftInfo.shiftWorker.isHourlyRate) {
+                                amount = (if (shiftInfo.shiftWorker.isHourlyRate) {
                                     shiftInfo.shiftWorker.payRate * shiftInfo.shiftHours
                                 } else {
                                     shiftInfo.shiftWorker.payRate
-                                },
+                                }) + ((shiftInfo.shiftWorker.referencePayRate ?: 0.0) * shiftInfo.shiftHours),
                                 isPaid = shiftInfo.shiftWorker.isPaid,
                                 onMarkAsPaid = if (!shiftInfo.shiftWorker.isPaid) {
                                     { onMarkShiftAsPaid(shiftInfo.shiftWorker.id) }
@@ -326,7 +330,11 @@ fun WorkerDetailScreen(
                                 type = "event",
                                 projectName = eventInfo.eventName,
                                 date = eventInfo.eventDate,
-                                amount = eventInfo.eventWorker.hours * eventInfo.eventWorker.payRate,
+                                amount = (if (eventInfo.eventWorker.isHourlyRate) {
+                                    eventInfo.eventWorker.hours * eventInfo.eventWorker.payRate
+                                } else {
+                                    eventInfo.eventWorker.payRate
+                                }) + ((eventInfo.eventWorker.referencePayRate ?: 0.0) * eventInfo.eventWorker.hours),
                                 isPaid = eventInfo.eventWorker.isPaid,
                                 onMarkAsPaid = if (!eventInfo.eventWorker.isPaid) {
                                     { onMarkEventAsPaid(eventInfo.eventWorker.id) }

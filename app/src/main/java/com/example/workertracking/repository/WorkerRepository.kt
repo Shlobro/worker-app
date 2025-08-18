@@ -39,15 +39,23 @@ class WorkerRepository(
         val unpaidEvents = eventWorkerDao.getUnpaidEventWorkers()
         
         val shiftTotal = unpaidShifts.sumOf { unpaidShift ->
-            if (unpaidShift.shiftWorker.isHourlyRate) {
+            val workerPayment = if (unpaidShift.shiftWorker.isHourlyRate) {
                 unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
             } else {
                 unpaidShift.shiftWorker.payRate
             }
+            val referencePayment = (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours
+            workerPayment + referencePayment
         }
         
         val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
-            unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
+            val workerPayment = if (unpaidEvent.eventWorker.isHourlyRate) {
+                unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
+            } else {
+                unpaidEvent.eventWorker.payRate
+            }
+            val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours
+            workerPayment + referencePayment
         }
         
         return shiftTotal + eventTotal
