@@ -30,11 +30,10 @@ fun AddEmployerScreen(
     }
     
     fun formatPhoneNumber(input: String): String {
-        val digitsOnly = input.filter { it.isDigit() }
+        val digitsOnly = input.filter { it.isDigit() }.take(10)
         return when {
             digitsOnly.length <= 3 -> digitsOnly
-            digitsOnly.length <= 10 -> "${digitsOnly.substring(0, 3)}-${digitsOnly.substring(3)}"
-            else -> "${digitsOnly.substring(0, 3)}-${digitsOnly.substring(3, 10)}"
+            else -> "${digitsOnly.substring(0, 3)}-${digitsOnly.substring(3)}"
         }
     }
     
