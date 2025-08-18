@@ -136,6 +136,7 @@
     <string name="delete_project">מחק פרויקט</string>
     <string name="delete_worker">מחק עובד</string>
     <string name="delete_event">מחק אירוע</string>
+    <string name="delete_shift">מחק משמרת</string>
     
     <!-- Event Details -->
     <string name="event_details">פרטי האירוע</string>

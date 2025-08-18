@@ -153,4 +153,14 @@ class ShiftDetailViewModel(
     fun clearError() {
         _error.value = null
     }
+    
+    fun deleteShift(shift: Shift) {
+        viewModelScope.launch {
+            try {
+                shiftRepository.deleteShift(shift)
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
 }

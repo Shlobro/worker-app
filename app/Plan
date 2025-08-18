@@ -3,4 +3,5 @@ change מזמין to מעסיק
 the phone problem is not fixed for the employer. meaning the first digit after the dash is moved to the back. 050-1234567 becomes 0502345671. fix this. make it the same as putting in a phone number for a worker
 when entering an hour in the time field, it bounces the number put after the colon bounces to the end. so 20:40 becomes 20:04. fix this using the same logic as the phone numbers
 the hour field must enforce xx:xx format. if the user tries to enter a different format it should not allow it.
-remove the trash icon from all the cards of everything, this includes workers, employers, events and projects. add the option to remove shifts. all deletions should be done by clicking on the card and then it should appear in the top left like it does at the moment everywhere except shifts.
+when clicking on an employer there should be an option to filter by date to see the income over a specific period.
+in the worker card the amounts are correct but when i click on the worker in the screen it shows the amount as if the global payment is an hourly payment.

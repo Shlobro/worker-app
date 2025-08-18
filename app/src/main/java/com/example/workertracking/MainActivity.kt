@@ -738,6 +738,10 @@ fun WorkerTrackingApp() {
                         onEditShift = {
                             navController.navigate(Screen.EditShift.createRoute(shiftId))
                         },
+                        onDeleteShift = {
+                            viewModel.deleteShift(shift!!)
+                            navController.popBackStack()
+                        },
                         onAddWorkerToShift = { sId, wId, isHourly, payRate, referencePayRate ->
                             viewModel.addWorkerToShift(sId, wId, isHourly, payRate, referencePayRate)
                         },

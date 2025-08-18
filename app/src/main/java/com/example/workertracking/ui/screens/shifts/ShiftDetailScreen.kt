@@ -36,11 +36,13 @@ fun ShiftDetailScreen(
     allWorkers: List<Worker>,
     onNavigateBack: () -> Unit,
     onEditShift: () -> Unit = {},
+    onDeleteShift: () -> Unit = {},
     onAddWorkerToShift: (Long, Long, Boolean, Double, Double?) -> Unit,
     onRemoveWorkerFromShift: (Long, Long) -> Unit,
     onUpdateWorkerPayment: (ShiftWorker) -> Unit
 ) {
     var showAddWorkerDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -85,6 +87,13 @@ fun ShiftDetailScreen(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = stringResource(R.string.edit_shift)
+                        )
+                    }
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.delete_shift),
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -216,6 +225,38 @@ fun ShiftDetailScreen(
             showHours = false
         )
     }
+    
+    // Delete confirmation dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text(stringResource(R.string.delete_confirmation_title)) },
+            text = { 
+                Text(
+                    stringResource(R.string.delete_shift_message),
+                    color = MaterialTheme.colorScheme.error
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDeleteShift()
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(stringResource(R.string.confirm_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(stringResource(R.string.cancel_delete))
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -294,13 +335,6 @@ private fun ShiftWorkerCard(
             Row {
                 TextButton(onClick = { showEditDialog = true }) {
                     Text("ערוך")
-                }
-                IconButton(onClick = onRemove) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "הסר עובד",
-                        tint = MaterialTheme.colorScheme.error
-                    )
                 }
             }
         }

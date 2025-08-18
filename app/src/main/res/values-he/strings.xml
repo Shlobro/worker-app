@@ -176,6 +176,7 @@
     <string name="no_workers_assigned">אין עובדים משויכים</string>
     <string name="remove_worker">הסר עובד</string>
     <string name="delete_event">מחק אירוע</string>
+    <string name="delete_shift">מחק משמרת</string>
     
     <!-- Date Filter -->
     <string name="apply">החל</string>
