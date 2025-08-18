@@ -40,6 +40,7 @@ import com.example.workertracking.ui.screens.projects.EditIncomeScreen
 import com.example.workertracking.ui.screens.workers.WorkersScreen
 import com.example.workertracking.ui.screens.workers.AddWorkerScreen
 import com.example.workertracking.ui.screens.workers.EditWorkerScreen
+import com.example.workertracking.ui.screens.WorkerPhotoGalleryScreen
 import com.example.workertracking.ui.screens.workers.WorkerDetailScreen
 import com.example.workertracking.ui.screens.events.EventsScreen
 import com.example.workertracking.ui.screens.events.AddEventScreen
@@ -428,6 +429,11 @@ fun WorkerTrackingApp() {
                         application.container.triggerDashboardRefresh()
                         navController.popBackStack()
                     },
+                    onViewPhotos = {
+                        worker?.let { w ->
+                            navController.navigate(Screen.WorkerPhotoGallery.createRoute(w.id, w.name))
+                        }
+                    },
                     onMarkShiftAsPaid = { shiftWorkerId ->
                         viewModel.markShiftAsPaid(shiftWorkerId)
                         application.container.triggerDashboardRefresh()
@@ -474,6 +480,24 @@ fun WorkerTrackingApp() {
                     },
                     onUpdateWorker = { name, phoneNumber, referenceId ->
                         viewModel.updateWorker(name, phoneNumber, referenceId)
+                    }
+                )
+            }
+            composable(
+                route = Screen.WorkerPhotoGallery.route,
+                arguments = listOf(
+                    navArgument("workerId") { type = NavType.LongType },
+                    navArgument("workerName") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val workerId = backStackEntry.arguments?.getLong("workerId") ?: 0L
+                val workerName = backStackEntry.arguments?.getString("workerName") ?: ""
+                
+                WorkerPhotoGalleryScreen(
+                    workerId = workerId,
+                    workerName = workerName,
+                    onNavigateUp = {
+                        navController.popBackStack()
                     }
                 )
             }
