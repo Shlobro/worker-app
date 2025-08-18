@@ -33,6 +33,21 @@ fun EditWorkerScreen(
     var phoneNumber by remember { mutableStateOf("") }
     var selectedReferenceWorker by remember { mutableStateOf<Worker?>(null) }
     var showWorkerSelector by remember { mutableStateOf(false) }
+    var phoneNumberError by remember { mutableStateOf<String?>(null) }
+    
+    fun isValidPhoneNumber(phone: String): Boolean {
+        val pattern = Regex("^\\d{3}-\\d{7}$")
+        return pattern.matches(phone)
+    }
+    
+    fun formatPhoneNumber(input: String): String {
+        val digitsOnly = input.filter { it.isDigit() }
+        return when {
+            digitsOnly.length <= 3 -> digitsOnly
+            digitsOnly.length <= 10 -> "${digitsOnly.substring(0, 3)}-${digitsOnly.substring(3)}"
+            else -> "${digitsOnly.substring(0, 3)}-${digitsOnly.substring(3, 10)}"
+        }
+    }
     
     // Update fields when worker data becomes available
     LaunchedEffect(worker, availableWorkers) {
@@ -88,10 +103,21 @@ fun EditWorkerScreen(
             
             OutlinedTextField(
                 value = phoneNumber,
-                onValueChange = { phoneNumber = it },
+                onValueChange = { input ->
+                    val formatted = formatPhoneNumber(input)
+                    phoneNumber = formatted
+                    phoneNumberError = if (formatted.isNotEmpty() && !isValidPhoneNumber(formatted)) {
+                        "פורמט מספר טלפון: xxx-xxxxxxx"
+                    } else {
+                        null
+                    }
+                },
                 label = { Text(stringResource(R.string.phone_number)) },
+                placeholder = { Text("050-1234567") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                isError = phoneNumberError != null,
+                supportingText = phoneNumberError?.let { { Text(it) } }
             )
             
             Box {
@@ -131,12 +157,12 @@ fun EditWorkerScreen(
             
             Button(
                 onClick = {
-                    if (workerName.isNotBlank() && phoneNumber.isNotBlank()) {
+                    if (workerName.isNotBlank() && phoneNumber.isNotBlank() && isValidPhoneNumber(phoneNumber)) {
                         onUpdateWorker(workerName, phoneNumber, selectedReferenceWorker?.id)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = workerName.isNotBlank() && phoneNumber.isNotBlank()
+                enabled = workerName.isNotBlank() && phoneNumber.isNotBlank() && isValidPhoneNumber(phoneNumber) && phoneNumberError == null
             ) {
                 Text(stringResource(R.string.save))
             }

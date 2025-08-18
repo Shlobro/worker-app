@@ -121,12 +121,23 @@ fun WorkerTrackingApp() {
                             label = { Text(stringResource(item.screen.titleRes)) },
                             selected = currentDestination?.hierarchy?.any { it.route == item.screen.route } == true,
                             onClick = {
-                                navController.navigate(item.screen.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                                // Handle navigation to dashboard differently
+                                if (item.screen.route == Screen.Dashboard.route) {
+                                    // Force navigation to dashboard by clearing everything and recreating
+                                    navController.popBackStack(Screen.Dashboard.route, inclusive = false)
+                                    if (navController.currentDestination?.route != Screen.Dashboard.route) {
+                                        navController.navigate(Screen.Dashboard.route) {
+                                            popUpTo(0) { inclusive = true }
+                                        }
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
+                                } else {
+                                    navController.navigate(item.screen.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
                             }
                         )
