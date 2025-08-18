@@ -1,10 +1,12 @@
 package com.example.workertracking.ui.screens.projects
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,19 +15,24 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.example.workertracking.R
+import com.example.workertracking.data.entity.Employer
+import com.example.workertracking.ui.components.SearchableEmployerSelector
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProjectScreen(
+    availableEmployers: List<Employer> = emptyList(),
     onNavigateBack: () -> Unit,
-    onSaveProject: (String, String, Date) -> Unit
+    onSaveProject: (String, String, Date, Long?) -> Unit
 ) {
     var projectName by remember { mutableStateOf("") }
     var projectLocation by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf(Date()) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var selectedEmployer by remember { mutableStateOf<Employer?>(null) }
+    var showEmployerSelector by remember { mutableStateOf(false) }
     
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
@@ -84,12 +91,45 @@ fun AddProjectScreen(
                 }
             )
             
+            Box {
+                OutlinedTextField(
+                    value = selectedEmployer?.name ?: stringResource(R.string.no_employer),
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.select_employer)) },
+                    trailingIcon = {
+                        if (selectedEmployer != null) {
+                            IconButton(onClick = { selectedEmployer = null }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear selection")
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { showEmployerSelector = true }
+                )
+            }
+            
+            if (showEmployerSelector) {
+                SearchableEmployerSelector(
+                    employers = availableEmployers,
+                    onEmployerSelected = { employer ->
+                        selectedEmployer = employer
+                        showEmployerSelector = false
+                    },
+                    onDismiss = { showEmployerSelector = false }
+                )
+            }
+            
             Spacer(modifier = Modifier.height(16.dp))
             
             Button(
                 onClick = {
                     if (projectName.isNotBlank() && projectLocation.isNotBlank()) {
-                        onSaveProject(projectName, projectLocation, selectedDate)
+                        onSaveProject(projectName, projectLocation, selectedDate, selectedEmployer?.id)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),

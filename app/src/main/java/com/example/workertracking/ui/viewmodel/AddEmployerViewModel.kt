@@ -2,16 +2,15 @@ package com.example.workertracking.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.workertracking.data.entity.Event
-import com.example.workertracking.repository.EventRepository
+import com.example.workertracking.data.entity.Employer
+import com.example.workertracking.repository.EmployerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.Date
 
-class AddEventViewModel(
-    private val eventRepository: EventRepository
+class AddEmployerViewModel(
+    private val employerRepository: EmployerRepository
 ) : ViewModel() {
     
     private val _isLoading = MutableStateFlow(false)
@@ -23,32 +22,19 @@ class AddEventViewModel(
     private val _saveSuccess = MutableStateFlow(false)
     val saveSuccess: StateFlow<Boolean> = _saveSuccess.asStateFlow()
     
-    fun saveEvent(
-        name: String,
-        date: Date,
-        startTime: String,
-        endTime: String,
-        hours: String,
-        income: Double,
-        employerId: Long?
-    ) {
+    fun saveEmployer(name: String, phoneNumber: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val event = Event(
+                val employer = Employer(
                     name = name,
-                    date = date,
-                    startTime = startTime,
-                    endTime = endTime,
-                    hours = hours,
-                    income = income,
-                    employerId = employerId
+                    phoneNumber = phoneNumber
                 )
-                eventRepository.insertEvent(event)
+                employerRepository.insertEmployer(employer)
                 _saveSuccess.value = true
-                _isLoading.value = false
             } catch (e: Exception) {
                 _error.value = e.message
+            } finally {
                 _isLoading.value = false
             }
         }

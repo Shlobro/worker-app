@@ -1,10 +1,21 @@
 package com.example.workertracking.data.entity
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import java.util.Date
 
-@Entity(tableName = "events")
+@Entity(
+    tableName = "events",
+    foreignKeys = [
+        ForeignKey(
+            entity = Employer::class,
+            parentColumns = ["id"],
+            childColumns = ["employerId"],
+            onDelete = ForeignKey.SET_NULL
+        )
+    ]
+)
 data class Event(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
@@ -13,5 +24,6 @@ data class Event(
     val startTime: String,
     val endTime: String,
     val hours: String,
-    val income: Double = 0.0
+    val income: Double = 0.0,
+    val employerId: Long? = null
 )

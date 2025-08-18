@@ -6,6 +6,7 @@
     <string name="nav_projects">פרויקטים</string>
     <string name="nav_workers">עובדים</string>
     <string name="nav_events">אירועים</string>
+    <string name="nav_employers">מזמינים</string>
     
     <!-- Dashboard -->
     <string name="dashboard_title">לוח בקרה</string>
@@ -96,7 +97,6 @@
     <string name="error_invalid_time">זמן לא תקין</string>
     
     <!-- Dashboard Cards -->
-    <string name="financial_summary">סיכום כספי</string>
     <string name="recent_activity">פעילות אחרונה</string>
     <string name="total_revenue">סה"כ הכנסות</string>
     <string name="total_expenses">סה"כ הוצאות</string>
@@ -154,7 +154,6 @@
     <string name="delete_photo">מחק תמונה</string>
     <string name="delete_photo_confirmation">האם אתה בטוח שברצונך למחוק תמונה זו?</string>
     <string name="worker_not_found">עובד לא נמצא</string>
-    <string name="search_projects_events">חפש פרויקטים ואירועים</string>
     <string name="worker_projects_events">פרויקטים ואירועים של העובד</string>
     <string name="worker_of">עובד של %1$s</string>
     
@@ -184,4 +183,21 @@
     <string name="select_start_date">בחר תאריך התחלה</string>
     <string name="select_end_date">בחר תאריך סיום</string>
     <string name="next">הבא</string>
+    
+    <!-- Employers -->
+    <string name="employers_title">מזמינים</string>
+    <string name="add_employer">הוסף מזמין</string>
+    <string name="edit_employer">ערוך מזמין</string>
+    <string name="employer_name">שם המזמין</string>
+    <string name="search_employers">חפש מזמינים</string>
+    <string name="call_employer">התקשר למזמין</string>
+    <string name="delete_employer">מחק מזמין</string>
+    <string name="delete_employer_message">האם אתה בטוח שברצונך למחוק את %1$s?</string>
+    <string name="employer_not_found">מזמין לא נמצא</string>
+    <string name="no_projects_events">אין פרויקטים או אירועים</string>
+    <string name="search_projects_events">חפש פרויקטים ואירועים</string>
+    <string name="financial_summary">סיכום כספי</string>
+    <string name="total_profit">רווח כולל</string>
+    <string name="select_employer">בחר מזמין</string>
+    <string name="no_employer">ללא מזמין</string>
 </resources>

@@ -5,6 +5,7 @@ sealed class Screen(val route: String, val titleRes: Int, val iconRes: Int? = nu
     object Projects : Screen("projects", com.example.workertracking.R.string.nav_projects)
     object Workers : Screen("workers", com.example.workertracking.R.string.nav_workers)
     object Events : Screen("events", com.example.workertracking.R.string.nav_events)
+    object Employers : Screen("employers", com.example.workertracking.R.string.employers_title)
     
     // Detail screens
     object ProjectDetail : Screen("project_detail/{projectId}", com.example.workertracking.R.string.projects_title) {
@@ -15,6 +16,9 @@ sealed class Screen(val route: String, val titleRes: Int, val iconRes: Int? = nu
     }
     object EventDetail : Screen("event_detail/{eventId}", com.example.workertracking.R.string.events_title) {
         fun createRoute(eventId: Long) = "event_detail/$eventId"
+    }
+    object EmployerDetail : Screen("employer_detail/{employerId}", com.example.workertracking.R.string.employers_title) {
+        fun createRoute(employerId: Long) = "employer_detail/$employerId"
     }
     
     // Add/Edit screens
@@ -29,6 +33,10 @@ sealed class Screen(val route: String, val titleRes: Int, val iconRes: Int? = nu
     object AddEvent : Screen("add_event", com.example.workertracking.R.string.add_event)
     object EditEvent : Screen("edit_event/{eventId}", com.example.workertracking.R.string.edit_event) {
         fun createRoute(eventId: Long) = "edit_event/$eventId"
+    }
+    object AddEmployer : Screen("add_employer", com.example.workertracking.R.string.add_employer)
+    object EditEmployer : Screen("edit_employer/{employerId}", com.example.workertracking.R.string.edit_employer) {
+        fun createRoute(employerId: Long) = "edit_employer/$employerId"
     }
     object AddShift : Screen("add_shift/{projectId}", com.example.workertracking.R.string.add_shift) {
         fun createRoute(projectId: Long) = "add_shift/$projectId"

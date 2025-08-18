@@ -28,4 +28,7 @@ interface EventDao {
         ORDER BY e.date DESC
     """)
     fun getEventsForWorker(workerId: Long): Flow<List<Event>>
+
+    @Query("SELECT * FROM events WHERE employerId = :employerId ORDER BY date DESC")
+    suspend fun getEventsByEmployer(employerId: Long): List<Event>
 }

@@ -31,5 +31,10 @@ val bottomNavItems = listOf(
         screen = Screen.Events,
         icon = Icons.Default.DateRange,
         selectedIcon = Icons.Default.DateRange
+    ),
+    BottomNavItem(
+        screen = Screen.Employers,
+        icon = Icons.Default.AccountCircle,
+        selectedIcon = Icons.Default.AccountCircle
     )
 )

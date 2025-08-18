@@ -45,6 +45,10 @@ import com.example.workertracking.ui.screens.events.EventsScreen
 import com.example.workertracking.ui.screens.events.AddEventScreen
 import com.example.workertracking.ui.screens.events.EditEventScreen
 import com.example.workertracking.ui.screens.events.EventDetailScreen
+import com.example.workertracking.ui.screens.employers.EmployersScreen
+import com.example.workertracking.ui.screens.employers.AddEmployerScreen
+import com.example.workertracking.ui.screens.employers.EditEmployerScreen
+import com.example.workertracking.ui.screens.employers.EmployerDetailScreen
 import com.example.workertracking.ui.screens.shifts.AddShiftScreen
 import com.example.workertracking.ui.screens.shifts.EditShiftScreen
 import com.example.workertracking.ui.screens.shifts.ShiftDetailScreen
@@ -63,6 +67,10 @@ import com.example.workertracking.ui.viewmodel.ShiftDetailViewModel
 import com.example.workertracking.ui.viewmodel.AddIncomeViewModel
 import com.example.workertracking.ui.viewmodel.MoneyOwedViewModel
 import com.example.workertracking.ui.viewmodel.DashboardViewModel
+import com.example.workertracking.ui.viewmodel.EmployersViewModel
+import com.example.workertracking.ui.viewmodel.AddEmployerViewModel
+import com.example.workertracking.ui.viewmodel.EditEmployerViewModel
+import com.example.workertracking.ui.viewmodel.EmployerDetailViewModel
 import com.example.workertracking.ui.theme.WorkerTrackingTheme
 
 class MainActivity : ComponentActivity() {
@@ -103,7 +111,8 @@ fun WorkerTrackingApp() {
                 Screen.Dashboard.route,
                 Screen.Projects.route,
                 Screen.Workers.route,
-                Screen.Events.route
+                Screen.Events.route,
+                Screen.Employers.route
             )) {
                 NavigationBar {
                     bottomNavItems.forEach { item ->
@@ -206,7 +215,11 @@ fun WorkerTrackingApp() {
                 val viewModel: AddProjectViewModel = viewModel {
                     AddProjectViewModel(application.container.projectRepository)
                 }
+                val employersViewModel: EmployersViewModel = viewModel {
+                    EmployersViewModel(application.container.employerRepository)
+                }
                 val saveSuccess by viewModel.saveSuccess.collectAsState()
+                val availableEmployers by employersViewModel.employers.collectAsState()
                 
                 LaunchedEffect(saveSuccess) {
                     if (saveSuccess) {
@@ -216,11 +229,12 @@ fun WorkerTrackingApp() {
                 }
                 
                 AddProjectScreen(
+                    availableEmployers = availableEmployers,
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onSaveProject = { name, location, startDate ->
-                        viewModel.saveProject(name, location, startDate)
+                    onSaveProject = { name, location, startDate, employerId ->
+                        viewModel.saveProject(name, location, startDate, employerId)
                     }
                 )
             }
@@ -489,7 +503,11 @@ fun WorkerTrackingApp() {
                 val viewModel: AddEventViewModel = viewModel {
                     AddEventViewModel(application.container.eventRepository)
                 }
+                val employersViewModel: EmployersViewModel = viewModel {
+                    EmployersViewModel(application.container.employerRepository)
+                }
                 val saveSuccess by viewModel.saveSuccess.collectAsState()
+                val availableEmployers by employersViewModel.employers.collectAsState()
                 
                 LaunchedEffect(saveSuccess) {
                     if (saveSuccess) {
@@ -499,11 +517,12 @@ fun WorkerTrackingApp() {
                 }
                 
                 AddEventScreen(
+                    availableEmployers = availableEmployers,
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onSaveEvent = { name, date, startTime, endTime, hours, income ->
-                        viewModel.saveEvent(name, date, startTime, endTime, hours, income)
+                    onSaveEvent = { name, date, startTime, endTime, hours, income, employerId ->
+                        viewModel.saveEvent(name, date, startTime, endTime, hours, income, employerId)
                     }
                 )
             }
@@ -820,6 +839,134 @@ fun WorkerTrackingApp() {
                         navController.navigate(Screen.WorkerDetail.createRoute(workerId))
                     },
                     viewModel = viewModel
+                )
+            }
+            composable(Screen.Employers.route) {
+                val viewModel: EmployersViewModel = viewModel {
+                    EmployersViewModel(application.container.employerRepository)
+                }
+                val employers by viewModel.employers.collectAsState()
+                val employerProfits by viewModel.employerProfits.collectAsState()
+                val isLoading by viewModel.isLoading.collectAsState()
+                
+                EmployersScreen(
+                    employers = employers,
+                    employerProfits = employerProfits,
+                    isLoading = isLoading,
+                    onAddEmployer = {
+                        navController.navigate(Screen.AddEmployer.route)
+                    },
+                    onEmployerClick = { employer ->
+                        navController.navigate(Screen.EmployerDetail.createRoute(employer.id))
+                    },
+                    onDeleteEmployer = { employer ->
+                        viewModel.deleteEmployer(employer)
+                    }
+                )
+            }
+            composable(Screen.AddEmployer.route) {
+                val viewModel: AddEmployerViewModel = viewModel {
+                    AddEmployerViewModel(application.container.employerRepository)
+                }
+                val saveSuccess by viewModel.saveSuccess.collectAsState()
+                
+                LaunchedEffect(saveSuccess) {
+                    if (saveSuccess) {
+                        viewModel.clearSaveSuccess()
+                        navController.popBackStack()
+                    }
+                }
+                
+                AddEmployerScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onSaveEmployer = { name, phoneNumber ->
+                        viewModel.saveEmployer(name, phoneNumber)
+                    }
+                )
+            }
+            composable(
+                route = Screen.EditEmployer.route,
+                arguments = listOf(navArgument("employerId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val employerId = backStackEntry.arguments?.getLong("employerId") ?: 0L
+                val viewModel: EditEmployerViewModel = viewModel {
+                    EditEmployerViewModel(application.container.employerRepository)
+                }
+                val employer by viewModel.employer.collectAsState()
+                val updateSuccess by viewModel.updateSuccess.collectAsState()
+                
+                LaunchedEffect(employerId) {
+                    viewModel.loadEmployer(employerId)
+                }
+                
+                LaunchedEffect(updateSuccess) {
+                    if (updateSuccess) {
+                        viewModel.clearUpdateSuccess()
+                        navController.popBackStack()
+                    }
+                }
+                
+                EditEmployerScreen(
+                    employer = employer,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onUpdateEmployer = { name, phoneNumber ->
+                        viewModel.updateEmployer(name, phoneNumber)
+                    }
+                )
+            }
+            composable(
+                route = Screen.EmployerDetail.route,
+                arguments = listOf(navArgument("employerId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val employerId = backStackEntry.arguments?.getLong("employerId") ?: 0L
+                val viewModel: EmployerDetailViewModel = viewModel {
+                    EmployerDetailViewModel(application.container.employerRepository)
+                }
+                val employer by viewModel.employer.collectAsState()
+                val projects by viewModel.projects.collectAsState()
+                val events by viewModel.events.collectAsState()
+                val totalProfit by viewModel.totalProfit.collectAsState()
+                val totalIncome by viewModel.totalIncome.collectAsState()
+                val isLoading by viewModel.isLoading.collectAsState()
+                val deleteSuccess by viewModel.deleteSuccess.collectAsState()
+                
+                LaunchedEffect(employerId) {
+                    viewModel.loadEmployer(employerId)
+                }
+                
+                LaunchedEffect(deleteSuccess) {
+                    if (deleteSuccess) {
+                        viewModel.clearDeleteSuccess()
+                        navController.popBackStack()
+                    }
+                }
+                
+                EmployerDetailScreen(
+                    employer = employer,
+                    projects = projects,
+                    events = events,
+                    isLoading = isLoading,
+                    totalProfit = totalProfit,
+                    totalIncome = totalIncome,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onEditEmployer = {
+                        navController.navigate(Screen.EditEmployer.createRoute(employerId))
+                    },
+                    onDeleteEmployer = {
+                        viewModel.deleteEmployer()
+                    },
+                    onProjectClick = { project ->
+                        navController.navigate(Screen.ProjectDetail.createRoute(project.id))
+                    },
+                    onEventClick = { event ->
+                        navController.navigate(Screen.EventDetail.createRoute(event.id))
+                    }
                 )
             }
         }

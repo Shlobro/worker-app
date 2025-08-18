@@ -26,7 +26,8 @@ class AddProjectViewModel(
     fun saveProject(
         name: String,
         location: String,
-        startDate: Date
+        startDate: Date,
+        employerId: Long?
     ) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -34,7 +35,8 @@ class AddProjectViewModel(
                 val project = Project(
                     name = name,
                     location = location,
-                    startDate = startDate
+                    startDate = startDate,
+                    employerId = employerId
                 )
                 projectRepository.insertProject(project)
                 _saveSuccess.value = true

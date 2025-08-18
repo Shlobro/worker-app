@@ -24,4 +24,7 @@ interface ProjectDao {
 
     @Query("UPDATE projects SET status = 'CLOSED', endDate = :endDate WHERE id = :projectId")
     suspend fun closeProject(projectId: Long, endDate: Long)
+
+    @Query("SELECT * FROM projects WHERE employerId = :employerId ORDER BY startDate DESC")
+    suspend fun getProjectsByEmployer(employerId: Long): List<Project>
 }
