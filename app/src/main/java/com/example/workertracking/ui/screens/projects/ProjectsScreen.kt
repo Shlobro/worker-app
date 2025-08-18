@@ -35,7 +35,7 @@ fun ProjectsScreen(
     var projectToDelete by remember { mutableStateOf<Project?>(null) }
     
     val filteredProjects = remember(projects, searchQuery) {
-        if (searchQuery.isBlank()) {
+        val projectsToSort = if (searchQuery.isBlank()) {
             projects
         } else {
             projects.filter { project ->
@@ -43,6 +43,12 @@ fun ProjectsScreen(
                 project.location.contains(searchQuery, ignoreCase = true)
             }
         }
+        
+        // Sort projects: active first, then by date (most recent first)
+        projectsToSort.sortedWith(
+            compareBy<Project> { it.status != ProjectStatus.ACTIVE }
+                .thenByDescending { it.startDate }
+        )
     }
     
     Scaffold(
