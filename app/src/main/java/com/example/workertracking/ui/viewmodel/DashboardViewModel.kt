@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.util.*
+import java.util.Calendar
 
 data class DashboardUiState(
     val totalIncome: Double = 0.0,
@@ -178,10 +179,15 @@ class DashboardViewModel(
 
     private fun getUpcomingEvents(): Flow<List<Event>> =
         eventRepository.getAllEvents().map { events ->
-            val now = Date()
+            val today = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.time
             val (startDate, endDate) = _dateFilter.value
             events.filter { event ->
-                event.date.after(now) && // Future events only
+                !event.date.before(today) && // Today and future events
                 isWithinDateRange(event.date, startDate, endDate)
             }.sortedBy { it.date }.take(5) // Next 5 events
         }
