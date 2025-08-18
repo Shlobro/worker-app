@@ -177,4 +177,11 @@
     <string name="all_shifts">כל המשמרות</string>
     <string name="all_events">כל האירועים</string>
     <string name="no_work_history">אין היסטוריית עבודה</string>
+    
+    <!-- Date Filter -->
+    <string name="apply">החל</string>
+    <string name="select_date_range">בחר טווח תאריכים</string>
+    <string name="select_start_date">בחר תאריך התחלה</string>
+    <string name="select_end_date">בחר תאריך סיום</string>
+    <string name="next">הבא</string>
 </resources>

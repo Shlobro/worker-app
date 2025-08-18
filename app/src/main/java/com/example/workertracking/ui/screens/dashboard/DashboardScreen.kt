@@ -598,8 +598,112 @@ fun DateFilterChip(
         )
     }
     
-    // TODO: Implement date range picker dialog
-    // This would show a date range picker when showDatePicker is true
+    if (showDatePicker) {
+        DateRangePickerDialog(
+            startDate = startDate,
+            endDate = endDate,
+            onDateRangeSelected = { start, end ->
+                onDateRangeSelected(start, end)
+                showDatePicker = false
+            },
+            onDismiss = {
+                showDatePicker = false
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DateRangePickerDialog(
+    startDate: Date?,
+    endDate: Date?,
+    onDateRangeSelected: (Date?, Date?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var isSelectingStartDate by remember { mutableStateOf(true) }
+    var tempStartDate by remember { mutableStateOf(startDate) }
+    var tempEndDate by remember { mutableStateOf(endDate) }
+    
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = if (isSelectingStartDate) startDate?.time else endDate?.time
+    )
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (isSelectingStartDate) {
+                    TextButton(
+                        onClick = {
+                            tempStartDate = datePickerState.selectedDateMillis?.let { Date(it) }
+                            isSelectingStartDate = false
+                            // Reset the picker for end date
+                            datePickerState.selectedDateMillis = tempEndDate?.time
+                        }
+                    ) {
+                        Text(stringResource(R.string.next))
+                    }
+                } else {
+                    TextButton(
+                        onClick = {
+                            isSelectingStartDate = true
+                            datePickerState.selectedDateMillis = tempStartDate?.time
+                        }
+                    ) {
+                        Text(stringResource(R.string.back))
+                    }
+                    TextButton(
+                        onClick = {
+                            tempEndDate = datePickerState.selectedDateMillis?.let { Date(it) }
+                            onDateRangeSelected(tempStartDate, tempEndDate)
+                        }
+                    ) {
+                        Text(stringResource(R.string.apply))
+                    }
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+        title = {
+            Column {
+                Text(
+                    text = if (isSelectingStartDate) 
+                        stringResource(R.string.select_start_date) 
+                    else 
+                        stringResource(R.string.select_end_date)
+                )
+                if (tempStartDate != null || tempEndDate != null) {
+                    val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
+                    Text(
+                        text = when {
+                            tempStartDate != null && tempEndDate != null -> 
+                                "${dateFormat.format(tempStartDate!!)} - ${dateFormat.format(tempEndDate!!)}"
+                            tempStartDate != null -> 
+                                "מ- ${dateFormat.format(tempStartDate!!)}"
+                            tempEndDate != null -> 
+                                "עד ${dateFormat.format(tempEndDate!!)}"
+                            else -> ""
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        text = {
+            DatePicker(
+                state = datePickerState,
+                modifier = Modifier.height(400.dp)
+            )
+        }
+    )
 }
 
 // Helper function to format currency

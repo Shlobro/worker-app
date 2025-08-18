@@ -219,10 +219,13 @@ fun ProjectDetailScreen(
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                 }
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Button(onClick = onAddIncome) {
+                                    Button(
+                                        onClick = onAddIncome,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
                                         Text("הוסף הכנסה")
                                     }
                                     if (project.status == ProjectStatus.ACTIVE) {
@@ -230,7 +233,8 @@ fun ProjectDetailScreen(
                                             onClick = { showCloseDialog = true },
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = MaterialTheme.colorScheme.error
-                                            )
+                                            ),
+                                            modifier = Modifier.fillMaxWidth()
                                         ) {
                                             Text("סגור פרויקט")
                                         }
