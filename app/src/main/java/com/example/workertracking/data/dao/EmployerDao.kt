@@ -26,7 +26,7 @@ interface EmployerDao {
 
     @Query("""
         SELECT 
-            COALESCE(SUM(pi.amount * pi.units), 0) - 
+            (COALESCE(SUM(pi.amount * pi.units), 0) + COALESCE(SUM(e.income), 0)) - 
             (COALESCE(SUM(CASE WHEN sw.isHourlyRate = 1 THEN sw.payRate * s.hours ELSE sw.payRate END + COALESCE(s.hours * sw.referencePayRate, 0)), 0) +
              COALESCE(SUM(CASE WHEN ew.isHourlyRate = 1 THEN ew.hours * ew.payRate ELSE ew.payRate END + COALESCE(ew.hours * ew.referencePayRate, 0)), 0))
         FROM employers emp
@@ -50,4 +50,18 @@ interface EmployerDao {
         WHERE emp.id = :employerId
     """)
     suspend fun getTotalIncomeFromEmployer(employerId: Long): Double?
+
+    @Query("""
+        SELECT 
+            COALESCE(SUM(CASE WHEN sw.isHourlyRate = 1 THEN sw.payRate * s.hours ELSE sw.payRate END + COALESCE(s.hours * sw.referencePayRate, 0)), 0) +
+            COALESCE(SUM(CASE WHEN ew.isHourlyRate = 1 THEN ew.hours * ew.payRate ELSE ew.payRate END + COALESCE(ew.hours * ew.referencePayRate, 0)), 0)
+        FROM employers emp
+        LEFT JOIN projects p ON emp.id = p.employerId
+        LEFT JOIN events e ON emp.id = e.employerId
+        LEFT JOIN shifts s ON p.id = s.projectId
+        LEFT JOIN shift_workers sw ON s.id = sw.shiftId
+        LEFT JOIN event_workers ew ON e.id = ew.eventId
+        WHERE emp.id = :employerId
+    """)
+    suspend fun getTotalExpensesFromEmployer(employerId: Long): Double?
 }

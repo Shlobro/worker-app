@@ -871,11 +871,15 @@ fun WorkerTrackingApp() {
                 }
                 val employers by viewModel.employers.collectAsState()
                 val employerProfits by viewModel.employerProfits.collectAsState()
+                val employerIncomes by viewModel.employerIncomes.collectAsState()
+                val employerExpenses by viewModel.employerExpenses.collectAsState()
                 val isLoading by viewModel.isLoading.collectAsState()
                 
                 EmployersScreen(
                     employers = employers,
                     employerProfits = employerProfits,
+                    employerIncomes = employerIncomes,
+                    employerExpenses = employerExpenses,
                     isLoading = isLoading,
                     onAddEmployer = {
                         navController.navigate(Screen.AddEmployer.route)
@@ -955,6 +959,7 @@ fun WorkerTrackingApp() {
                 val events by viewModel.events.collectAsState()
                 val totalProfit by viewModel.totalProfit.collectAsState()
                 val totalIncome by viewModel.totalIncome.collectAsState()
+                val totalExpenses by viewModel.totalExpenses.collectAsState()
                 val isLoading by viewModel.isLoading.collectAsState()
                 val deleteSuccess by viewModel.deleteSuccess.collectAsState()
                 
@@ -976,6 +981,7 @@ fun WorkerTrackingApp() {
                     isLoading = isLoading,
                     totalProfit = totalProfit,
                     totalIncome = totalIncome,
+                    totalExpenses = totalExpenses,
                     onNavigateBack = {
                         navController.popBackStack()
                     },

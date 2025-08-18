@@ -28,6 +28,8 @@ import com.example.workertracking.data.entity.Employer
 fun EmployersScreen(
     employers: List<Employer> = emptyList(),
     employerProfits: Map<Long, Double> = emptyMap(),
+    employerIncomes: Map<Long, Double> = emptyMap(),
+    employerExpenses: Map<Long, Double> = emptyMap(),
     isLoading: Boolean = false,
     onAddEmployer: () -> Unit = {},
     onEmployerClick: (Employer) -> Unit = {},
@@ -142,6 +144,8 @@ fun EmployersScreen(
                     EmployerCard(
                         employer = employer,
                         totalProfit = employerProfits[employer.id] ?: 0.0,
+                        totalIncome = employerIncomes[employer.id] ?: 0.0,
+                        totalExpenses = employerExpenses[employer.id] ?: 0.0,
                         onClick = { onEmployerClick(employer) },
                         onDelete = { employerToDelete = employer }
                     )
@@ -188,6 +192,8 @@ fun EmployersScreen(
 fun EmployerCard(
     employer: Employer,
     totalProfit: Double = 0.0,
+    totalIncome: Double = 0.0,
+    totalExpenses: Double = 0.0,
     onClick: () -> Unit,
     onDelete: () -> Unit = {}
 ) {
@@ -244,36 +250,75 @@ fun EmployerCard(
                 )
             }
             
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.total_revenue),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "₪${String.format("%.2f", totalIncome)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.total_expenses),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "₪${String.format("%.2f", totalExpenses)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.total_profit),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = stringResource(R.string.total_profit),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                         Text(
                             text = "₪${String.format("%.2f", totalProfit)}",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = if (totalProfit >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                         )
+                        IconButton(onClick = onDelete) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.delete_employer),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.delete_employer),
-                        tint = MaterialTheme.colorScheme.error
-                    )
                 }
             }
         }

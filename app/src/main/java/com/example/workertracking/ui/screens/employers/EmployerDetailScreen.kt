@@ -37,6 +37,7 @@ fun EmployerDetailScreen(
     isLoading: Boolean,
     totalProfit: Double = 0.0,
     totalIncome: Double = 0.0,
+    totalExpenses: Double = 0.0,
     onNavigateBack: () -> Unit,
     onEditEmployer: () -> Unit = {},
     onDeleteEmployer: () -> Unit = {},
@@ -192,7 +193,7 @@ fun EmployerDetailScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = stringResource(R.string.total_income),
+                                    text = stringResource(R.string.total_revenue),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 Text(
@@ -200,6 +201,22 @@ fun EmployerDetailScreen(
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.total_expenses),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = "₪${String.format("%.2f", totalExpenses)}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.error
                                 )
                             }
                             

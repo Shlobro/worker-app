@@ -30,6 +30,9 @@ class EmployerDetailViewModel(
     private val _totalIncome = MutableStateFlow(0.0)
     val totalIncome: StateFlow<Double> = _totalIncome.asStateFlow()
     
+    private val _totalExpenses = MutableStateFlow(0.0)
+    val totalExpenses: StateFlow<Double> = _totalExpenses.asStateFlow()
+    
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     
@@ -87,8 +90,10 @@ class EmployerDetailViewModel(
             try {
                 val profit = employerRepository.getTotalProfitFromEmployer(employerId)
                 val income = employerRepository.getTotalIncomeFromEmployer(employerId)
+                val expenses = employerRepository.getTotalExpensesFromEmployer(employerId)
                 _totalProfit.value = profit
                 _totalIncome.value = income
+                _totalExpenses.value = expenses
             } catch (e: Exception) {
                 _error.value = e.message
             }

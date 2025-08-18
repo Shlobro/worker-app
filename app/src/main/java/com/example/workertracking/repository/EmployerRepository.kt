@@ -34,6 +34,10 @@ class EmployerRepository(
         return employerDao.getTotalIncomeFromEmployer(employerId) ?: 0.0
     }
     
+    suspend fun getTotalExpensesFromEmployer(employerId: Long): Double {
+        return employerDao.getTotalExpensesFromEmployer(employerId) ?: 0.0
+    }
+    
     suspend fun getProjectsForEmployer(employerId: Long): List<Project> {
         return projectDao.getProjectsByEmployer(employerId)
     }

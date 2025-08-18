@@ -19,6 +19,12 @@ class EmployersViewModel(
     private val _employerProfits = MutableStateFlow<Map<Long, Double>>(emptyMap())
     val employerProfits: StateFlow<Map<Long, Double>> = _employerProfits.asStateFlow()
     
+    private val _employerIncomes = MutableStateFlow<Map<Long, Double>>(emptyMap())
+    val employerIncomes: StateFlow<Map<Long, Double>> = _employerIncomes.asStateFlow()
+    
+    private val _employerExpenses = MutableStateFlow<Map<Long, Double>>(emptyMap())
+    val employerExpenses: StateFlow<Map<Long, Double>> = _employerExpenses.asStateFlow()
+    
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     
@@ -35,7 +41,7 @@ class EmployersViewModel(
             try {
                 employerRepository.getAllEmployers().collect { employerList ->
                     _employers.value = employerList
-                    loadEmployerProfits(employerList)
+                    loadEmployerFinancials(employerList)
                     _isLoading.value = false
                 }
             } catch (e: Exception) {
@@ -45,17 +51,26 @@ class EmployersViewModel(
         }
     }
     
-    private fun loadEmployerProfits(employers: List<Employer>) {
+    private fun loadEmployerFinancials(employers: List<Employer>) {
         viewModelScope.launch {
             val profits = mutableMapOf<Long, Double>()
+            val incomes = mutableMapOf<Long, Double>()
+            val expenses = mutableMapOf<Long, Double>()
+            
             employers.forEach { employer ->
                 try {
                     profits[employer.id] = employerRepository.getTotalProfitFromEmployer(employer.id)
+                    incomes[employer.id] = employerRepository.getTotalIncomeFromEmployer(employer.id)
+                    expenses[employer.id] = employerRepository.getTotalExpensesFromEmployer(employer.id)
                 } catch (e: Exception) {
                     profits[employer.id] = 0.0
+                    incomes[employer.id] = 0.0
+                    expenses[employer.id] = 0.0
                 }
             }
             _employerProfits.value = profits
+            _employerIncomes.value = incomes
+            _employerExpenses.value = expenses
         }
     }
     
