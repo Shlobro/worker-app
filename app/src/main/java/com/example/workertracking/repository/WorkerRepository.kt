@@ -8,6 +8,7 @@ import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.data.entity.UnpaidShiftWorkerInfo
 import com.example.workertracking.data.entity.UnpaidEventWorkerInfo
 import kotlinx.coroutines.flow.Flow
+import java.util.*
 
 class WorkerRepository(
     private val workerDao: WorkerDao,
@@ -91,5 +92,80 @@ class WorkerRepository(
 
     suspend fun getAllEventWorkersForWorker(workerId: Long): List<UnpaidEventWorkerInfo> {
         return eventWorkerDao.getAllEventWorkersForWorker(workerId)
+    }
+    
+    // Date filtering methods
+    suspend fun getUnpaidShiftWorkersForWorkerWithDateFilter(
+        workerId: Long, 
+        startDate: Date?, 
+        endDate: Date?
+    ): List<UnpaidShiftWorkerInfo> {
+        val allUnpaidShifts = shiftWorkerDao.getUnpaidShiftWorkersForWorker(workerId)
+        return filterShiftsByDate(allUnpaidShifts, startDate, endDate)
+    }
+
+    suspend fun getUnpaidEventWorkersForWorkerWithDateFilter(
+        workerId: Long, 
+        startDate: Date?, 
+        endDate: Date?
+    ): List<UnpaidEventWorkerInfo> {
+        val allUnpaidEvents = eventWorkerDao.getUnpaidEventWorkersForWorker(workerId)
+        return filterEventsByDate(allUnpaidEvents, startDate, endDate)
+    }
+
+    suspend fun getAllShiftWorkersForWorkerWithDateFilter(
+        workerId: Long, 
+        startDate: Date?, 
+        endDate: Date?
+    ): List<UnpaidShiftWorkerInfo> {
+        val allShifts = shiftWorkerDao.getAllShiftWorkersForWorker(workerId)
+        return filterShiftsByDate(allShifts, startDate, endDate)
+    }
+
+    suspend fun getAllEventWorkersForWorkerWithDateFilter(
+        workerId: Long, 
+        startDate: Date?, 
+        endDate: Date?
+    ): List<UnpaidEventWorkerInfo> {
+        val allEvents = eventWorkerDao.getAllEventWorkersForWorker(workerId)
+        return filterEventsByDate(allEvents, startDate, endDate)
+    }
+    
+    private fun filterShiftsByDate(
+        shifts: List<UnpaidShiftWorkerInfo>, 
+        startDate: Date?, 
+        endDate: Date?
+    ): List<UnpaidShiftWorkerInfo> {
+        if (startDate == null && endDate == null) return shifts
+        
+        return shifts.filter { shift ->
+            val shiftDate = Date(shift.shiftDate)
+            when {
+                startDate != null && endDate != null -> 
+                    shiftDate >= startDate && shiftDate <= endDate
+                startDate != null -> shiftDate >= startDate
+                endDate != null -> shiftDate <= endDate
+                else -> true
+            }
+        }
+    }
+    
+    private fun filterEventsByDate(
+        events: List<UnpaidEventWorkerInfo>, 
+        startDate: Date?, 
+        endDate: Date?
+    ): List<UnpaidEventWorkerInfo> {
+        if (startDate == null && endDate == null) return events
+        
+        return events.filter { event ->
+            val eventDate = Date(event.eventDate)
+            when {
+                startDate != null && endDate != null -> 
+                    eventDate >= startDate && eventDate <= endDate
+                startDate != null -> eventDate >= startDate
+                endDate != null -> eventDate <= endDate
+                else -> true
+            }
+        }
     }
 }

@@ -401,6 +401,7 @@ fun WorkerTrackingApp() {
                 val allShifts by viewModel.allShifts.collectAsState()
                 val allEvents by viewModel.allEvents.collectAsState()
                 val totalOwed by viewModel.totalOwed.collectAsState()
+                val dateFilter by viewModel.dateFilter.collectAsState()
                 
                 LaunchedEffect(workerId) {
                     viewModel.loadWorker(workerId)
@@ -417,6 +418,7 @@ fun WorkerTrackingApp() {
                     allShifts = allShifts,
                     allEvents = allEvents,
                     totalOwed = totalOwed,
+                    dateFilter = dateFilter,
                     onNavigateBack = {
                         application.container.triggerDashboardRefresh()
                         navController.popBackStack()
@@ -441,6 +443,12 @@ fun WorkerTrackingApp() {
                     onMarkEventAsPaid = { eventWorkerId ->
                         viewModel.markEventAsPaid(eventWorkerId)
                         application.container.triggerDashboardRefresh()
+                    },
+                    onDateRangeSelected = { startDate, endDate ->
+                        viewModel.setDateFilter(startDate, endDate)
+                    },
+                    onClearDateFilter = {
+                        viewModel.clearDateFilter()
                     }
                 )
             }

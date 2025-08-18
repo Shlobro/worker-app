@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.*
 
 class WorkerDetailViewModel(
     private val workerRepository: WorkerRepository,
@@ -59,6 +60,9 @@ class WorkerDetailViewModel(
 
     private val _allEvents = MutableStateFlow<List<UnpaidEventWorkerInfo>>(emptyList())
     val allEvents: StateFlow<List<UnpaidEventWorkerInfo>> = _allEvents.asStateFlow()
+    
+    private val _dateFilter = MutableStateFlow<Pair<Date?, Date?>>(Pair(null, null))
+    val dateFilter: StateFlow<Pair<Date?, Date?>> = _dateFilter.asStateFlow()
 
     fun loadWorker(workerId: Long) {
         viewModelScope.launch {
@@ -144,8 +148,17 @@ class WorkerDetailViewModel(
     private fun loadUnpaidItems(workerId: Long) {
         viewModelScope.launch {
             try {
-                val unpaidShifts = workerRepository.getUnpaidShiftWorkersForWorker(workerId)
-                val unpaidEvents = workerRepository.getUnpaidEventWorkersForWorker(workerId)
+                val currentFilter = _dateFilter.value
+                val unpaidShifts = workerRepository.getUnpaidShiftWorkersForWorkerWithDateFilter(
+                    workerId, 
+                    currentFilter.first, 
+                    currentFilter.second
+                )
+                val unpaidEvents = workerRepository.getUnpaidEventWorkersForWorkerWithDateFilter(
+                    workerId, 
+                    currentFilter.first, 
+                    currentFilter.second
+                )
                 
                 _unpaidShifts.value = unpaidShifts
                 _unpaidEvents.value = unpaidEvents
@@ -176,8 +189,17 @@ class WorkerDetailViewModel(
     private fun loadCompleteHistory(workerId: Long) {
         viewModelScope.launch {
             try {
-                val allShifts = workerRepository.getAllShiftWorkersForWorker(workerId)
-                val allEvents = workerRepository.getAllEventWorkersForWorker(workerId)
+                val currentFilter = _dateFilter.value
+                val allShifts = workerRepository.getAllShiftWorkersForWorkerWithDateFilter(
+                    workerId, 
+                    currentFilter.first, 
+                    currentFilter.second
+                )
+                val allEvents = workerRepository.getAllEventWorkersForWorkerWithDateFilter(
+                    workerId, 
+                    currentFilter.first, 
+                    currentFilter.second
+                )
                 
                 _allShifts.value = allShifts
                 _allEvents.value = allEvents
@@ -212,6 +234,24 @@ class WorkerDetailViewModel(
             } catch (e: Exception) {
                 // Handle error
             }
+        }
+    }
+    
+    fun setDateFilter(startDate: Date?, endDate: Date?) {
+        _dateFilter.value = Pair(startDate, endDate)
+        // Reload data with filter
+        _worker.value?.let { worker ->
+            loadUnpaidItems(worker.id)
+            loadCompleteHistory(worker.id)
+        }
+    }
+    
+    fun clearDateFilter() {
+        _dateFilter.value = Pair(null, null)
+        // Reload data without filter
+        _worker.value?.let { worker ->
+            loadUnpaidItems(worker.id)
+            loadCompleteHistory(worker.id)
         }
     }
 }

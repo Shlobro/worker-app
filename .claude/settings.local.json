@@ -10,7 +10,9 @@
       "Bash(copy:*)",
       "Bash(rm:*)",
       "Bash(gradlew.bat lint:*)",
-      "Bash(gradlew.bat compileDebugKotlin:*)"
+      "Bash(gradlew.bat compileDebugKotlin:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": [],
