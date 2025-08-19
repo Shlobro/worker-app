@@ -8,6 +8,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Search
@@ -23,16 +26,24 @@ import androidx.compose.ui.unit.dp
 import com.example.workertracking.R
 import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.data.entity.WorkerWithDebt
+import com.example.workertracking.ui.screens.dashboard.DateFilterChip
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkersScreen(
     workers: List<Worker> = emptyList(),
     workersWithDebt: List<WorkerWithDebt> = emptyList(),
+    workerEarnings: Map<Long, Double> = emptyMap(),
+    startDate: Date? = null,
+    endDate: Date? = null,
     isLoading: Boolean = false,
     onAddWorker: () -> Unit = {},
     onWorkerClick: (Worker) -> Unit = {},
-    onDeleteWorker: (Worker) -> Unit = {}
+    onDeleteWorker: (Worker) -> Unit = {},
+    onDateFilterChanged: (Date?, Date?) -> Unit = { _, _ -> },
+    onClearDateFilter: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var workerToDelete by remember { mutableStateOf<Worker?>(null) }
@@ -146,12 +157,21 @@ fun WorkersScreen(
                         singleLine = true
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+                    
+                    DateFilterChip(
+                        startDate = startDate,
+                        endDate = endDate,
+                        onDateRangeSelected = onDateFilterChanged,
+                        onClearFilter = onClearDateFilter
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
                 
                 items(filteredWorkersWithDebt) { workerWithDebt ->
                     WorkerCard(
                         worker = workerWithDebt.worker,
                         totalOwed = workerWithDebt.totalOwed,
+                        totalEarnings = workerEarnings[workerWithDebt.worker.id] ?: 0.0,
                         unpaidCount = workerWithDebt.unpaidShiftsCount + workerWithDebt.unpaidEventsCount,
                         onClick = { onWorkerClick(workerWithDebt.worker) },
                         onDelete = { workerToDelete = workerWithDebt.worker }
@@ -199,6 +219,7 @@ fun WorkersScreen(
 fun WorkerCard(
     worker: Worker,
     totalOwed: Double = 0.0,
+    totalEarnings: Double = 0.0,
     unpaidCount: Int = 0,
     onClick: () -> Unit,
     onDelete: () -> Unit = {}
@@ -277,6 +298,40 @@ fun WorkerCard(
                             color = MaterialTheme.colorScheme.error
                         )
                     }
+                    
+                    // Total earnings row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.total_earnings),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "₪${String.format("%.2f", totalEarnings)}",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    // Total owed row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,

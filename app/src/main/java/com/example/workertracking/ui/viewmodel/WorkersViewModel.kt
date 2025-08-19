@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.*
 
 class WorkersViewModel(
     private val workerRepository: WorkerRepository
@@ -26,9 +27,19 @@ class WorkersViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
     
+    private val _workerEarnings = MutableStateFlow<Map<Long, Double>>(emptyMap())
+    val workerEarnings: StateFlow<Map<Long, Double>> = _workerEarnings.asStateFlow()
+    
+    private val _startDate = MutableStateFlow<Date?>(null)
+    val startDate: StateFlow<Date?> = _startDate.asStateFlow()
+    
+    private val _endDate = MutableStateFlow<Date?>(null)
+    val endDate: StateFlow<Date?> = _endDate.asStateFlow()
+    
     init {
         loadWorkers()
         loadWorkersWithDebt()
+        loadWorkerEarnings()
     }
     
     private fun loadWorkers() {
@@ -101,5 +112,40 @@ class WorkersViewModel(
                 _error.value = e.message
             }
         }
+    }
+    
+    private fun loadWorkerEarnings() {
+        viewModelScope.launch {
+            try {
+                workerRepository.getAllWorkers().collect { workerList ->
+                    val earningsMap = mutableMapOf<Long, Double>()
+                    
+                    workerList.forEach { worker ->
+                        val totalEarnings = workerRepository.getTotalEarningsForWorkerWithDateFilter(
+                            worker.id,
+                            _startDate.value,
+                            _endDate.value
+                        )
+                        earningsMap[worker.id] = totalEarnings
+                    }
+                    
+                    _workerEarnings.value = earningsMap
+                }
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+    
+    fun setDateFilter(startDate: Date?, endDate: Date?) {
+        _startDate.value = startDate
+        _endDate.value = endDate
+        loadWorkerEarnings()
+    }
+    
+    fun clearDateFilter() {
+        _startDate.value = null
+        _endDate.value = null
+        loadWorkerEarnings()
     }
 }

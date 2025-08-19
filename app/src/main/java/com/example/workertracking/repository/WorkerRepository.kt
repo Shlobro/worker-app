@@ -168,4 +168,39 @@ class WorkerRepository(
             }
         }
     }
+    
+    suspend fun getTotalEarningsForWorker(workerId: Long): Double {
+        return getTotalEarningsForWorkerWithDateFilter(workerId, null, null)
+    }
+    
+    suspend fun getTotalEarningsForWorkerWithDateFilter(
+        workerId: Long,
+        startDate: Date?,
+        endDate: Date?
+    ): Double {
+        val shifts = getAllShiftWorkersForWorkerWithDateFilter(workerId, startDate, endDate)
+        val events = getAllEventWorkersForWorkerWithDateFilter(workerId, startDate, endDate)
+        
+        val shiftEarnings = shifts.sumOf { shift ->
+            val workerPayment = if (shift.shiftWorker.isHourlyRate) {
+                shift.shiftWorker.payRate * shift.shiftHours
+            } else {
+                shift.shiftWorker.payRate
+            }
+            val referencePayment = (shift.shiftWorker.referencePayRate ?: 0.0) * shift.shiftHours
+            workerPayment + referencePayment
+        }
+        
+        val eventEarnings = events.sumOf { event ->
+            val workerPayment = if (event.eventWorker.isHourlyRate) {
+                event.eventWorker.hours * event.eventWorker.payRate
+            } else {
+                event.eventWorker.payRate
+            }
+            val referencePayment = (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
+            workerPayment + referencePayment
+        }
+        
+        return shiftEarnings + eventEarnings
+    }
 }
