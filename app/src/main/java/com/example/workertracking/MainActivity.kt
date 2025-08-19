@@ -338,6 +338,7 @@ fun WorkerTrackingApp() {
                 val workers by viewModel.workers.collectAsState()
                 val workersWithDebt by viewModel.workersWithDebt.collectAsState()
                 val workerEarnings by viewModel.workerEarnings.collectAsState()
+                val referenceWorkerNames by viewModel.referenceWorkerNames.collectAsState()
                 val startDate by viewModel.startDate.collectAsState()
                 val endDate by viewModel.endDate.collectAsState()
                 val isLoading by viewModel.isLoading.collectAsState()
@@ -346,6 +347,7 @@ fun WorkerTrackingApp() {
                     workers = workers,
                     workersWithDebt = workersWithDebt,
                     workerEarnings = workerEarnings,
+                    referenceWorkerNames = referenceWorkerNames,
                     startDate = startDate,
                     endDate = endDate,
                     isLoading = isLoading,

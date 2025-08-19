@@ -30,6 +30,9 @@ class WorkersViewModel(
     private val _workerEarnings = MutableStateFlow<Map<Long, Double>>(emptyMap())
     val workerEarnings: StateFlow<Map<Long, Double>> = _workerEarnings.asStateFlow()
     
+    private val _referenceWorkerNames = MutableStateFlow<Map<Long, String>>(emptyMap())
+    val referenceWorkerNames: StateFlow<Map<Long, String>> = _referenceWorkerNames.asStateFlow()
+    
     private val _startDate = MutableStateFlow<Date?>(null)
     val startDate: StateFlow<Date?> = _startDate.asStateFlow()
     
@@ -40,6 +43,7 @@ class WorkersViewModel(
         loadWorkers()
         loadWorkersWithDebt()
         loadWorkerEarnings()
+        loadReferenceWorkerNames()
     }
     
     private fun loadWorkers() {
@@ -147,5 +151,28 @@ class WorkersViewModel(
         _startDate.value = null
         _endDate.value = null
         loadWorkerEarnings()
+    }
+    
+    private fun loadReferenceWorkerNames() {
+        viewModelScope.launch {
+            try {
+                workerRepository.getAllWorkers().collect { workerList ->
+                    val referenceNamesMap = mutableMapOf<Long, String>()
+                    
+                    workerList.forEach { worker ->
+                        if (worker.referenceId != null) {
+                            val referenceWorker = workerRepository.getWorkerById(worker.referenceId)
+                            referenceWorker?.let {
+                                referenceNamesMap[worker.id] = it.name
+                            }
+                        }
+                    }
+                    
+                    _referenceWorkerNames.value = referenceNamesMap
+                }
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
     }
 }

@@ -36,6 +36,7 @@ fun WorkersScreen(
     workers: List<Worker> = emptyList(),
     workersWithDebt: List<WorkerWithDebt> = emptyList(),
     workerEarnings: Map<Long, Double> = emptyMap(),
+    referenceWorkerNames: Map<Long, String> = emptyMap(),
     startDate: Date? = null,
     endDate: Date? = null,
     isLoading: Boolean = false,
@@ -170,9 +171,7 @@ fun WorkersScreen(
                 items(filteredWorkersWithDebt) { workerWithDebt ->
                     WorkerCard(
                         worker = workerWithDebt.worker,
-                        totalOwed = workerWithDebt.totalOwed,
-                        totalEarnings = workerEarnings[workerWithDebt.worker.id] ?: 0.0,
-                        unpaidCount = workerWithDebt.unpaidShiftsCount + workerWithDebt.unpaidEventsCount,
+                        referenceWorkerName = referenceWorkerNames[workerWithDebt.worker.id],
                         onClick = { onWorkerClick(workerWithDebt.worker) },
                         onDelete = { workerToDelete = workerWithDebt.worker }
                     )
@@ -218,9 +217,7 @@ fun WorkersScreen(
 @Composable
 fun WorkerCard(
     worker: Worker,
-    totalOwed: Double = 0.0,
-    totalEarnings: Double = 0.0,
-    unpaidCount: Int = 0,
+    referenceWorkerName: String? = null,
     onClick: () -> Unit,
     onDelete: () -> Unit = {}
 ) {
@@ -277,92 +274,12 @@ fun WorkerCard(
                 )
             }
             
-            if (worker.referenceId != null) {
+            if (referenceWorkerName != null) {
                 Text(
-                    text = "יש מפנה",
+                    text = stringResource(R.string.worker_of, referenceWorkerName),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.secondary
                 )
-            }
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    if (unpaidCount > 0) {
-                        Text(
-                            text = "$unpaidCount ${stringResource(R.string.unpaid)} תשלומים",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    
-                    // Total earnings row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.total_earnings),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "₪${String.format("%.2f", totalEarnings)}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    // Total owed row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.total_owed),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            if (totalOwed > 0) {
-                                Icon(
-                                    imageVector = Icons.Default.Warning,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                            Text(
-                                text = "₪${String.format("%.2f", totalOwed)}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = if (totalOwed > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
             }
         }
     }
