@@ -6,7 +6,7 @@
     <string name="nav_projects">פרויקטים</string>
     <string name="nav_workers">עובדים</string>
     <string name="nav_events">אירועים</string>
-    <string name="nav_employers">מזמינים</string>
+    <string name="nav_employers">מעסיקים</string>
     
     <!-- Dashboard -->
     <string name="dashboard_title">לוח בקרה</string>
@@ -187,19 +187,19 @@
     <string name="next">הבא</string>
     
     <!-- Employers -->
-    <string name="employers_title">מזמינים</string>
-    <string name="add_employer">הוסף מזמין</string>
-    <string name="edit_employer">ערוך מזמין</string>
-    <string name="employer_name">שם המזמין</string>
-    <string name="search_employers">חפש מזמינים</string>
-    <string name="call_employer">התקשר למזמין</string>
-    <string name="delete_employer">מחק מזמין</string>
+    <string name="employers_title">מעסיקים</string>
+    <string name="add_employer">הוסף מעסיק</string>
+    <string name="edit_employer">ערוך מעסיק</string>
+    <string name="employer_name">שם המעסיק</string>
+    <string name="search_employers">חפש מעסיקים</string>
+    <string name="call_employer">התקשר למעסיק</string>
+    <string name="delete_employer">מחק מעסיק</string>
     <string name="delete_employer_message">האם אתה בטוח שברצונך למחוק את %1$s?</string>
-    <string name="employer_not_found">מזמין לא נמצא</string>
+    <string name="employer_not_found">מעסיק לא נמצא</string>
     <string name="no_projects_events">אין פרויקטים או אירועים</string>
     <string name="search_projects_events">חפש פרויקטים ואירועים</string>
     <string name="financial_summary">סיכום כספי</string>
     <string name="total_profit">רווח כולל</string>
-    <string name="select_employer">בחר מזמין</string>
-    <string name="no_employer">ללא מזמין</string>
+    <string name="select_employer">בחר מעסיק</string>
+    <string name="no_employer">ללא מעסיק</string>
 </resources>
