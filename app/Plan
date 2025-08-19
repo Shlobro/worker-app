@@ -1,7 +1,6 @@
 on the worker cards it shouldn't say יש מפנה it should say עובד של and then the name of the refernce worker.
 change מזמין to מעסיק
-the phone problem is not fixed for the employer. meaning the first digit after the dash is moved to the back. 050-1234567 becomes 0502345671. fix this. make it the same as putting in a phone number for a worker
-when entering an hour in the time field, it bounces the number put after the colon bounces to the end. so 20:40 becomes 20:04. fix this using the same logic as the phone numbers
-the hour field must enforce xx:xx format. if the user tries to enter a different format it should not allow it.
-when clicking on a worker the history should be searchable for both events and shifts. you should also be able to filter to look at a specific time period.
-the worker screen should also show how much money the worker has earned in total. there should also be an option to filter according to dates to see the profit of the worker over a chosen period.
+I can't remove a worker from a shift. fix this.
+the shift debt to workers is not appearing on the worker cards.
+when there is a referecnce worker, the amount should that the reference gets should appear on his name in the worker info. not in the worker who was working himslef.
+in the control panel when looking at the payments owed, in the projects section there appears the hour of the shift which is good. but the name of the shift should appear as well.

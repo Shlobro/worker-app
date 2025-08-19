@@ -15,6 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.example.workertracking.R
@@ -43,41 +47,105 @@ fun AddEventScreen(
     
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
-    fun formatTimeInput(input: String): String {
-        val digitsOnly = input.filter { it.isDigit() }
-        return when {
-            digitsOnly.isEmpty() -> ""
-            digitsOnly.length == 1 -> digitsOnly
-            digitsOnly.length == 2 -> digitsOnly
-            digitsOnly.length == 3 -> "${digitsOnly.substring(0, 1)}:${digitsOnly.substring(1)}"
-            digitsOnly.length >= 4 -> {
-                val hoursStr = digitsOnly.substring(0, 2).padStart(2, '0')
-                val minutesStr = digitsOnly.substring(2, minOf(4, digitsOnly.length)).padStart(2, '0')
-                // Validate time format
-                val h = hoursStr.toIntOrNull() ?: 0
-                val m = minutesStr.toIntOrNull() ?: 0
-                if (h <= 23 && m <= 59) {
-                    "$hoursStr:$minutesStr"
-                } else {
-                    input.take(input.length - 1) // Remove last character if invalid
+    class TimeInputVisualTransformation : VisualTransformation {
+        override fun filter(text: AnnotatedString): TransformedText {
+            val digitsOnly = text.text.filter { it.isDigit() }.take(4)
+            val formatted = when {
+                digitsOnly.isEmpty() -> ""
+                digitsOnly.length == 1 -> digitsOnly
+                digitsOnly.length == 2 -> digitsOnly
+                digitsOnly.length == 3 -> {
+                    // For 3-digit input, check if it makes sense as HMM (e.g., "800" -> "08:00")
+                    // But if the first digit would create invalid minutes (like "180" -> "1:80" or "999" -> "9:99"), 
+                    // treat it as incomplete 4-digit input instead
+                    val firstDigitHour = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
+                    val remainingMinutes = digitsOnly.substring(1).toIntOrNull() ?: 0
+                    
+                    if (firstDigitHour <= 9 && remainingMinutes <= 59) {
+                        // Valid 3-digit format: H:MM (only hours 0-2 are valid for 3-digit)
+                        val hours = digitsOnly.substring(0, 1).padStart(2, '0')
+                        val minutes = digitsOnly.substring(1)
+                        "$hours:$minutes"
+                    } else {
+                        // Invalid as 3-digit, show as incomplete 4-digit input
+                        digitsOnly
+                    }
+                }
+                digitsOnly.length >= 4 -> {
+                    // Handle 4-digit input like "0800" or "1800" -> "08:00" or "18:00"
+                    val hours = digitsOnly.substring(0, 2)
+                    val minutes = digitsOnly.substring(2)
+                    val h = hours.toIntOrNull() ?: 0
+                    val m = minutes.toIntOrNull() ?: 0
+                    if (h <= 23 && m <= 59) {
+                        "$hours:$minutes"
+                    } else {
+                        ""
+                    }
+                }
+                else -> digitsOnly
+            }
+            
+            val offsetMapping = object : OffsetMapping {
+                override fun originalToTransformed(offset: Int): Int {
+                    val digitsBeforeOffset = text.text.take(offset).count { it.isDigit() }
+                    return when {
+                        formatted.contains(":") -> {
+                            // Has colon formatting
+                            when {
+                                digitsBeforeOffset <= 2 -> digitsBeforeOffset
+                                else -> minOf(digitsBeforeOffset + 1, formatted.length) // +1 for colon, but cap at formatted length
+                            }
+                        }
+                        else -> {
+                            // No colon, direct mapping
+                            minOf(digitsBeforeOffset, formatted.length)
+                        }
+                    }
+                }
+                
+                override fun transformedToOriginal(offset: Int): Int {
+                    return when {
+                        formatted.contains(":") -> {
+                            // Has colon formatting
+                            when {
+                                offset <= 2 -> offset
+                                offset == 3 -> 2 // colon position maps to end of hours
+                                else -> offset - 1 // account for the colon
+                            }
+                        }
+                        else -> {
+                            // No colon, direct mapping
+                            offset
+                        }
+                    }
                 }
             }
-            else -> input
+            
+            return TransformedText(AnnotatedString(formatted), offsetMapping)
         }
     }
     
     fun calculateHours(start: String, end: String): String {
-        if (start.isBlank() || end.isBlank() || !start.contains(":") || !end.contains(":")) {
+        if ((start.length != 3 && start.length != 4) || (end.length != 3 && end.length != 4) || 
+            !start.all { it.isDigit() } || !end.all { it.isDigit() }) {
             return ""
         }
         
         try {
-            val startParts = start.split(":")
-            val endParts = end.split(":")
-            val startHour = startParts[0].toInt()
-            val startMinute = startParts[1].toInt()
-            val endHour = endParts[0].toInt()
-            val endMinute = endParts[1].toInt()
+            // Pad to 4 digits if needed
+            val startPadded = start.padStart(4, '0')
+            val endPadded = end.padStart(4, '0')
+            
+            val startHour = startPadded.substring(0, 2).toInt()
+            val startMinute = startPadded.substring(2, 4).toInt()
+            val endHour = endPadded.substring(0, 2).toInt()
+            val endMinute = endPadded.substring(2, 4).toInt()
+            
+            // Validate time ranges
+            if (startHour > 23 || startMinute > 59 || endHour > 23 || endMinute > 59) {
+                return ""
+            }
             
             var totalMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute)
             
@@ -154,27 +222,61 @@ fun AddEventScreen(
             OutlinedTextField(
                 value = startTime,
                 onValueChange = { input ->
-                    val formatted = formatTimeInput(input)
-                    startTime = formatted
+                    val digitsOnly = input.filter { it.isDigit() }.take(4)
+                    // Validate input based on length
+                    when (digitsOnly.length) {
+                        3 -> {
+                            // For 3-digit input, only allow valid H:MM patterns (0-9 for first digit, 0-59 for minutes)
+                            val firstDigit = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
+                            val minutes = digitsOnly.substring(1).toIntOrNull() ?: 0
+                            if (firstDigit > 9 || minutes > 59) return@OutlinedTextField
+                        }
+                        4 -> {
+                            // For 4-digit input, validate as HH:MM
+                            val hours = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
+                            val minutes = digitsOnly.substring(2).toIntOrNull() ?: 0
+                            if (hours > 23 || minutes > 59) return@OutlinedTextField
+                        }
+                    }
+                    startTime = digitsOnly
                 },
                 label = { Text("שעת התחלה") },
+                visualTransformation = TimeInputVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                placeholder = { Text("HH:MM") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                placeholder = { Text("800 או 0800") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                supportingText = { Text("הקלד 3-4 ספרות (למשל: 800 או 0800 עבור 08:00)") }
             )
             
             OutlinedTextField(
                 value = endTime,
                 onValueChange = { input ->
-                    val formatted = formatTimeInput(input)
-                    endTime = formatted
+                    val digitsOnly = input.filter { it.isDigit() }.take(4)
+                    // Validate input based on length
+                    when (digitsOnly.length) {
+                        3 -> {
+                            // For 3-digit input, only allow valid H:MM patterns (0-9 for first digit, 0-59 for minutes)
+                            val firstDigit = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
+                            val minutes = digitsOnly.substring(1).toIntOrNull() ?: 0
+                            if (firstDigit > 9 || minutes > 59) return@OutlinedTextField
+                        }
+                        4 -> {
+                            // For 4-digit input, validate as HH:MM
+                            val hours = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
+                            val minutes = digitsOnly.substring(2).toIntOrNull() ?: 0
+                            if (hours > 23 || minutes > 59) return@OutlinedTextField
+                        }
+                    }
+                    endTime = digitsOnly
                 },
                 label = { Text("שעת סיום") },
+                visualTransformation = TimeInputVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                placeholder = { Text("HH:MM") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                placeholder = { Text("1700 או 800") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                supportingText = { Text("הקלד 3-4 ספרות (למשל: 1700 או 800 עבור 17:00)") }
             )
             
             Row(
@@ -253,13 +355,18 @@ fun AddEventScreen(
             
             Button(
                 onClick = {
-                    if (eventName.isNotBlank() && startTime.isNotBlank() && endTime.isNotBlank()) {
+                    if (eventName.isNotBlank() && (startTime.length == 3 || startTime.length == 4) && (endTime.length == 3 || endTime.length == 4)) {
                         val incomeValue = income.toDoubleOrNull() ?: 0.0
-                        onSaveEvent(eventName, selectedDate, startTime, endTime, hours, incomeValue, selectedEmployer?.id)
+                        // Pad times to 4 digits and format
+                        val startPadded = startTime.padStart(4, '0')
+                        val endPadded = endTime.padStart(4, '0')
+                        val formattedStartTime = "${startPadded.substring(0, 2)}:${startPadded.substring(2)}"
+                        val formattedEndTime = "${endPadded.substring(0, 2)}:${endPadded.substring(2)}"
+                        onSaveEvent(eventName, selectedDate, formattedStartTime, formattedEndTime, hours, incomeValue, selectedEmployer?.id)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = eventName.isNotBlank() && startTime.isNotBlank() && endTime.isNotBlank()
+                enabled = eventName.isNotBlank() && (startTime.length == 3 || startTime.length == 4) && (endTime.length == 3 || endTime.length == 4)
             ) {
                 Text(stringResource(R.string.save))
             }

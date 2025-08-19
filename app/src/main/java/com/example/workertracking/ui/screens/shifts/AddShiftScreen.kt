@@ -14,6 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.example.workertracking.R
@@ -39,41 +43,104 @@ fun AddShiftScreen(
     
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
-    // Format time input to HH:MM format
-    fun formatTimeInput(input: String): String {
-        val digitsOnly = input.filter { it.isDigit() }
-        return when {
-            digitsOnly.isEmpty() -> ""
-            digitsOnly.length == 1 -> digitsOnly
-            digitsOnly.length == 2 -> digitsOnly
-            digitsOnly.length == 3 -> "${digitsOnly.substring(0, 1)}:${digitsOnly.substring(1)}"
-            digitsOnly.length >= 4 -> {
-                val hours = digitsOnly.substring(0, 2).padStart(2, '0')
-                val minutes = digitsOnly.substring(2, minOf(4, digitsOnly.length)).padStart(2, '0')
-                // Validate time format
-                val h = hours.toIntOrNull() ?: 0
-                val m = minutes.toIntOrNull() ?: 0
-                if (h <= 23 && m <= 59) {
-                    "$hours:$minutes"
-                } else {
-                    input.take(input.length - 1) // Remove last character if invalid
+    class TimeInputVisualTransformation : VisualTransformation {
+        override fun filter(text: AnnotatedString): TransformedText {
+            val digitsOnly = text.text.filter { it.isDigit() }.take(4)
+            val formatted = when {
+                digitsOnly.isEmpty() -> ""
+                digitsOnly.length == 1 -> digitsOnly
+                digitsOnly.length == 2 -> digitsOnly
+                digitsOnly.length == 3 -> {
+                    // For 3-digit input, check if it makes sense as HMM (e.g., "800" -> "08:00")
+                    // But if the first digit would create invalid minutes (like "180" -> "1:80" or "999" -> "9:99"), 
+                    // treat it as incomplete 4-digit input instead
+                    val firstDigitHour = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
+                    val remainingMinutes = digitsOnly.substring(1).toIntOrNull() ?: 0
+                    
+                    if (firstDigitHour <= 9 && remainingMinutes <= 59) {
+                        // Valid 3-digit format: H:MM (only hours 0-2 are valid for 3-digit)
+                        val hours = digitsOnly.substring(0, 1).padStart(2, '0')
+                        val minutes = digitsOnly.substring(1)
+                        "$hours:$minutes"
+                    } else {
+                        // Invalid as 3-digit, show as incomplete 4-digit input
+                        digitsOnly
+                    }
+                }
+                digitsOnly.length >= 4 -> {
+                    // Handle 4-digit input like "0800" or "1800" -> "08:00" or "18:00"
+                    val hours = digitsOnly.substring(0, 2)
+                    val minutes = digitsOnly.substring(2)
+                    val h = hours.toIntOrNull() ?: 0
+                    val m = minutes.toIntOrNull() ?: 0
+                    if (h <= 23 && m <= 59) {
+                        "$hours:$minutes"
+                    } else {
+                        ""
+                    }
+                }
+                else -> digitsOnly
+            }
+            
+            val offsetMapping = object : OffsetMapping {
+                override fun originalToTransformed(offset: Int): Int {
+                    val digitsBeforeOffset = text.text.take(offset).count { it.isDigit() }
+                    return when {
+                        formatted.contains(":") -> {
+                            // Has colon formatting
+                            when {
+                                digitsBeforeOffset <= 2 -> digitsBeforeOffset
+                                else -> minOf(digitsBeforeOffset + 1, formatted.length) // +1 for colon, but cap at formatted length
+                            }
+                        }
+                        else -> {
+                            // No colon, direct mapping
+                            minOf(digitsBeforeOffset, formatted.length)
+                        }
+                    }
+                }
+                
+                override fun transformedToOriginal(offset: Int): Int {
+                    return when {
+                        formatted.contains(":") -> {
+                            // Has colon formatting
+                            when {
+                                offset <= 2 -> offset
+                                offset == 3 -> 2 // colon position maps to end of hours
+                                else -> offset - 1 // account for the colon
+                            }
+                        }
+                        else -> {
+                            // No colon, direct mapping
+                            offset
+                        }
+                    }
                 }
             }
-            else -> input
+            
+            return TransformedText(AnnotatedString(formatted), offsetMapping)
         }
     }
     
-    // Calculate hours between two times
+    // Calculate hours between two times (input format: digits only, e.g., "800", "0800", "1630")
     fun calculateHours(start: String, end: String): Double? {
         try {
-            if (start.matches(Regex("\\d{2}:\\d{2}")) && end.matches(Regex("\\d{2}:\\d{2}"))) {
-                val startParts = start.split(":")
-                val endParts = end.split(":")
+            if ((start.length == 3 || start.length == 4) && (end.length == 3 || end.length == 4) && 
+                start.all { it.isDigit() } && end.all { it.isDigit() }) {
                 
-                val startHour = startParts[0].toInt()
-                val startMinute = startParts[1].toInt()
-                val endHour = endParts[0].toInt()
-                val endMinute = endParts[1].toInt()
+                // Pad to 4 digits if needed
+                val startPadded = start.padStart(4, '0')
+                val endPadded = end.padStart(4, '0')
+                
+                val startHour = startPadded.substring(0, 2).toInt()
+                val startMinute = startPadded.substring(2, 4).toInt()
+                val endHour = endPadded.substring(0, 2).toInt()
+                val endMinute = endPadded.substring(2, 4).toInt()
+                
+                // Validate time ranges
+                if (startHour > 23 || startMinute > 59 || endHour > 23 || endMinute > 59) {
+                    return null
+                }
                 
                 val startTotalMinutes = startHour * 60 + startMinute
                 var endTotalMinutes = endHour * 60 + endMinute
@@ -160,33 +227,61 @@ fun AddShiftScreen(
             OutlinedTextField(
                 value = startTimeInput,
                 onValueChange = { input ->
-                    val formatted = formatTimeInput(input)
-                    if (formatted.length <= 5) { // Max HH:MM
-                        startTimeInput = formatted
+                    val digitsOnly = input.filter { it.isDigit() }.take(4)
+                    // Validate input based on length
+                    when (digitsOnly.length) {
+                        3 -> {
+                            // For 3-digit input, only allow valid H:MM patterns (0-9 for first digit, 0-59 for minutes)
+                            val firstDigit = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
+                            val minutes = digitsOnly.substring(1).toIntOrNull() ?: 0
+                            if (firstDigit > 9 || minutes > 59) return@OutlinedTextField
+                        }
+                        4 -> {
+                            // For 4-digit input, validate as HH:MM
+                            val hours = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
+                            val minutes = digitsOnly.substring(2).toIntOrNull() ?: 0
+                            if (hours > 23 || minutes > 59) return@OutlinedTextField
+                        }
                     }
+                    startTimeInput = digitsOnly
                 },
                 label = { Text("שעת התחלה") },
+                visualTransformation = TimeInputVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
-                placeholder = { Text("0800 או 08:00") },
-                supportingText = { Text("הקלד 4 ספרות (למשל: 0800 עבור 08:00)") }
+                placeholder = { Text("800 או 0800") },
+                supportingText = { Text("הקלד 3-4 ספרות (למשל: 800 או 0800 עבור 08:00)") }
             )
             
             OutlinedTextField(
                 value = endTimeInput,
                 onValueChange = { input ->
-                    val formatted = formatTimeInput(input)
-                    if (formatted.length <= 5) { // Max HH:MM
-                        endTimeInput = formatted
+                    val digitsOnly = input.filter { it.isDigit() }.take(4)
+                    // Validate input based on length
+                    when (digitsOnly.length) {
+                        3 -> {
+                            // For 3-digit input, only allow valid H:MM patterns (0-9 for first digit, 0-59 for minutes)
+                            val firstDigit = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
+                            val minutes = digitsOnly.substring(1).toIntOrNull() ?: 0
+                            if (firstDigit > 9 || minutes > 59) return@OutlinedTextField
+                        }
+                        4 -> {
+                            // For 4-digit input, validate as HH:MM
+                            val hours = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
+                            val minutes = digitsOnly.substring(2).toIntOrNull() ?: 0
+                            if (hours > 23 || minutes > 59) return@OutlinedTextField
+                        }
                     }
+                    endTimeInput = digitsOnly
                 },
                 label = { Text("שעת סיום") },
+                visualTransformation = TimeInputVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
-                placeholder = { Text("1600 או 16:00") },
-                supportingText = { Text("הקלד 4 ספרות (למשל: 1600 עבור 16:00)") }
+                placeholder = { Text("1600 או 800") },
+                supportingText = { Text("הקלד 3-4 ספרות (למשל: 1600 או 800 עבור 16:00)") }
             )
             
             Row(
@@ -240,22 +335,23 @@ fun AddShiftScreen(
                     val shiftHours = hours.toDoubleOrNull()
                     if (shiftName.isNotBlank() &&
                         shiftHours != null && 
-                        startTimeInput.isNotBlank() && 
-                        endTimeInput.isNotBlank() && 
-                        shiftHours > 0 &&
-                        startTimeInput.matches(Regex("\\d{2}:\\d{2}")) &&
-                        endTimeInput.matches(Regex("\\d{2}:\\d{2}"))) {
-                        onSaveShift(projectId, shiftName, selectedDate, startTimeInput, endTimeInput, shiftHours)
+                        (startTimeInput.length == 3 || startTimeInput.length == 4) && 
+                        (endTimeInput.length == 3 || endTimeInput.length == 4) && 
+                        shiftHours > 0) {
+                        // Pad times to 4 digits and format
+                        val startPadded = startTimeInput.padStart(4, '0')
+                        val endPadded = endTimeInput.padStart(4, '0')
+                        val formattedStartTime = "${startPadded.substring(0, 2)}:${startPadded.substring(2)}"
+                        val formattedEndTime = "${endPadded.substring(0, 2)}:${endPadded.substring(2)}"
+                        onSaveShift(projectId, shiftName, selectedDate, formattedStartTime, formattedEndTime, shiftHours)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = shiftName.isNotBlank() &&
-                          startTimeInput.isNotBlank() && 
-                          endTimeInput.isNotBlank() &&
+                          (startTimeInput.length == 3 || startTimeInput.length == 4) && 
+                          (endTimeInput.length == 3 || endTimeInput.length == 4) &&
                           hours.toDoubleOrNull() != null && 
-                          hours.toDoubleOrNull()!! > 0 &&
-                          startTimeInput.matches(Regex("\\d{2}:\\d{2}")) &&
-                          endTimeInput.matches(Regex("\\d{2}:\\d{2}"))
+                          hours.toDoubleOrNull()!! > 0
             ) {
                 Text("שמור משמרת")
             }

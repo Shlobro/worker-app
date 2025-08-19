@@ -11,6 +11,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.unit.dp
 import com.example.workertracking.R
 import com.example.workertracking.data.entity.Employer
@@ -27,15 +31,36 @@ fun EditEmployerScreen(
     var phoneNumberError by remember { mutableStateOf<String?>(null) }
     
     fun isValidPhoneNumber(phone: String): Boolean {
-        val pattern = Regex("^\\d{3}-\\d{7}$")
-        return pattern.matches(phone)
+        return phone.length == 10 && phone.all { it.isDigit() }
     }
     
-    fun formatPhoneNumber(input: String): String {
-        val digitsOnly = input.filter { it.isDigit() }.take(10)
-        return when {
-            digitsOnly.length <= 3 -> digitsOnly
-            else -> "${digitsOnly.substring(0, 3)}-${digitsOnly.substring(3)}"
+    class PhoneNumberVisualTransformation : VisualTransformation {
+        override fun filter(text: AnnotatedString): TransformedText {
+            val digitsOnly = text.text.filter { it.isDigit() }.take(10)
+            val formatted = when {
+                digitsOnly.length <= 3 -> digitsOnly
+                else -> "${digitsOnly.substring(0, 3)}-${digitsOnly.substring(3)}"
+            }
+            
+            val offsetMapping = object : OffsetMapping {
+                override fun originalToTransformed(offset: Int): Int {
+                    val digitsBeforeOffset = text.text.take(offset).count { it.isDigit() }
+                    return when {
+                        digitsBeforeOffset <= 3 -> digitsBeforeOffset
+                        else -> digitsBeforeOffset + 1 // +1 for the dash
+                    }
+                }
+                
+                override fun transformedToOriginal(offset: Int): Int {
+                    return when {
+                        offset <= 3 -> offset
+                        offset == 4 -> 3 // dash position maps to end of first 3 digits
+                        else -> offset - 1 // account for the dash
+                    }
+                }
+            }
+            
+            return TransformedText(AnnotatedString(formatted), offsetMapping)
         }
     }
     
@@ -43,7 +68,7 @@ fun EditEmployerScreen(
     LaunchedEffect(employer) {
         employer?.let {
             employerName = it.name
-            phoneNumber = it.phoneNumber
+            phoneNumber = it.phoneNumber.filter { char -> char.isDigit() }
         }
     }
     
@@ -91,16 +116,17 @@ fun EditEmployerScreen(
             OutlinedTextField(
                 value = phoneNumber,
                 onValueChange = { input ->
-                    val formatted = formatPhoneNumber(input)
-                    phoneNumber = formatted
-                    phoneNumberError = if (formatted.isNotEmpty() && !isValidPhoneNumber(formatted)) {
+                    val digitsOnly = input.filter { it.isDigit() }.take(10)
+                    phoneNumber = digitsOnly
+                    phoneNumberError = if (digitsOnly.isNotEmpty() && digitsOnly.length != 10) {
                         "פורמט מספר טלפון: xxx-xxxxxxx"
                     } else {
                         null
                     }
                 },
                 label = { Text(stringResource(R.string.phone_number)) },
-                placeholder = { Text("050-1234567") },
+                placeholder = { Text("0501234567") },
+                visualTransformation = PhoneNumberVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 isError = phoneNumberError != null,
@@ -112,7 +138,8 @@ fun EditEmployerScreen(
             Button(
                 onClick = {
                     if (employerName.isNotBlank() && phoneNumber.isNotBlank() && isValidPhoneNumber(phoneNumber)) {
-                        onUpdateEmployer(employerName, phoneNumber)
+                        val formattedPhone = "${phoneNumber.substring(0, 3)}-${phoneNumber.substring(3)}"
+                        onUpdateEmployer(employerName, formattedPhone)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
