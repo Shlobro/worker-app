@@ -165,28 +165,6 @@ fun WorkerDetailScreen(
                     }
                 }
                 
-                // Date filter section
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.work_history),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        
-                        DateFilterChip(
-                            startDate = dateFilter.first,
-                            endDate = dateFilter.second,
-                            onDateRangeSelected = onDateRangeSelected,
-                            onClearFilter = onClearDateFilter
-                        )
-                    }
-                }
-                
                 // Money owed section
                 if (totalOwed > 0 || unpaidShifts.isNotEmpty() || unpaidEvents.isNotEmpty()) {
                     item {
@@ -264,6 +242,7 @@ fun WorkerDetailScreen(
                     }
                 }
                 
+                // Photo album section
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth()
@@ -299,6 +278,28 @@ fun WorkerDetailScreen(
                                 }
                             }
                         }
+                    }
+                }
+                
+                // Date filter section
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.work_history),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        DateFilterChip(
+                            startDate = dateFilter.first,
+                            endDate = dateFilter.second,
+                            onDateRangeSelected = onDateRangeSelected,
+                            onClearFilter = onClearDateFilter
+                        )
                     }
                 }
                 
