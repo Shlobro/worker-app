@@ -55,19 +55,18 @@ fun AddEventScreen(
                 digitsOnly.length == 1 -> digitsOnly
                 digitsOnly.length == 2 -> digitsOnly
                 digitsOnly.length == 3 -> {
-                    // For 3-digit input, check if it makes sense as HMM (e.g., "800" -> "08:00")
-                    // But if the first digit would create invalid minutes (like "180" -> "1:80" or "999" -> "9:99"), 
-                    // treat it as incomplete 4-digit input instead
+                    // For 3-digit input, check if it could be valid as H:MM (e.g., "800" -> "08:00")
+                    // But for inputs like "180", treat as incomplete 4-digit input (user typing "1800")
                     val firstDigitHour = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
                     val remainingMinutes = digitsOnly.substring(1).toIntOrNull() ?: 0
                     
-                    if (firstDigitHour <= 9 && remainingMinutes <= 59) {
-                        // Valid 3-digit format: H:MM (only hours 0-2 are valid for 3-digit)
+                    if (firstDigitHour <= 2 && remainingMinutes <= 59) {
+                        // Valid 3-digit format: H:MM (only hours 0-2 work for single digit hours)
                         val hours = digitsOnly.substring(0, 1).padStart(2, '0')
                         val minutes = digitsOnly.substring(1)
                         "$hours:$minutes"
                     } else {
-                        // Invalid as 3-digit, show as incomplete 4-digit input
+                        // Treat as incomplete 4-digit input (e.g., "180" -> "180" waiting for final digit)
                         digitsOnly
                     }
                 }
@@ -226,10 +225,11 @@ fun AddEventScreen(
                     // Validate input based on length
                     when (digitsOnly.length) {
                         3 -> {
-                            // For 3-digit input, only allow valid H:MM patterns (0-9 for first digit, 0-59 for minutes)
+                            // For 3-digit input, allow any combination that could lead to valid 4-digit time
+                            // Don't validate as H:MM yet since user might be typing HHMM
+                            // Just ensure first digit is reasonable for hours (0-2)
                             val firstDigit = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
-                            val minutes = digitsOnly.substring(1).toIntOrNull() ?: 0
-                            if (firstDigit > 9 || minutes > 59) return@OutlinedTextField
+                            if (firstDigit > 2) return@OutlinedTextField
                         }
                         4 -> {
                             // For 4-digit input, validate as HH:MM
@@ -256,10 +256,11 @@ fun AddEventScreen(
                     // Validate input based on length
                     when (digitsOnly.length) {
                         3 -> {
-                            // For 3-digit input, only allow valid H:MM patterns (0-9 for first digit, 0-59 for minutes)
+                            // For 3-digit input, allow any combination that could lead to valid 4-digit time
+                            // Don't validate as H:MM yet since user might be typing HHMM
+                            // Just ensure first digit is reasonable for hours (0-2)
                             val firstDigit = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
-                            val minutes = digitsOnly.substring(1).toIntOrNull() ?: 0
-                            if (firstDigit > 9 || minutes > 59) return@OutlinedTextField
+                            if (firstDigit > 2) return@OutlinedTextField
                         }
                         4 -> {
                             // For 4-digit input, validate as HH:MM
