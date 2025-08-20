@@ -83,31 +83,43 @@ class WorkersViewModel(
                         val unpaidShifts = workerRepository.getUnpaidShiftWorkersForWorker(worker.id)
                         val unpaidEvents = workerRepository.getUnpaidEventWorkersForWorker(worker.id)
                         
+                        // Calculate direct payments owed TO this worker (exclude reference payments they make)
                         val shiftTotal = unpaidShifts.sumOf { unpaidShift ->
-                            val workerPayment = if (unpaidShift.shiftWorker.isHourlyRate) {
+                            if (unpaidShift.shiftWorker.isHourlyRate) {
                                 unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
                             } else {
                                 unpaidShift.shiftWorker.payRate
                             }
-                            val referencePayment = (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours
-                            workerPayment + referencePayment
                         }
                         
                         val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
-                            val workerPayment = if (unpaidEvent.eventWorker.isHourlyRate) {
+                            if (unpaidEvent.eventWorker.isHourlyRate) {
                                 unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
                             } else {
                                 unpaidEvent.eventWorker.payRate
                             }
-                            val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours
-                            workerPayment + referencePayment
+                        }
+                        
+                        // Calculate reference payments owed TO this worker (when they are the reference worker)
+                        val unpaidReferenceShifts = workerRepository.getUnpaidReferenceShiftsForWorker(worker.id)
+                        val unpaidReferenceEvents = workerRepository.getUnpaidReferenceEventsForWorker(worker.id)
+                        
+                        val referenceShiftTotal = unpaidReferenceShifts.sumOf { shift ->
+                            (shift.shiftWorker.referencePayRate ?: 0.0) * shift.shiftHours
+                        }
+                        
+                        val referenceEventTotal = unpaidReferenceEvents.sumOf { event ->
+                            (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
                         }
                         
                         WorkerWithDebt(
                             worker = worker,
                             totalOwed = shiftTotal + eventTotal,
                             unpaidShiftsCount = unpaidShifts.size,
-                            unpaidEventsCount = unpaidEvents.size
+                            unpaidEventsCount = unpaidEvents.size,
+                            totalReferenceOwed = referenceShiftTotal + referenceEventTotal,
+                            unpaidReferenceShiftsCount = unpaidReferenceShifts.size,
+                            unpaidReferenceEventsCount = unpaidReferenceEvents.size
                         )
                     }
                     _workersWithDebt.value = workersWithDebt

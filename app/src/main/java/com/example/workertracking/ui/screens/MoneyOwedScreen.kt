@@ -91,11 +91,37 @@ fun MoneyOwedScreen(
                     }
                     
                     items(uiState.unpaidShifts) { unpaidShift ->
-                        UnpaidShiftCard(
-                            unpaidShift = unpaidShift,
-                            onMarkAsPaid = { viewModel.markShiftAsPaid(it) },
-                            onWorkerClick = onWorkerClick
-                        )
+                        // Show worker's direct payment card
+                        val workerPayment = if (unpaidShift.shiftWorker.isHourlyRate) {
+                            unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
+                        } else {
+                            unpaidShift.shiftWorker.payRate
+                        }
+                        
+                        if (workerPayment > 0) {
+                            UnpaidShiftCard(
+                                unpaidShift = unpaidShift,
+                                onMarkAsPaid = { viewModel.markShiftAsPaid(it) },
+                                onWorkerClick = onWorkerClick,
+                                isReferencePayment = false,
+                                displayAmount = workerPayment
+                            )
+                        }
+                        
+                        // Show reference worker payment card if exists
+                        val referencePayment = unpaidShift.shiftWorker.referencePayRate?.let { refRate ->
+                            refRate * unpaidShift.shiftHours
+                        } ?: 0.0
+                        
+                        if (referencePayment > 0) {
+                            UnpaidShiftCard(
+                                unpaidShift = unpaidShift,
+                                onMarkAsPaid = { viewModel.markShiftAsPaid(it) },
+                                onWorkerClick = onWorkerClick,
+                                isReferencePayment = true,
+                                displayAmount = referencePayment
+                            )
+                        }
                     }
                 }
                 
@@ -111,11 +137,37 @@ fun MoneyOwedScreen(
                     }
                     
                     items(uiState.unpaidEvents) { unpaidEvent ->
-                        UnpaidEventCard(
-                            unpaidEvent = unpaidEvent,
-                            onMarkAsPaid = { viewModel.markEventAsPaid(it) },
-                            onWorkerClick = onWorkerClick
-                        )
+                        // Show worker's direct payment card
+                        val workerPayment = if (unpaidEvent.eventWorker.isHourlyRate) {
+                            unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
+                        } else {
+                            unpaidEvent.eventWorker.payRate
+                        }
+                        
+                        if (workerPayment > 0) {
+                            UnpaidEventCard(
+                                unpaidEvent = unpaidEvent,
+                                onMarkAsPaid = { viewModel.markEventAsPaid(it) },
+                                onWorkerClick = onWorkerClick,
+                                isReferencePayment = false,
+                                displayAmount = workerPayment
+                            )
+                        }
+                        
+                        // Show reference worker payment card if exists
+                        val referencePayment = unpaidEvent.eventWorker.referencePayRate?.let { refRate ->
+                            refRate * unpaidEvent.eventWorker.hours
+                        } ?: 0.0
+                        
+                        if (referencePayment > 0) {
+                            UnpaidEventCard(
+                                unpaidEvent = unpaidEvent,
+                                onMarkAsPaid = { viewModel.markEventAsPaid(it) },
+                                onWorkerClick = onWorkerClick,
+                                isReferencePayment = true,
+                                displayAmount = referencePayment
+                            )
+                        }
                     }
                 }
                 
@@ -151,17 +203,20 @@ fun MoneyOwedScreen(
 private fun UnpaidShiftCard(
     unpaidShift: UnpaidShiftWorkerInfo,
     onMarkAsPaid: (Long) -> Unit,
-    onWorkerClick: (Long) -> Unit
+    onWorkerClick: (Long) -> Unit,
+    isReferencePayment: Boolean = false,
+    displayAmount: Double
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    val amount = (if (unpaidShift.shiftWorker.isHourlyRate) {
-        unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
-    } else {
-        unpaidShift.shiftWorker.payRate
-    }) + ((unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours)
     
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isReferencePayment) 
+                MaterialTheme.colorScheme.secondaryContainer 
+            else 
+                MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -176,12 +231,21 @@ private fun UnpaidShiftCard(
                         onClick = { onWorkerClick(unpaidShift.shiftWorker.workerId) },
                         contentPadding = PaddingValues(0.dp)
                     ) {
-                        Text(
-                            text = unpaidShift.workerName,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Column {
+                            Text(
+                                text = unpaidShift.workerName,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                            )
+                            if (isReferencePayment) {
+                                Text(
+                                    text = "עובד מפנה",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            }
+                        }
                     }
                     Text(
                         text = unpaidShift.projectName,
@@ -201,10 +265,14 @@ private fun UnpaidShiftCard(
                 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "₪${String.format("%.2f", amount)}",
+                        text = if (isReferencePayment) {
+                            "תשלום הפניה: ₪${String.format("%.2f", displayAmount)}"
+                        } else {
+                            "₪${String.format("%.2f", displayAmount)}"
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.error
+                        color = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error
                     )
                     FilledTonalButton(
                         onClick = { onMarkAsPaid(unpaidShift.shiftWorker.id) },
@@ -228,17 +296,20 @@ private fun UnpaidShiftCard(
 private fun UnpaidEventCard(
     unpaidEvent: UnpaidEventWorkerInfo,
     onMarkAsPaid: (Long) -> Unit,
-    onWorkerClick: (Long) -> Unit
+    onWorkerClick: (Long) -> Unit,
+    isReferencePayment: Boolean = false,
+    displayAmount: Double
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    val amount = (if (unpaidEvent.eventWorker.isHourlyRate) {
-        unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
-    } else {
-        unpaidEvent.eventWorker.payRate
-    }) + ((unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours)
     
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isReferencePayment) 
+                MaterialTheme.colorScheme.secondaryContainer 
+            else 
+                MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -253,12 +324,21 @@ private fun UnpaidEventCard(
                         onClick = { onWorkerClick(unpaidEvent.eventWorker.workerId) },
                         contentPadding = PaddingValues(0.dp)
                     ) {
-                        Text(
-                            text = unpaidEvent.workerName,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Column {
+                            Text(
+                                text = unpaidEvent.workerName,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                            )
+                            if (isReferencePayment) {
+                                Text(
+                                    text = "עובד מפנה",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            }
+                        }
                     }
                     Text(
                         text = unpaidEvent.eventName,
@@ -278,10 +358,14 @@ private fun UnpaidEventCard(
                 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "₪${String.format("%.2f", amount)}",
+                        text = if (isReferencePayment) {
+                            "תשלום הפניה: ₪${String.format("%.2f", displayAmount)}"
+                        } else {
+                            "₪${String.format("%.2f", displayAmount)}"
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.error
+                        color = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error
                     )
                     FilledTonalButton(
                         onClick = { onMarkAsPaid(unpaidEvent.eventWorker.id) },

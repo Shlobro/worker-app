@@ -46,6 +46,9 @@ fun WorkerDetailScreen(
     allShifts: List<UnpaidShiftWorkerInfo> = emptyList(),
     allEvents: List<UnpaidEventWorkerInfo> = emptyList(),
     totalOwed: Double = 0.0,
+    unpaidReferenceShifts: List<UnpaidShiftWorkerInfo> = emptyList(),
+    unpaidReferenceEvents: List<UnpaidEventWorkerInfo> = emptyList(),
+    totalReferenceOwed: Double = 0.0,
     dateFilter: Pair<Date?, Date?> = Pair(null, null),
     onNavigateBack: () -> Unit,
     onEditWorker: () -> Unit = {},
@@ -205,11 +208,11 @@ fun WorkerDetailScreen(
                                             type = "shift",
                                             projectName = unpaidShift.projectName,
                                             date = unpaidShift.shiftDate,
-                                            amount = (if (unpaidShift.shiftWorker.isHourlyRate) {
+                                            amount = if (unpaidShift.shiftWorker.isHourlyRate) {
                                                 unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
                                             } else {
                                                 unpaidShift.shiftWorker.payRate
-                                            }) + ((unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours),
+                                            },
                                             onMarkAsPaid = { onMarkShiftAsPaid(unpaidShift.shiftWorker.id) }
                                         )
                                     }
@@ -228,12 +231,83 @@ fun WorkerDetailScreen(
                                             type = "event",
                                             projectName = unpaidEvent.eventName,
                                             date = unpaidEvent.eventDate,
-                                            amount = (if (unpaidEvent.eventWorker.isHourlyRate) {
+                                            amount = if (unpaidEvent.eventWorker.isHourlyRate) {
                                                 unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
                                             } else {
                                                 unpaidEvent.eventWorker.payRate
-                                            }) + ((unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours),
+                                            },
                                             onMarkAsPaid = { onMarkEventAsPaid(unpaidEvent.eventWorker.id) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Reference payments owed TO this worker section
+                if (totalReferenceOwed > 0 || unpaidReferenceShifts.isNotEmpty() || unpaidReferenceEvents.isNotEmpty()) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "תשלומי הפניה",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                
+                                Text(
+                                    text = "₪${String.format("%.2f", totalReferenceOwed)}",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                                
+                                if (unpaidReferenceShifts.isNotEmpty()) {
+                                    Text(
+                                        text = "משמרות בהפניה",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                    
+                                    unpaidReferenceShifts.forEach { unpaidShift ->
+                                        WorkerDebtCard(
+                                            type = "reference_shift",
+                                            projectName = unpaidShift.projectName,
+                                            date = unpaidShift.shiftDate,
+                                            amount = (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours,
+                                            onMarkAsPaid = { onMarkShiftAsPaid(unpaidShift.shiftWorker.id) },
+                                            isReference = true
+                                        )
+                                    }
+                                }
+                                
+                                if (unpaidReferenceEvents.isNotEmpty()) {
+                                    Text(
+                                        text = "אירועים בהפניה",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                    
+                                    unpaidReferenceEvents.forEach { unpaidEvent ->
+                                        WorkerDebtCard(
+                                            type = "reference_event",
+                                            projectName = unpaidEvent.eventName,
+                                            date = unpaidEvent.eventDate,
+                                            amount = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours,
+                                            onMarkAsPaid = { onMarkEventAsPaid(unpaidEvent.eventWorker.id) },
+                                            isReference = true
                                         )
                                     }
                                 }
@@ -428,7 +502,8 @@ private fun WorkerDebtCard(
     projectName: String,
     date: Long,
     amount: Double,
-    onMarkAsPaid: () -> Unit
+    onMarkAsPaid: () -> Unit,
+    isReference: Boolean = false
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     

@@ -63,6 +63,15 @@ class WorkerDetailViewModel(
     
     private val _dateFilter = MutableStateFlow<Pair<Date?, Date?>>(Pair(null, null))
     val dateFilter: StateFlow<Pair<Date?, Date?>> = _dateFilter.asStateFlow()
+    
+    private val _unpaidReferenceShifts = MutableStateFlow<List<UnpaidShiftWorkerInfo>>(emptyList())
+    val unpaidReferenceShifts: StateFlow<List<UnpaidShiftWorkerInfo>> = _unpaidReferenceShifts.asStateFlow()
+
+    private val _unpaidReferenceEvents = MutableStateFlow<List<UnpaidEventWorkerInfo>>(emptyList())
+    val unpaidReferenceEvents: StateFlow<List<UnpaidEventWorkerInfo>> = _unpaidReferenceEvents.asStateFlow()
+
+    private val _totalReferenceOwed = MutableStateFlow(0.0)
+    val totalReferenceOwed: StateFlow<Double> = _totalReferenceOwed.asStateFlow()
 
     fun loadWorker(workerId: Long) {
         viewModelScope.launch {
@@ -163,23 +172,41 @@ class WorkerDetailViewModel(
                 _unpaidShifts.value = unpaidShifts
                 _unpaidEvents.value = unpaidEvents
                 
+                // Load reference payments owed TO this worker (when they are the reference worker)
+                val unpaidReferenceShifts = workerRepository.getUnpaidReferenceShiftsForWorker(workerId)
+                val unpaidReferenceEvents = workerRepository.getUnpaidReferenceEventsForWorker(workerId)
+                
+                _unpaidReferenceShifts.value = unpaidReferenceShifts
+                _unpaidReferenceEvents.value = unpaidReferenceEvents
+                
+                // Calculate total owed directly to this worker (exclude reference payments they make)
                 val shiftTotal = unpaidShifts.sumOf { unpaidShift ->
-                    (if (unpaidShift.shiftWorker.isHourlyRate) {
+                    if (unpaidShift.shiftWorker.isHourlyRate) {
                         unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
                     } else {
                         unpaidShift.shiftWorker.payRate
-                    }) + ((unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours)
+                    }
                 }
                 
                 val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
-                    (if (unpaidEvent.eventWorker.isHourlyRate) {
+                    if (unpaidEvent.eventWorker.isHourlyRate) {
                         unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
                     } else {
                         unpaidEvent.eventWorker.payRate
-                    }) + ((unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours)
+                    }
+                }
+                
+                // Calculate reference payments owed TO this worker
+                val referenceShiftTotal = unpaidReferenceShifts.sumOf { shift ->
+                    (shift.shiftWorker.referencePayRate ?: 0.0) * shift.shiftHours
+                }
+                
+                val referenceEventTotal = unpaidReferenceEvents.sumOf { event ->
+                    (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
                 }
                 
                 _totalOwed.value = shiftTotal + eventTotal
+                _totalReferenceOwed.value = referenceShiftTotal + referenceEventTotal
             } catch (e: Exception) {
                 // Handle error silently or add error state if needed
             }

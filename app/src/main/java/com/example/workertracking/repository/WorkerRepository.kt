@@ -203,4 +203,38 @@ class WorkerRepository(
         
         return shiftEarnings + eventEarnings
     }
+    
+    // Methods to calculate reference payments owed TO a worker (when they are the reference worker)
+    suspend fun getUnpaidReferenceShiftsForWorker(workerId: Long): List<UnpaidShiftWorkerInfo> {
+        val allUnpaidShifts = shiftWorkerDao.getUnpaidShiftWorkers()
+        return allUnpaidShifts.filter { shift ->
+            // Find workers who have this worker as their reference
+            val worker = workerDao.getWorkerById(shift.shiftWorker.workerId)
+            worker?.referenceId == workerId && shift.shiftWorker.referencePayRate != null
+        }
+    }
+    
+    suspend fun getUnpaidReferenceEventsForWorker(workerId: Long): List<UnpaidEventWorkerInfo> {
+        val allUnpaidEvents = eventWorkerDao.getUnpaidEventWorkers()
+        return allUnpaidEvents.filter { event ->
+            // Find workers who have this worker as their reference
+            val worker = workerDao.getWorkerById(event.eventWorker.workerId)
+            worker?.referenceId == workerId && event.eventWorker.referencePayRate != null
+        }
+    }
+    
+    suspend fun getTotalReferencePaymentsOwedToWorker(workerId: Long): Double {
+        val referenceShifts = getUnpaidReferenceShiftsForWorker(workerId)
+        val referenceEvents = getUnpaidReferenceEventsForWorker(workerId)
+        
+        val shiftReferenceTotal = referenceShifts.sumOf { shift ->
+            (shift.shiftWorker.referencePayRate ?: 0.0) * shift.shiftHours
+        }
+        
+        val eventReferenceTotal = referenceEvents.sumOf { event ->
+            (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
+        }
+        
+        return shiftReferenceTotal + eventReferenceTotal
+    }
 }

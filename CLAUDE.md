@@ -204,9 +204,13 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 2. **Worker Assignment**: Click shift to open detail screen for worker management
 3. **Payment Types**: Use "שכר שעתי" and "סכום גלובלי" (not "תשלום קבוע")
 4. **Reference Payment System**: Prompt for reference worker rates when adding workers with references
-5. **Search Integration**: Implement searchable worker addition dialogs
-6. **Financial Updates**: Ensure financial calculations refresh on worker changes including reference payments
-7. **Time Formatting**: Implement auto-formatting for time inputs (HHMM → HH:MM)
+5. **Reference Payment Display**: Reference payments are shown in separate "עובדים מפנים" section under reference worker names, not under working worker cards
+6. **Reference Worker Debt Tracking**: WorkerDetailScreen displays separate section for reference payments owed TO the worker when they are the reference worker for others
+7. **Workers List Dual Cards**: WorkersScreen shows TWO separate cards per worker when applicable - one for their direct work payments (⚠️ warning icon) and another for their reference worker payments (⭐ star icon with secondary background)
+8. **MoneyOwedScreen Dual Cards**: מעקב חובות (Money Owed) screen now displays separate cards for worker payments and reference payments with distinct styling and proper payment attribution
+9. **Search Integration**: Implement searchable worker addition dialogs
+10. **Financial Updates**: Ensure financial calculations refresh on worker changes including reference payments
+11. **Time Formatting**: Implement auto-formatting for time inputs (HHMM → HH:MM)
 
 #### Event Feature Implementation (✅ COMPLETED)
 1. **Event Time Management**: Events have startTime, endTime, and hours fields with smart formatting
@@ -361,9 +365,9 @@ Enhanced event worker assignment to match shift worker functionality, including 
 **EventDetailScreen Enhancements**:
 - Direct worker assignment through dialog (no separate screen navigation)
 - Payment type display (hourly rate vs. fixed amount)
-- Display of reference worker information and payments
+- Display of reference worker information and payments in separate "עובדים מפנים" section
 - Total payment calculations including reference amounts with proper payment type handling
-- Worker cards show payment type, worker payment, and reference payment details
+- Worker cards show payment type and worker payment only (reference payments shown separately)
 
 #### Payment Calculation Updates
 **EventWorkerDao**:

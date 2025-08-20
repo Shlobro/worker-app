@@ -169,15 +169,50 @@ fun WorkersScreen(
                 }
                 
                 items(filteredWorkersWithDebt) { workerWithDebt ->
-                    WorkerCard(
-                        worker = workerWithDebt.worker,
-                        referenceWorkerName = referenceWorkerNames[workerWithDebt.worker.id],
-                        totalOwed = workerWithDebt.totalOwed,
-                        unpaidShiftsCount = workerWithDebt.unpaidShiftsCount,
-                        unpaidEventsCount = workerWithDebt.unpaidEventsCount,
-                        onClick = { onWorkerClick(workerWithDebt.worker) },
-                        onDelete = { workerToDelete = workerWithDebt.worker }
-                    )
+                    // Show worker's own debt card if they have any direct payments owed
+                    if (workerWithDebt.totalOwed > 0) {
+                        WorkerCard(
+                            worker = workerWithDebt.worker,
+                            referenceWorkerName = referenceWorkerNames[workerWithDebt.worker.id],
+                            totalOwed = workerWithDebt.totalOwed,
+                            unpaidShiftsCount = workerWithDebt.unpaidShiftsCount,
+                            unpaidEventsCount = workerWithDebt.unpaidEventsCount,
+                            onClick = { onWorkerClick(workerWithDebt.worker) },
+                            onDelete = { workerToDelete = workerWithDebt.worker },
+                            isReferencePayment = false
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    
+                    // Show reference worker debt card if this worker earns reference payments
+                    if (workerWithDebt.totalReferenceOwed > 0) {
+                        WorkerCard(
+                            worker = workerWithDebt.worker,
+                            referenceWorkerName = null, // This IS the reference worker
+                            totalOwed = workerWithDebt.totalReferenceOwed,
+                            unpaidShiftsCount = workerWithDebt.unpaidReferenceShiftsCount,
+                            unpaidEventsCount = workerWithDebt.unpaidReferenceEventsCount,
+                            onClick = { onWorkerClick(workerWithDebt.worker) },
+                            onDelete = { workerToDelete = workerWithDebt.worker },
+                            isReferencePayment = true
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    
+                    // If worker has neither direct nor reference payments, still show them
+                    if (workerWithDebt.totalOwed == 0.0 && workerWithDebt.totalReferenceOwed == 0.0) {
+                        WorkerCard(
+                            worker = workerWithDebt.worker,
+                            referenceWorkerName = referenceWorkerNames[workerWithDebt.worker.id],
+                            totalOwed = 0.0,
+                            unpaidShiftsCount = 0,
+                            unpaidEventsCount = 0,
+                            onClick = { onWorkerClick(workerWithDebt.worker) },
+                            onDelete = { workerToDelete = workerWithDebt.worker },
+                            isReferencePayment = false
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                 }
             }
         }
@@ -225,14 +260,21 @@ fun WorkerCard(
     unpaidShiftsCount: Int = 0,
     unpaidEventsCount: Int = 0,
     onClick: () -> Unit,
-    onDelete: () -> Unit = {}
+    onDelete: () -> Unit = {},
+    isReferencePayment: Boolean = false
 ) {
     val context = LocalContext.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isReferencePayment) 
+                MaterialTheme.colorScheme.secondaryContainer 
+            else 
+                MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier
@@ -245,16 +287,25 @@ fun WorkerCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Person,
+                    imageVector = if (isReferencePayment) Icons.Default.Star else Icons.Default.Person,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
-                Text(
-                    text = worker.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Column {
+                    Text(
+                        text = worker.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (isReferencePayment) {
+                        Text(
+                            text = "עובד מפנה",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                }
             }
             
             Row(
@@ -298,15 +349,19 @@ fun WorkerCard(
                         .padding(top = 4.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Warning,
+                        imageVector = if (isReferencePayment) Icons.Default.Star else Icons.Default.Warning,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
+                        tint = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = stringResource(R.string.total_owed_format, totalOwed),
+                        text = if (isReferencePayment) {
+                            "תשלומי הפניה: ₪${String.format("%.2f", totalOwed)}"
+                        } else {
+                            stringResource(R.string.total_owed_format, totalOwed)
+                        },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
+                        color = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Medium
                     )
                 }

@@ -202,6 +202,40 @@ fun ShiftDetailScreen(
                     )
                 }
             }
+            
+            // Show reference workers section if there are any reference payments
+            val referencePayments = shiftWorkers.mapNotNull { (shiftWorker, worker) ->
+                shiftWorker.referencePayRate?.let { refRate ->
+                    worker.referenceId?.let { referenceId ->
+                        val referenceWorker = allWorkers.find { it.id == referenceId }
+                        referenceWorker?.let { refWorker ->
+                            Triple(refWorker, refRate, refRate * shift.hours)
+                        }
+                    }
+                }
+            }.groupBy { it.first.id }.map { (_, payments) ->
+                val refWorker = payments.first().first
+                val totalRefPayment = payments.sumOf { it.third }
+                Pair(refWorker, totalRefPayment)
+            }
+            
+            if (referencePayments.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "עובדים מפנים:",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                
+                items(referencePayments) { (referenceWorker, totalPayment) ->
+                    ReferenceWorkerCard(
+                        worker = referenceWorker,
+                        totalPayment = totalPayment
+                    )
+                }
+            }
         }
     }
     
@@ -306,26 +340,13 @@ private fun ShiftWorkerCard(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 
-                // Show reference payment if exists
-                shiftWorker.referencePayRate?.let { refRate ->
-                    worker.referenceId?.let { referenceId ->
-                        val referenceWorker = allWorkers.find { it.id == referenceId }
-                        referenceWorker?.let { refWorker ->
-                            Text(
-                                text = "תשלום מפנה (${refWorker.name}): ${refRate} ש\"ח/שעה",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
-                        }
-                    }
-                }
                 
                 val referencePayment = shiftWorker.referencePayRate?.let { refRate ->
                     refRate * shiftHours
                 } ?: 0.0
                 
                 Text(
-                    text = "סכום כולל: ${String.format("%.2f", totalPayment + referencePayment)} ש\"ח",
+                    text = "סכום: ${String.format("%.2f", totalPayment)} ש\"ח",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -363,6 +384,52 @@ private fun ShiftWorkerCard(
     }
 }
 
+
+@Composable
+private fun ReferenceWorkerCard(
+    worker: Worker,
+    totalPayment: Double
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = worker.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "טלפון: ${worker.phoneNumber}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "עובד מפנה",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+            
+            Text(
+                text = "סכום: ${String.format("%.2f", totalPayment)} ש\"ח",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
+    }
+}
 
 @Composable
 private fun EditWorkerPaymentDialog(

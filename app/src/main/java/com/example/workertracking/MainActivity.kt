@@ -415,6 +415,9 @@ fun WorkerTrackingApp() {
                 val allShifts by viewModel.allShifts.collectAsState()
                 val allEvents by viewModel.allEvents.collectAsState()
                 val totalOwed by viewModel.totalOwed.collectAsState()
+                val unpaidReferenceShifts by viewModel.unpaidReferenceShifts.collectAsState()
+                val unpaidReferenceEvents by viewModel.unpaidReferenceEvents.collectAsState()
+                val totalReferenceOwed by viewModel.totalReferenceOwed.collectAsState()
                 val dateFilter by viewModel.dateFilter.collectAsState()
                 
                 LaunchedEffect(workerId) {
@@ -432,6 +435,9 @@ fun WorkerTrackingApp() {
                     allShifts = allShifts,
                     allEvents = allEvents,
                     totalOwed = totalOwed,
+                    unpaidReferenceShifts = unpaidReferenceShifts,
+                    unpaidReferenceEvents = unpaidReferenceEvents,
+                    totalReferenceOwed = totalReferenceOwed,
                     dateFilter = dateFilter,
                     onNavigateBack = {
                         application.container.triggerDashboardRefresh()

@@ -4,5 +4,8 @@ data class WorkerWithDebt(
     val worker: Worker,
     val totalOwed: Double = 0.0,
     val unpaidShiftsCount: Int = 0,
-    val unpaidEventsCount: Int = 0
+    val unpaidEventsCount: Int = 0,
+    val totalReferenceOwed: Double = 0.0,
+    val unpaidReferenceShiftsCount: Int = 0,
+    val unpaidReferenceEventsCount: Int = 0
 )

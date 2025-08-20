@@ -310,21 +310,13 @@ fun EventDetailScreen(
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                             
-                                            // Show reference payment if exists
-                                            if (workerWithName.eventWorker.referencePayRate != null && referenceWorker != null) {
-                                                Text(
-                                                    text = "תשלום מפנה (${referenceWorker.name}): ₪${workerWithName.eventWorker.referencePayRate}/שעה",
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.secondary
-                                                )
-                                            }
                                         }
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
                                             Text(
-                                                text = "₪${String.format("%.2f", totalPayment)}",
+                                                text = "₪${String.format("%.2f", workerPayment)}",
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Medium
                                             )
@@ -341,6 +333,69 @@ fun EventDetailScreen(
                                     }
                                     if (workerWithName != eventWorkers.last()) {
                                         HorizontalDivider()
+                                    }
+                                }
+                            }
+                            
+                            // Show reference workers section if there are any reference payments
+                            val referencePayments = eventWorkers.mapNotNull { workerWithName ->
+                                workerWithName.eventWorker.referencePayRate?.let { refRate ->
+                                    val worker = allWorkers.find { it.id == workerWithName.eventWorker.workerId }
+                                    worker?.referenceId?.let { referenceId ->
+                                        val referenceWorker = allWorkers.find { it.id == referenceId }
+                                        referenceWorker?.let { refWorker ->
+                                            Triple(refWorker, refRate, refRate * workerWithName.eventWorker.hours)
+                                        }
+                                    }
+                                }
+                            }.groupBy { it.first.id }.map { (_, payments) ->
+                                val refWorker = payments.first().first
+                                val totalRefPayment = payments.sumOf { it.third }
+                                Pair(refWorker, totalRefPayment)
+                            }
+                            
+                            if (referencePayments.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "עובדים מפנים:",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                
+                                referencePayments.forEach { (referenceWorker, totalPayment) ->
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                        )
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(12.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = referenceWorker.name,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                                Text(
+                                                    text = "עובד מפנה",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.secondary
+                                                )
+                                            }
+                                            Text(
+                                                text = "₪${String.format("%.2f", totalPayment)}",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.secondary
+                                            )
+                                        }
                                     }
                                 }
                             }

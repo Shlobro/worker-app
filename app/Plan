@@ -1,5 +1,7 @@
-
+there should be a total amount owed to a worker and a button to mark all as paid with a single click.
 in the control panel when looking at the payments owed, in the projects section there appears the hour of the shift which is good. but the name of the shift should appear as well.
 in the event cards it's showing הכנסה get rid of this all i need is the name the date and the hours. also you make the date and hour in the same line to save space.
 in the employers cards it should only show the name and the phone number (being clickable to call). all the numbers we can get rid of on the card. you can click the card to see all that info.
 there should be a section for workers and employees that i can write down notes about them. this should be an option in the top left of their screens.
+in events when adding a worker that has a reference worker in the area where it shows how much is owed and to whom for the reference worker it should show what workers he referenced. הפנה את and then the names of the workers he referenced
+in the workers screen there should be a little red dot next to workers that have pending payments.
