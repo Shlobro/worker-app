@@ -39,7 +39,8 @@ fun ShiftDetailScreen(
     onDeleteShift: () -> Unit = {},
     onAddWorkerToShift: (Long, Long, Boolean, Double, Double?) -> Unit,
     onRemoveWorkerFromShift: (Long, Long) -> Unit,
-    onUpdateWorkerPayment: (ShiftWorker) -> Unit
+    onUpdateWorkerPayment: (ShiftWorker) -> Unit,
+    onMarkAsPaid: (Long) -> Unit = {} // shiftWorkerId
 ) {
     var showAddWorkerDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -198,7 +199,8 @@ fun ShiftDetailScreen(
                         allWorkers = allWorkers,
                         shiftHours = shift.hours,
                         onRemove = { onRemoveWorkerFromShift(shift.id, worker.id) },
-                        onUpdate = onUpdateWorkerPayment
+                        onUpdate = onUpdateWorkerPayment,
+                        onMarkAsPaid = { onMarkAsPaid(shiftWorker.id) }
                     )
                 }
             }
@@ -307,7 +309,8 @@ private fun ShiftWorkerCard(
     allWorkers: List<Worker>,
     shiftHours: Double,
     onRemove: () -> Unit,
-    onUpdate: (ShiftWorker) -> Unit
+    onUpdate: (ShiftWorker) -> Unit,
+    onMarkAsPaid: () -> Unit
 ) {
     var showEditDialog by remember { mutableStateOf(false) }
     
@@ -352,15 +355,40 @@ private fun ShiftWorkerCard(
                     refRate * shiftHours
                 } ?: 0.0
                 
-                Text(
-                    text = "סכום: ${String.format("%.2f", totalPayment)} ש\"ח",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(
+                        text = "סכום: ${String.format("%.2f", totalPayment)} ש\"ח",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if (shiftWorker.isPaid) {
+                        Text(
+                            text = stringResource(R.string.paid),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF4CAF50),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
             }
             
             Row {
+                if (!shiftWorker.isPaid) {
+                    TextButton(
+                        onClick = onMarkAsPaid,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color(0xFF4CAF50)
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(R.string.mark_as_paid),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
                 TextButton(onClick = { showEditDialog = true }) {
                     Text("ערוך")
                 }

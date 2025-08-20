@@ -163,4 +163,19 @@ class EventDetailViewModel(
             }
         }
     }
+
+    fun markEventWorkerAsPaid(eventWorkerId: Long) {
+        viewModelScope.launch {
+            try {
+                workerRepository.markEventWorkerAsPaid(eventWorkerId)
+                // Refresh data to reflect payment status change
+                _event.value?.let { event ->
+                    loadEventWorkers(event.id)
+                    loadTotalCost(event.id)
+                }
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
+    }
 }

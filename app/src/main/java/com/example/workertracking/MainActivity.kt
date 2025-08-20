@@ -631,6 +631,9 @@ fun WorkerTrackingApp() {
                     },
                     onRemoveWorker = { eventWorker ->
                         viewModel.removeWorkerFromEvent(eventWorker)
+                    },
+                    onMarkAsPaid = { eventWorkerId ->
+                        viewModel.markEventWorkerAsPaid(eventWorkerId)
                     }
                 )
             }
@@ -782,6 +785,9 @@ fun WorkerTrackingApp() {
                         },
                         onUpdateWorkerPayment = { shiftWorker ->
                             viewModel.updateWorkerPayment(shiftWorker)
+                        },
+                        onMarkAsPaid = { shiftWorkerId ->
+                            viewModel.markShiftWorkerAsPaid(shiftWorkerId)
                         }
                     )
                 }

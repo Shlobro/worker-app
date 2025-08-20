@@ -163,4 +163,18 @@ class ShiftDetailViewModel(
             }
         }
     }
+
+    fun markShiftWorkerAsPaid(shiftWorkerId: Long) {
+        viewModelScope.launch {
+            try {
+                workerRepository.markShiftWorkerAsPaid(shiftWorkerId)
+                // Refresh data to reflect payment status change
+                _shift.value?.let { shift ->
+                    loadShiftWorkers(shift.id)
+                }
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
 }
