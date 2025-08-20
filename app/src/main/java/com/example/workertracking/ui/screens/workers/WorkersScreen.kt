@@ -172,6 +172,9 @@ fun WorkersScreen(
                     WorkerCard(
                         worker = workerWithDebt.worker,
                         referenceWorkerName = referenceWorkerNames[workerWithDebt.worker.id],
+                        totalOwed = workerWithDebt.totalOwed,
+                        unpaidShiftsCount = workerWithDebt.unpaidShiftsCount,
+                        unpaidEventsCount = workerWithDebt.unpaidEventsCount,
                         onClick = { onWorkerClick(workerWithDebt.worker) },
                         onDelete = { workerToDelete = workerWithDebt.worker }
                     )
@@ -218,6 +221,9 @@ fun WorkersScreen(
 fun WorkerCard(
     worker: Worker,
     referenceWorkerName: String? = null,
+    totalOwed: Double = 0.0,
+    unpaidShiftsCount: Int = 0,
+    unpaidEventsCount: Int = 0,
     onClick: () -> Unit,
     onDelete: () -> Unit = {}
 ) {
@@ -280,6 +286,52 @@ fun WorkerCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.secondary
                 )
+            }
+            
+            // Debt information display
+            if (totalOwed > 0) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.total_owed_format, totalOwed),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                
+                if (unpaidShiftsCount > 0 || unpaidEventsCount > 0) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.padding(start = 24.dp)
+                    ) {
+                        if (unpaidShiftsCount > 0) {
+                            Text(
+                                text = stringResource(R.string.unpaid_shifts_count, unpaidShiftsCount),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (unpaidEventsCount > 0) {
+                            Text(
+                                text = stringResource(R.string.unpaid_events_count, unpaidEventsCount),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
         }
     }

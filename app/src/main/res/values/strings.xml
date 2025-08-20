@@ -178,6 +178,9 @@
     <string name="all_shifts">כל המשמרות</string>
     <string name="all_events">כל האירועים</string>
     <string name="no_work_history">אין היסטוריית עבודה</string>
+    <string name="total_owed_format">סה\"כ חוב: %1$.2f ₪</string>
+    <string name="unpaid_shifts_count">%1$d משמרות</string>
+    <string name="unpaid_events_count">%1$d אירועים</string>
     
     <!-- Date Filter -->
     <string name="apply">החל</string>
