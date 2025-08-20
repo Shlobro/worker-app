@@ -213,10 +213,16 @@ fun ShiftDetailScreen(
                         }
                     }
                 }
-            }.groupBy { it.first.id }.map { (_, payments) ->
+            }.groupBy { it.first.id }.map { (referenceWorkerId, payments) ->
                 val refWorker = payments.first().first
                 val totalRefPayment = payments.sumOf { it.third }
-                Pair(refWorker, totalRefPayment)
+                // Find all workers that this reference worker referenced in this shift
+                val referencedWorkerNames = shiftWorkers.mapNotNull { (shiftWorker, worker) ->
+                    if (worker.referenceId == referenceWorkerId && shiftWorker.referencePayRate != null) {
+                        worker.name
+                    } else null
+                }
+                Triple(refWorker, totalRefPayment, referencedWorkerNames)
             }
             
             if (referencePayments.isNotEmpty()) {
@@ -229,10 +235,11 @@ fun ShiftDetailScreen(
                     )
                 }
                 
-                items(referencePayments) { (referenceWorker, totalPayment) ->
+                items(referencePayments) { (referenceWorker, totalPayment, referencedWorkerNames) ->
                     ReferenceWorkerCard(
                         worker = referenceWorker,
-                        totalPayment = totalPayment
+                        totalPayment = totalPayment,
+                        referencedWorkerNames = referencedWorkerNames
                     )
                 }
             }
@@ -388,7 +395,8 @@ private fun ShiftWorkerCard(
 @Composable
 private fun ReferenceWorkerCard(
     worker: Worker,
-    totalPayment: Double
+    totalPayment: Double,
+    referencedWorkerNames: List<String> = emptyList()
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -419,6 +427,13 @@ private fun ReferenceWorkerCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.secondary
                 )
+                if (referencedWorkerNames.isNotEmpty()) {
+                    Text(
+                        text = "הפנה את: ${referencedWorkerNames.joinToString(", ")}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             
             Text(

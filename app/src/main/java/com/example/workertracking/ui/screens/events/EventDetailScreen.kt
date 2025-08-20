@@ -348,10 +348,17 @@ fun EventDetailScreen(
                                         }
                                     }
                                 }
-                            }.groupBy { it.first.id }.map { (_, payments) ->
+                            }.groupBy { it.first.id }.map { (referenceWorkerId, payments) ->
                                 val refWorker = payments.first().first
                                 val totalRefPayment = payments.sumOf { it.third }
-                                Pair(refWorker, totalRefPayment)
+                                // Find all workers that this reference worker referenced in this event
+                                val referencedWorkerNames = eventWorkers.mapNotNull { workerWithName ->
+                                    val worker = allWorkers.find { it.id == workerWithName.eventWorker.workerId }
+                                    if (worker?.referenceId == referenceWorkerId && workerWithName.eventWorker.referencePayRate != null) {
+                                        worker.name
+                                    } else null
+                                }
+                                Triple(refWorker, totalRefPayment, referencedWorkerNames)
                             }
                             
                             if (referencePayments.isNotEmpty()) {
@@ -362,7 +369,7 @@ fun EventDetailScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 
-                                referencePayments.forEach { (referenceWorker, totalPayment) ->
+                                referencePayments.forEach { (referenceWorker, totalPayment, referencedWorkerNames) ->
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
@@ -388,6 +395,13 @@ fun EventDetailScreen(
                                                     style = MaterialTheme.typography.bodySmall,
                                                     color = MaterialTheme.colorScheme.secondary
                                                 )
+                                                if (referencedWorkerNames.isNotEmpty()) {
+                                                    Text(
+                                                        text = "הפנה את: ${referencedWorkerNames.joinToString(", ")}",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
                                             }
                                             Text(
                                                 text = "₪${String.format("%.2f", totalPayment)}",
