@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,6 +50,9 @@ fun WorkerDetailScreen(
     unpaidReferenceShifts: List<UnpaidShiftWorkerInfo> = emptyList(),
     unpaidReferenceEvents: List<UnpaidEventWorkerInfo> = emptyList(),
     totalReferenceOwed: Double = 0.0,
+    paidShifts: List<UnpaidShiftWorkerInfo> = emptyList(),
+    paidEvents: List<UnpaidEventWorkerInfo> = emptyList(),
+    showPaidItems: Boolean = false,
     dateFilter: Pair<Date?, Date?> = Pair(null, null),
     onNavigateBack: () -> Unit,
     onEditWorker: () -> Unit = {},
@@ -56,7 +60,10 @@ fun WorkerDetailScreen(
     onViewPhotos: () -> Unit = {},
     onMarkShiftAsPaid: (Long) -> Unit = {},
     onMarkEventAsPaid: (Long) -> Unit = {},
+    onRevokeShiftPayment: (Long) -> Unit = {},
+    onRevokeEventPayment: (Long) -> Unit = {},
     onMarkAllAsPaid: () -> Unit = {},
+    onToggleShowPaidItems: () -> Unit = {},
     onDateRangeSelected: (Date?, Date?) -> Unit = { _, _ -> },
     onClearDateFilter: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -266,6 +273,27 @@ fun WorkerDetailScreen(
                         }
                     }
                 }
+
+                // Toggle button to show/hide paid items
+                item {
+                    OutlinedButton(
+                        onClick = { onToggleShowPaidItems() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (showPaidItems) 
+                                stringResource(R.string.hide_paid_items) 
+                            else 
+                                stringResource(R.string.show_paid_items)
+                        )
+                    }
+                }
                 
                 // Reference payments owed TO this worker section
                 if (totalReferenceOwed > 0 || unpaidReferenceShifts.isNotEmpty() || unpaidReferenceEvents.isNotEmpty()) {
@@ -332,6 +360,86 @@ fun WorkerDetailScreen(
                                             isReference = true
                                         )
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Paid shifts and events section (shown only when toggled)
+                if (showPaidItems) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.paid_history),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                                
+                                if (paidShifts.isNotEmpty()) {
+                                    Text(
+                                        text = stringResource(R.string.unpaid_shifts) + " (${stringResource(R.string.paid)})",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+                                    
+                                    paidShifts.forEach { paidShift ->
+                                        WorkerPaidCard(
+                                            type = "shift",
+                                            projectName = paidShift.projectName,
+                                            date = paidShift.shiftDate,
+                                            amount = if (paidShift.shiftWorker.isHourlyRate) {
+                                                paidShift.shiftWorker.payRate * paidShift.shiftHours
+                                            } else {
+                                                paidShift.shiftWorker.payRate
+                                            },
+                                            onRevokePayment = { onRevokeShiftPayment(paidShift.shiftWorker.id) }
+                                        )
+                                    }
+                                }
+                                
+                                if (paidEvents.isNotEmpty()) {
+                                    Text(
+                                        text = stringResource(R.string.unpaid_events) + " (${stringResource(R.string.paid)})",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+                                    
+                                    paidEvents.forEach { paidEvent ->
+                                        WorkerPaidCard(
+                                            type = "event",
+                                            projectName = paidEvent.eventName,
+                                            date = paidEvent.eventDate,
+                                            amount = if (paidEvent.eventWorker.isHourlyRate) {
+                                                paidEvent.eventWorker.hours * paidEvent.eventWorker.payRate
+                                            } else {
+                                                paidEvent.eventWorker.payRate
+                                            },
+                                            onRevokePayment = { onRevokeEventPayment(paidEvent.eventWorker.id) }
+                                        )
+                                    }
+                                }
+
+                                // Show empty state if no paid items
+                                if (paidShifts.isEmpty() && paidEvents.isEmpty()) {
+                                    Text(
+                                        text = "אין פריטים ששולמו עדיין",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                    )
                                 }
                             }
                         }
@@ -579,6 +687,99 @@ private fun WorkerDebtCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun WorkerPaidCard(
+    type: String,
+    projectName: String,
+    date: Long,
+    amount: Double,
+    onRevokePayment: () -> Unit
+) {
+    var showRevokeDialog by remember { mutableStateOf(false) }
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = projectName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = dateFormat.format(Date(date)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = stringResource(R.string.paid),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "₪${String.format("%.2f", amount)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                OutlinedButton(
+                    onClick = { showRevokeDialog = true },
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.revoke_payment),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+        }
+    }
+    
+    if (showRevokeDialog) {
+        AlertDialog(
+            onDismissRequest = { showRevokeDialog = false },
+            title = { Text(stringResource(R.string.revoke_payment)) },
+            text = { Text(stringResource(R.string.revoke_payment_confirmation)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onRevokePayment()
+                        showRevokeDialog = false
+                    }
+                ) {
+                    Text(stringResource(R.string.revoke_payment))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRevokeDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
     }
 }
 

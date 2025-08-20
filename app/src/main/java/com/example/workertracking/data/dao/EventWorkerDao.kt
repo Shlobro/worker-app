@@ -69,4 +69,24 @@ interface EventWorkerDao {
         ORDER BY e.date DESC
     """)
     suspend fun getAllEventWorkersForWorker(workerId: Long): List<UnpaidEventWorkerInfo>
+
+    @Query("""
+        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName 
+        FROM event_workers ew
+        INNER JOIN workers w ON ew.workerId = w.id
+        INNER JOIN events e ON ew.eventId = e.id
+        WHERE ew.workerId = :workerId AND ew.isPaid = 1
+        ORDER BY e.date DESC
+    """)
+    suspend fun getPaidEventWorkersForWorker(workerId: Long): List<UnpaidEventWorkerInfo>
+
+    @Query("""
+        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName 
+        FROM event_workers ew
+        INNER JOIN workers w ON ew.workerId = w.id
+        INNER JOIN events e ON ew.eventId = e.id
+        WHERE ew.isPaid = 1
+        ORDER BY e.date DESC
+    """)
+    suspend fun getAllPaidEventWorkers(): List<UnpaidEventWorkerInfo>
 }

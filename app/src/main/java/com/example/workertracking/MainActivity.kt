@@ -418,6 +418,9 @@ fun WorkerTrackingApp() {
                 val unpaidReferenceShifts by viewModel.unpaidReferenceShifts.collectAsState()
                 val unpaidReferenceEvents by viewModel.unpaidReferenceEvents.collectAsState()
                 val totalReferenceOwed by viewModel.totalReferenceOwed.collectAsState()
+                val paidShifts by viewModel.paidShifts.collectAsState()
+                val paidEvents by viewModel.paidEvents.collectAsState()
+                val showPaidItems by viewModel.showPaidItems.collectAsState()
                 val dateFilter by viewModel.dateFilter.collectAsState()
                 
                 LaunchedEffect(workerId) {
@@ -438,6 +441,9 @@ fun WorkerTrackingApp() {
                     unpaidReferenceShifts = unpaidReferenceShifts,
                     unpaidReferenceEvents = unpaidReferenceEvents,
                     totalReferenceOwed = totalReferenceOwed,
+                    paidShifts = paidShifts,
+                    paidEvents = paidEvents,
+                    showPaidItems = showPaidItems,
                     dateFilter = dateFilter,
                     onNavigateBack = {
                         application.container.triggerDashboardRefresh()
@@ -464,9 +470,20 @@ fun WorkerTrackingApp() {
                         viewModel.markEventAsPaid(eventWorkerId)
                         application.container.triggerDashboardRefresh()
                     },
+                    onRevokeShiftPayment = { shiftWorkerId ->
+                        viewModel.revokeShiftPayment(shiftWorkerId)
+                        application.container.triggerDashboardRefresh()
+                    },
+                    onRevokeEventPayment = { eventWorkerId ->
+                        viewModel.revokeEventPayment(eventWorkerId)
+                        application.container.triggerDashboardRefresh()
+                    },
                     onMarkAllAsPaid = {
                         viewModel.markAllAsPaid()
                         application.container.triggerDashboardRefresh()
+                    },
+                    onToggleShowPaidItems = {
+                        viewModel.toggleShowPaidItems()
                     },
                     onDateRangeSelected = { startDate, endDate ->
                         viewModel.setDateFilter(startDate, endDate)

@@ -86,6 +86,30 @@ class WorkerRepository(
         eventWorkerDao.updatePaymentStatus(eventWorkerId, true)
     }
 
+    suspend fun revokeShiftWorkerPayment(shiftWorkerId: Long) {
+        shiftWorkerDao.updatePaymentStatus(shiftWorkerId, false)
+    }
+
+    suspend fun revokeEventWorkerPayment(eventWorkerId: Long) {
+        eventWorkerDao.updatePaymentStatus(eventWorkerId, false)
+    }
+
+    suspend fun getPaidShiftWorkersForWorker(workerId: Long): List<UnpaidShiftWorkerInfo> {
+        return shiftWorkerDao.getPaidShiftWorkersForWorker(workerId)
+    }
+
+    suspend fun getPaidEventWorkersForWorker(workerId: Long): List<UnpaidEventWorkerInfo> {
+        return eventWorkerDao.getPaidEventWorkersForWorker(workerId)
+    }
+
+    suspend fun getAllPaidShiftWorkers(): List<UnpaidShiftWorkerInfo> {
+        return shiftWorkerDao.getAllPaidShiftWorkers()
+    }
+
+    suspend fun getAllPaidEventWorkers(): List<UnpaidEventWorkerInfo> {
+        return eventWorkerDao.getAllPaidEventWorkers()
+    }
+
     suspend fun getAllShiftWorkersForWorker(workerId: Long): List<UnpaidShiftWorkerInfo> {
         return shiftWorkerDao.getAllShiftWorkersForWorker(workerId)
     }

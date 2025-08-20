@@ -16,7 +16,10 @@ data class MoneyOwedUiState(
     val isLoading: Boolean = true,
     val unpaidShifts: List<UnpaidShiftWorkerInfo> = emptyList(),
     val unpaidEvents: List<UnpaidEventWorkerInfo> = emptyList(),
-    val totalDebt: Double = 0.0
+    val paidShifts: List<UnpaidShiftWorkerInfo> = emptyList(),
+    val paidEvents: List<UnpaidEventWorkerInfo> = emptyList(),
+    val totalDebt: Double = 0.0,
+    val showPaidItems: Boolean = false
 )
 
 class MoneyOwedViewModel(
@@ -38,6 +41,19 @@ class MoneyOwedViewModel(
             try {
                 val unpaidShifts = workerRepository.getUnpaidShiftWorkers()
                 val unpaidEvents = workerRepository.getUnpaidEventWorkers()
+                
+                // Load paid items if needed
+                val paidShifts = if (_uiState.value.showPaidItems) {
+                    workerRepository.getAllPaidShiftWorkers()
+                } else {
+                    emptyList()
+                }
+                
+                val paidEvents = if (_uiState.value.showPaidItems) {
+                    workerRepository.getAllPaidEventWorkers()
+                } else {
+                    emptyList()
+                }
                 
                 val shiftTotal = unpaidShifts.sumOf { unpaidShift ->
                     val workerPayment = if (unpaidShift.shiftWorker.isHourlyRate) {
@@ -63,6 +79,8 @@ class MoneyOwedViewModel(
                     isLoading = false,
                     unpaidShifts = unpaidShifts,
                     unpaidEvents = unpaidEvents,
+                    paidShifts = paidShifts,
+                    paidEvents = paidEvents,
                     totalDebt = shiftTotal + eventTotal
                 )
             } catch (e: Exception) {
@@ -93,6 +111,37 @@ class MoneyOwedViewModel(
                 // Handle error
             }
         }
+    }
+
+    fun revokeShiftPayment(shiftWorkerId: Long) {
+        viewModelScope.launch {
+            try {
+                workerRepository.revokeShiftWorkerPayment(shiftWorkerId)
+                loadData() // Refresh the data
+                appContainer.triggerDashboardRefresh() // Trigger dashboard refresh
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun revokeEventPayment(eventWorkerId: Long) {
+        viewModelScope.launch {
+            try {
+                workerRepository.revokeEventWorkerPayment(eventWorkerId)
+                loadData() // Refresh the data
+                appContainer.triggerDashboardRefresh() // Trigger dashboard refresh
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun toggleShowPaidItems() {
+        _uiState.value = _uiState.value.copy(
+            showPaidItems = !_uiState.value.showPaidItems
+        )
+        loadData() // Reload data to include/exclude paid items
     }
 
     class Factory(

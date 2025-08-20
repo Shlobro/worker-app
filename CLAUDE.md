@@ -329,6 +329,71 @@ Added comprehensive Hebrew strings for:
 - Database migration handles existing data automatically
 - Backwards compatible with previous app versions
 
+### Payment Revocation System (✅ COMPLETED)
+
+#### Overview
+Enhanced debt tracking system with ability to revoke payments that were marked as paid accidentally, providing complete control over payment status management.
+
+#### Repository Enhancements
+**WorkerRepository** additional methods:
+- `revokeShiftWorkerPayment(shiftWorkerId)`: Reverts shift payment status from paid to unpaid
+- `revokeEventWorkerPayment(eventWorkerId)`: Reverts event payment status from paid to unpaid
+- `getAllPaidShiftWorkers()`: Returns all paid shift assignments globally
+- `getAllPaidEventWorkers()`: Returns all paid event assignments globally
+- `getPaidShiftWorkersForWorker(workerId)`: Returns paid shifts for specific worker
+- `getPaidEventWorkersForWorker(workerId)`: Returns paid events for specific worker
+
+#### DAO Enhancements
+**ShiftWorkerDao** and **EventWorkerDao** additional methods:
+- `getPaidShiftWorkersForWorker(workerId)`: Query for paid shift assignments per worker
+- `getPaidEventWorkersForWorker(workerId)`: Query for paid event assignments per worker
+- `getAllPaidShiftWorkers()`: Global query for all paid shift assignments
+- `getAllPaidEventWorkers()`: Global query for all paid event assignments
+
+#### UI Enhancements
+
+**MoneyOwedScreen**:
+- Toggle button to show/hide paid items history
+- Separate sections for paid shifts and events with distinct visual styling
+- Revoke payment buttons on paid items with confirmation dialogs
+- Paid items displayed with muted colors and "Paid" status labels
+- Same dual-card system for reference payments (working and reference cards)
+
+**WorkerDetailScreen**:
+- Toggle button to show/hide paid items in worker detail
+- Paid shifts and events section with revoke payment functionality
+- Consistent visual styling with paid status indicators
+- Integration with existing debt tracking system
+
+#### Component Architecture
+**Dedicated Paid Item Cards**:
+- `PaidShiftCard`: Displays paid shift information with revoke option
+- `PaidEventCard`: Displays paid event information with revoke option
+- `WorkerPaidCard`: Worker-specific paid item cards with confirmation dialogs
+- Consistent visual design with primary color scheme and muted backgrounds
+
+#### User Experience Features
+- **Confirmation Dialogs**: All revoke actions require user confirmation
+- **Visual Distinction**: Paid items clearly distinguished from unpaid items
+- **Toggle Controls**: Easy toggle between showing/hiding paid history
+- **Real-time Updates**: Immediate reflection of status changes across screens
+- **Error Prevention**: Clear confirmation messages for irreversible actions
+
+#### String Resources
+Added Hebrew strings for revoke functionality:
+- `revoke_payment`: "בטל תשלום" 
+- `payment_revoked`: "התשלום בוטל"
+- `revoke_payment_confirmation`: "האם אתה בטוח שברצונך לבטל את התשלום?"
+- `paid_history`: "היסטוריית תשלומים"
+- `show_paid_items`: "הצג פריטים ששולמו"
+- `hide_paid_items`: "הסתר פריטים ששולמו"
+
+#### Implementation Benefits
+- **Accident Recovery**: Users can easily fix accidental payment markings
+- **Complete Audit Trail**: Full visibility into payment history and status changes
+- **Consistent UX**: Same interaction patterns across MoneyOwed and WorkerDetail screens
+- **Data Integrity**: All operations maintain database consistency with proper refresh cycles
+
 ### Event-Worker Relationship Enhancement (Version 17) (✅ COMPLETED)
 
 #### Overview

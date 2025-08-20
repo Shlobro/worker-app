@@ -73,6 +73,15 @@ class WorkerDetailViewModel(
     private val _totalReferenceOwed = MutableStateFlow(0.0)
     val totalReferenceOwed: StateFlow<Double> = _totalReferenceOwed.asStateFlow()
 
+    private val _paidShifts = MutableStateFlow<List<UnpaidShiftWorkerInfo>>(emptyList())
+    val paidShifts: StateFlow<List<UnpaidShiftWorkerInfo>> = _paidShifts.asStateFlow()
+
+    private val _paidEvents = MutableStateFlow<List<UnpaidEventWorkerInfo>>(emptyList())
+    val paidEvents: StateFlow<List<UnpaidEventWorkerInfo>> = _paidEvents.asStateFlow()
+
+    private val _showPaidItems = MutableStateFlow(false)
+    val showPaidItems: StateFlow<Boolean> = _showPaidItems.asStateFlow()
+
     fun loadWorker(workerId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -243,6 +252,9 @@ class WorkerDetailViewModel(
                 _worker.value?.let { worker ->
                     loadUnpaidItems(worker.id) // Refresh the data
                     loadCompleteHistory(worker.id) // Refresh complete history too
+                    if (_showPaidItems.value) {
+                        loadPaidItems(worker.id) // Refresh paid items if showing
+                    }
                 }
             } catch (e: Exception) {
                 // Handle error
@@ -257,6 +269,9 @@ class WorkerDetailViewModel(
                 _worker.value?.let { worker ->
                     loadUnpaidItems(worker.id) // Refresh the data
                     loadCompleteHistory(worker.id) // Refresh complete history too
+                    if (_showPaidItems.value) {
+                        loadPaidItems(worker.id) // Refresh paid items if showing
+                    }
                 }
             } catch (e: Exception) {
                 // Handle error
@@ -289,9 +304,72 @@ class WorkerDetailViewModel(
                     workerRepository.markAllAsPayedForWorker(worker.id)
                     loadUnpaidItems(worker.id) // Refresh the data
                     loadCompleteHistory(worker.id) // Refresh complete history too
+                    if (_showPaidItems.value) {
+                        loadPaidItems(worker.id) // Refresh paid items if showing
+                    }
                 }
             } catch (e: Exception) {
                 // Handle error
+            }
+        }
+    }
+
+    fun revokeShiftPayment(shiftWorkerId: Long) {
+        viewModelScope.launch {
+            try {
+                workerRepository.revokeShiftWorkerPayment(shiftWorkerId)
+                _worker.value?.let { worker ->
+                    loadUnpaidItems(worker.id) // Refresh unpaid items
+                    loadCompleteHistory(worker.id) // Refresh complete history
+                    if (_showPaidItems.value) {
+                        loadPaidItems(worker.id) // Refresh paid items
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun revokeEventPayment(eventWorkerId: Long) {
+        viewModelScope.launch {
+            try {
+                workerRepository.revokeEventWorkerPayment(eventWorkerId)
+                _worker.value?.let { worker ->
+                    loadUnpaidItems(worker.id) // Refresh unpaid items
+                    loadCompleteHistory(worker.id) // Refresh complete history
+                    if (_showPaidItems.value) {
+                        loadPaidItems(worker.id) // Refresh paid items
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun toggleShowPaidItems() {
+        _showPaidItems.value = !_showPaidItems.value
+        if (_showPaidItems.value) {
+            _worker.value?.let { worker ->
+                loadPaidItems(worker.id)
+            }
+        } else {
+            _paidShifts.value = emptyList()
+            _paidEvents.value = emptyList()
+        }
+    }
+
+    private fun loadPaidItems(workerId: Long) {
+        viewModelScope.launch {
+            try {
+                val paidShifts = workerRepository.getPaidShiftWorkersForWorker(workerId)
+                val paidEvents = workerRepository.getPaidEventWorkersForWorker(workerId)
+                
+                _paidShifts.value = paidShifts
+                _paidEvents.value = paidEvents
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
             }
         }
     }

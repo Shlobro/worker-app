@@ -171,6 +171,12 @@
     <string name="debt_status">סטטוס חוב</string>
     <string name="paid">שולם</string>
     <string name="unpaid">לא שולם</string>
+    <string name="revoke_payment">בטל תשלום</string>
+    <string name="payment_revoked">התשלום בוטל</string>
+    <string name="revoke_payment_confirmation">האם אתה בטוח שברצונך לבטל את התשלום?</string>
+    <string name="paid_history">היסטוריית תשלומים</string>
+    <string name="show_paid_items">הצג פריטים ששולמו</string>
+    <string name="hide_paid_items">הסתר פריטים ששולמו</string>
     <string name="work_history">היסטוריית עבודה</string>
     <string name="all_shifts">כל המשמרות</string>
     <string name="all_events">כל האירועים</string>
