@@ -33,11 +33,6 @@ class WorkersViewModel(
     private val _referenceWorkerNames = MutableStateFlow<Map<Long, String>>(emptyMap())
     val referenceWorkerNames: StateFlow<Map<Long, String>> = _referenceWorkerNames.asStateFlow()
     
-    private val _startDate = MutableStateFlow<Date?>(null)
-    val startDate: StateFlow<Date?> = _startDate.asStateFlow()
-    
-    private val _endDate = MutableStateFlow<Date?>(null)
-    val endDate: StateFlow<Date?> = _endDate.asStateFlow()
     
     init {
         loadWorkers()
@@ -137,11 +132,7 @@ class WorkersViewModel(
                     val earningsMap = mutableMapOf<Long, Double>()
                     
                     workerList.forEach { worker ->
-                        val totalEarnings = workerRepository.getTotalEarningsForWorkerWithDateFilter(
-                            worker.id,
-                            _startDate.value,
-                            _endDate.value
-                        )
+                        val totalEarnings = workerRepository.getTotalEarningsForWorker(worker.id)
                         earningsMap[worker.id] = totalEarnings
                     }
                     
@@ -153,17 +144,6 @@ class WorkersViewModel(
         }
     }
     
-    fun setDateFilter(startDate: Date?, endDate: Date?) {
-        _startDate.value = startDate
-        _endDate.value = endDate
-        loadWorkerEarnings()
-    }
-    
-    fun clearDateFilter() {
-        _startDate.value = null
-        _endDate.value = null
-        loadWorkerEarnings()
-    }
     
     private fun loadReferenceWorkerNames() {
         viewModelScope.launch {

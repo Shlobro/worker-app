@@ -339,8 +339,6 @@ fun WorkerTrackingApp() {
                 val workersWithDebt by viewModel.workersWithDebt.collectAsState()
                 val workerEarnings by viewModel.workerEarnings.collectAsState()
                 val referenceWorkerNames by viewModel.referenceWorkerNames.collectAsState()
-                val startDate by viewModel.startDate.collectAsState()
-                val endDate by viewModel.endDate.collectAsState()
                 val isLoading by viewModel.isLoading.collectAsState()
                 
                 WorkersScreen(
@@ -348,8 +346,6 @@ fun WorkerTrackingApp() {
                     workersWithDebt = workersWithDebt,
                     workerEarnings = workerEarnings,
                     referenceWorkerNames = referenceWorkerNames,
-                    startDate = startDate,
-                    endDate = endDate,
                     isLoading = isLoading,
                     onAddWorker = {
                         navController.navigate(Screen.AddWorker.route)
@@ -359,12 +355,6 @@ fun WorkerTrackingApp() {
                     },
                     onDeleteWorker = { worker ->
                         viewModel.deleteWorker(worker)
-                    },
-                    onDateFilterChanged = { start, end ->
-                        viewModel.setDateFilter(start, end)
-                    },
-                    onClearDateFilter = {
-                        viewModel.clearDateFilter()
                     }
                 )
             }

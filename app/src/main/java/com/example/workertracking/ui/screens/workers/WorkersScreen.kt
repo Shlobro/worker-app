@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Search
@@ -26,9 +25,6 @@ import androidx.compose.ui.unit.dp
 import com.example.workertracking.R
 import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.data.entity.WorkerWithDebt
-import com.example.workertracking.ui.screens.dashboard.DateFilterChip
-import java.text.SimpleDateFormat
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,14 +33,10 @@ fun WorkersScreen(
     workersWithDebt: List<WorkerWithDebt> = emptyList(),
     workerEarnings: Map<Long, Double> = emptyMap(),
     referenceWorkerNames: Map<Long, String> = emptyMap(),
-    startDate: Date? = null,
-    endDate: Date? = null,
     isLoading: Boolean = false,
     onAddWorker: () -> Unit = {},
     onWorkerClick: (Worker) -> Unit = {},
-    onDeleteWorker: (Worker) -> Unit = {},
-    onDateFilterChanged: (Date?, Date?) -> Unit = { _, _ -> },
-    onClearDateFilter: () -> Unit = {}
+    onDeleteWorker: (Worker) -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var workerToDelete by remember { mutableStateOf<Worker?>(null) }
@@ -150,13 +142,6 @@ fun WorkersScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    DateFilterChip(
-                        startDate = startDate,
-                        endDate = endDate,
-                        onDateRangeSelected = onDateFilterChanged,
-                        onClearFilter = onClearDateFilter
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
                 
                 items(filteredWorkers) { worker ->
