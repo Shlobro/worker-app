@@ -464,6 +464,10 @@ fun WorkerTrackingApp() {
                         viewModel.markEventAsPaid(eventWorkerId)
                         application.container.triggerDashboardRefresh()
                     },
+                    onMarkAllAsPaid = {
+                        viewModel.markAllAsPaid()
+                        application.container.triggerDashboardRefresh()
+                    },
                     onDateRangeSelected = { startDate, endDate ->
                         viewModel.setDateFilter(startDate, endDate)
                     },

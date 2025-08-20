@@ -56,6 +56,7 @@ fun WorkerDetailScreen(
     onViewPhotos: () -> Unit = {},
     onMarkShiftAsPaid: (Long) -> Unit = {},
     onMarkEventAsPaid: (Long) -> Unit = {},
+    onMarkAllAsPaid: () -> Unit = {},
     onDateRangeSelected: (Date?, Date?) -> Unit = { _, _ -> },
     onClearDateFilter: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -194,6 +195,27 @@ fun WorkerDetailScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.error
                                 )
+                                
+                                if (totalOwed > 0) {
+                                    Button(
+                                        onClick = onMarkAllAsPaid,
+                                        modifier = Modifier.padding(top = 8.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary
+                                        )
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = stringResource(R.string.mark_all_as_paid),
+                                            style = MaterialTheme.typography.labelMedium
+                                        )
+                                    }
+                                }
                                 
                                 if (unpaidShifts.isNotEmpty()) {
                                     Text(

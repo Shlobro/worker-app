@@ -239,19 +239,28 @@ fun EditShiftScreen(
                     // Validate input based on length
                     when (digitsOnly.length) {
                         3 -> {
-                            // For 3-digit input, only allow valid H:MM patterns (0-9 for first digit, 0-59 for minutes)
+                            // For 3-digit input, allow all input as user might be typing 4-digit time
+                            // Only validate if it could be a valid H:MM pattern
                             val firstDigit = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
                             val minutes = digitsOnly.substring(1).toIntOrNull() ?: 0
-                            if (firstDigit > 9 || minutes > 59) return@OutlinedTextField
+                            // Allow input if first digit <= 2 (could become 2x:xx) or if minutes <= 59 (valid H:MM)
+                            if (firstDigit <= 2 || minutes <= 59) {
+                                startTimeInput = digitsOnly
+                            }
                         }
                         4 -> {
                             // For 4-digit input, validate as HH:MM
                             val hours = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
                             val minutes = digitsOnly.substring(2).toIntOrNull() ?: 0
-                            if (hours > 23 || minutes > 59) return@OutlinedTextField
+                            if (hours <= 23 && minutes <= 59) {
+                                startTimeInput = digitsOnly
+                            }
+                        }
+                        else -> {
+                            // For 1-2 digits, always allow
+                            startTimeInput = digitsOnly
                         }
                     }
-                    startTimeInput = digitsOnly
                 },
                 label = { Text("שעת התחלה") },
                 visualTransformation = TimeInputVisualTransformation(),
@@ -269,19 +278,28 @@ fun EditShiftScreen(
                     // Validate input based on length
                     when (digitsOnly.length) {
                         3 -> {
-                            // For 3-digit input, only allow valid H:MM patterns (0-9 for first digit, 0-59 for minutes)
+                            // For 3-digit input, allow all input as user might be typing 4-digit time
+                            // Only validate if it could be a valid H:MM pattern
                             val firstDigit = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
                             val minutes = digitsOnly.substring(1).toIntOrNull() ?: 0
-                            if (firstDigit > 9 || minutes > 59) return@OutlinedTextField
+                            // Allow input if first digit <= 2 (could become 2x:xx) or if minutes <= 59 (valid H:MM)
+                            if (firstDigit <= 2 || minutes <= 59) {
+                                endTimeInput = digitsOnly
+                            }
                         }
                         4 -> {
                             // For 4-digit input, validate as HH:MM
                             val hours = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
                             val minutes = digitsOnly.substring(2).toIntOrNull() ?: 0
-                            if (hours > 23 || minutes > 59) return@OutlinedTextField
+                            if (hours <= 23 && minutes <= 59) {
+                                endTimeInput = digitsOnly
+                            }
+                        }
+                        else -> {
+                            // For 1-2 digits, always allow
+                            endTimeInput = digitsOnly
                         }
                     }
-                    endTimeInput = digitsOnly
                 },
                 label = { Text("שעת סיום") },
                 visualTransformation = TimeInputVisualTransformation(),

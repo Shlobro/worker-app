@@ -281,4 +281,18 @@ class WorkerDetailViewModel(
             loadCompleteHistory(worker.id)
         }
     }
+    
+    fun markAllAsPaid() {
+        viewModelScope.launch {
+            try {
+                _worker.value?.let { worker ->
+                    workerRepository.markAllAsPayedForWorker(worker.id)
+                    loadUnpaidItems(worker.id) // Refresh the data
+                    loadCompleteHistory(worker.id) // Refresh complete history too
+                }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
 }

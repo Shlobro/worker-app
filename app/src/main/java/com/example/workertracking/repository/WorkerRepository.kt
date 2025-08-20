@@ -237,4 +237,19 @@ class WorkerRepository(
         
         return shiftReferenceTotal + eventReferenceTotal
     }
+    
+    suspend fun markAllAsPayedForWorker(workerId: Long) {
+        val unpaidShifts = getUnpaidShiftWorkersForWorker(workerId)
+        val unpaidEvents = getUnpaidEventWorkersForWorker(workerId)
+        
+        // Mark all unpaid shifts as paid
+        unpaidShifts.forEach { unpaidShift ->
+            shiftWorkerDao.updatePaymentStatus(unpaidShift.shiftWorker.id, true)
+        }
+        
+        // Mark all unpaid events as paid
+        unpaidEvents.forEach { unpaidEvent ->
+            eventWorkerDao.updatePaymentStatus(unpaidEvent.eventWorker.id, true)
+        }
+    }
 }

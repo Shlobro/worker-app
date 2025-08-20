@@ -1,0 +1,8 @@
+# Ignore probe files
+*.probe
+
+# Ignore lock files
+*.lock
+
+# Ignore binary files
+*.bin
