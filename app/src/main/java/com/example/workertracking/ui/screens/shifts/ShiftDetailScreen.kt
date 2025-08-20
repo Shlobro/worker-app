@@ -336,6 +336,15 @@ private fun ShiftWorkerCard(
                 TextButton(onClick = { showEditDialog = true }) {
                     Text("ערוך")
                 }
+                IconButton(
+                    onClick = onRemove
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.remove_worker),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }

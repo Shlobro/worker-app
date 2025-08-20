@@ -328,6 +328,15 @@ fun EventDetailScreen(
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Medium
                                             )
+                                            IconButton(
+                                                onClick = { onRemoveWorker(workerWithName.eventWorker) }
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Delete,
+                                                    contentDescription = stringResource(R.string.remove_worker),
+                                                    tint = MaterialTheme.colorScheme.error
+                                                )
+                                            }
                                         }
                                     }
                                     if (workerWithName != eventWorkers.last()) {

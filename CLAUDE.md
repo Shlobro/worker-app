@@ -111,7 +111,7 @@ Worker Tracking is an Android application for managing projects, workers, and wo
   - Include reference payments in total shift cost calculation
   - Reference payments are always calculated hourly (rate × shiftHours)
 - **Search Functionality**: Searchable worker addition with real-time filtering
-- **Individual Control**: Add, edit, or remove workers from shifts independently
+- **Individual Control**: Add, edit, or remove workers from shifts independently (remove uses trash can icon for UI consistency)
 - **Cost Calculation**: Automatic shift cost calculation based on all assigned workers including reference payments
 
 ### Event-Worker Relationship  
@@ -120,7 +120,7 @@ Worker Tracking is an Android application for managing projects, workers, and wo
 - **Total Calculation**: Event total cost calculated as (hours × hourly rate) per worker
 - **EventWorker Entity**: Links events to workers with hours and pay rate
 - **Event Income**: Events have payment amounts for profit calculation
-- **Event Details**: Full event detail screens with worker management
+- **Event Details**: Full event detail screens with worker management (add/remove workers with trash can icon for UI consistency)
 - **Event Editing**: Complete edit functionality for events
 - **Event Deletion**: Events can be deleted like other entities
 - **Event Search**: Events are searchable by name
@@ -409,3 +409,5 @@ Enhanced event worker assignment to match shift worker functionality, including 
 - **Critical**: This app is designed to be fully in Hebrew. Both `values/strings.xml` (default) and `values-he/strings.xml` should contain Hebrew text
 - **Common Mistake**: DO NOT put English text in `values/strings.xml` - it should contain Hebrew text just like `values-he/strings.xml`
 - **Reason**: The app is Hebrew-first, so the default string resources should be in Hebrew to ensure proper display regardless of locale settings
+- update readme and claude.md after each change
+- whenever adding any new UI elements or editing old ones make sure they are consistant with all other UI elements
