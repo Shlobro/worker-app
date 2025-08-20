@@ -511,21 +511,15 @@ fun EventSummaryCard(
                 overflow = TextOverflow.Ellipsis
             )
             
-            Text(
-                text = dateFormat.format(event.date),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.secondary
-            )
-            
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = formatCurrency(event.income),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
+                    text = "${dateFormat.format(event.date)} • ${event.hours} שעות",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary
                 )
                 
                 Icon(

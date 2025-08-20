@@ -213,29 +213,10 @@ fun EventCard(
             }
             
             Text(
-                text = dateFormatter.format(event.date),
+                text = "${dateFormatter.format(event.date)} • ${event.startTime}-${event.endTime} • ${event.hours} שעות",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Text(
-                text = "${event.startTime} - ${event.endTime}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (event.income > 0) {
-                    Text(
-                        text = "הכנסה: ₪${String.format("%.2f", event.income)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
         }
     }
 }

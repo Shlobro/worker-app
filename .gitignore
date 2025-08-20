@@ -6,3 +6,6 @@
 
 # Ignore binary files
 *.bin
+
+# Ignore Gradle files
+.gradle/
