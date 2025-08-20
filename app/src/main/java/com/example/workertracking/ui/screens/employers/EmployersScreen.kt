@@ -26,9 +26,6 @@ import com.example.workertracking.data.entity.Employer
 @Composable
 fun EmployersScreen(
     employers: List<Employer> = emptyList(),
-    employerProfits: Map<Long, Double> = emptyMap(),
-    employerIncomes: Map<Long, Double> = emptyMap(),
-    employerExpenses: Map<Long, Double> = emptyMap(),
     isLoading: Boolean = false,
     onAddEmployer: () -> Unit = {},
     onEmployerClick: (Employer) -> Unit = {},
@@ -142,9 +139,6 @@ fun EmployersScreen(
                 items(filteredEmployers) { employer ->
                     EmployerCard(
                         employer = employer,
-                        totalProfit = employerProfits[employer.id] ?: 0.0,
-                        totalIncome = employerIncomes[employer.id] ?: 0.0,
-                        totalExpenses = employerExpenses[employer.id] ?: 0.0,
                         onClick = { onEmployerClick(employer) },
                         onDelete = { employerToDelete = employer }
                     )
@@ -190,9 +184,6 @@ fun EmployersScreen(
 @Composable
 fun EmployerCard(
     employer: Employer,
-    totalProfit: Double = 0.0,
-    totalIncome: Double = 0.0,
-    totalExpenses: Double = 0.0,
     onClick: () -> Unit,
     onDelete: () -> Unit = {}
 ) {
@@ -201,7 +192,8 @@ fun EmployerCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -211,7 +203,7 @@ fun EmployerCard(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.AccountCircle,
@@ -228,7 +220,7 @@ fun EmployerCard(
             
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.clickable {
                     val intent = Intent(Intent.ACTION_DIAL).apply {
                         data = Uri.parse("tel:${employer.phoneNumber}")
@@ -240,73 +232,13 @@ fun EmployerCard(
                     imageVector = Icons.Default.Phone,
                     contentDescription = stringResource(R.string.call_employer),
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(20.dp)
                 )
                 Text(
                     text = employer.phoneNumber,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
-            }
-            
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.total_revenue),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "₪${String.format("%.2f", totalIncome)}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.total_expenses),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "₪${String.format("%.2f", totalExpenses)}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.total_profit),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "₪${String.format("%.2f", totalProfit)}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = if (totalProfit >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                    )
-                }
             }
         }
     }

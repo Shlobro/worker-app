@@ -929,16 +929,10 @@ fun WorkerTrackingApp() {
                     EmployersViewModel(application.container.employerRepository)
                 }
                 val employers by viewModel.employers.collectAsState()
-                val employerProfits by viewModel.employerProfits.collectAsState()
-                val employerIncomes by viewModel.employerIncomes.collectAsState()
-                val employerExpenses by viewModel.employerExpenses.collectAsState()
                 val isLoading by viewModel.isLoading.collectAsState()
                 
                 EmployersScreen(
                     employers = employers,
-                    employerProfits = employerProfits,
-                    employerIncomes = employerIncomes,
-                    employerExpenses = employerExpenses,
                     isLoading = isLoading,
                     onAddEmployer = {
                         navController.navigate(Screen.AddEmployer.route)
