@@ -296,7 +296,15 @@ fun WorkerDetailScreen(
                 }
                 
                 // Reference payments owed TO this worker section
-                if (totalReferenceOwed > 0 || unpaidReferenceShifts.isNotEmpty() || unpaidReferenceEvents.isNotEmpty()) {
+                // Filter to check if there are actual reference payments with amounts > 0
+                val hasReferenceShiftsWithPayment = unpaidReferenceShifts.any { unpaidShift ->
+                    (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours > 0
+                }
+                val hasReferenceEventsWithPayment = unpaidReferenceEvents.any { unpaidEvent ->
+                    (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours > 0
+                }
+                
+                if (totalReferenceOwed > 0 || hasReferenceShiftsWithPayment || hasReferenceEventsWithPayment) {
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -323,42 +331,56 @@ fun WorkerDetailScreen(
                                 )
                                 
                                 if (unpaidReferenceShifts.isNotEmpty()) {
-                                    Text(
-                                        text = "משמרות בהפניה",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                                    )
+                                    // Filter out shifts with zero reference payment
+                                    val shiftsWithPayment = unpaidReferenceShifts.filter { unpaidShift ->
+                                        (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours > 0
+                                    }
                                     
-                                    unpaidReferenceShifts.forEach { unpaidShift ->
-                                        WorkerDebtCard(
-                                            type = "reference_shift",
-                                            projectName = unpaidShift.projectName,
-                                            date = unpaidShift.shiftDate,
-                                            amount = (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours,
-                                            onMarkAsPaid = { onMarkShiftAsPaid(unpaidShift.shiftWorker.id) },
-                                            isReference = true
+                                    if (shiftsWithPayment.isNotEmpty()) {
+                                        Text(
+                                            text = "משמרות בהפניה",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer
                                         )
+                                        
+                                        shiftsWithPayment.forEach { unpaidShift ->
+                                            WorkerDebtCard(
+                                                type = "reference_shift",
+                                                projectName = unpaidShift.projectName,
+                                                date = unpaidShift.shiftDate,
+                                                amount = (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours,
+                                                onMarkAsPaid = { onMarkShiftAsPaid(unpaidShift.shiftWorker.id) },
+                                                isReference = true
+                                            )
+                                        }
                                     }
                                 }
                                 
                                 if (unpaidReferenceEvents.isNotEmpty()) {
-                                    Text(
-                                        text = "אירועים בהפניה",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                                    )
+                                    // Filter out events with zero reference payment
+                                    val eventsWithPayment = unpaidReferenceEvents.filter { unpaidEvent ->
+                                        (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours > 0
+                                    }
                                     
-                                    unpaidReferenceEvents.forEach { unpaidEvent ->
-                                        WorkerDebtCard(
-                                            type = "reference_event",
-                                            projectName = unpaidEvent.eventName,
-                                            date = unpaidEvent.eventDate,
-                                            amount = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours,
-                                            onMarkAsPaid = { onMarkEventAsPaid(unpaidEvent.eventWorker.id) },
-                                            isReference = true
+                                    if (eventsWithPayment.isNotEmpty()) {
+                                        Text(
+                                            text = "אירועים בהפניה",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer
                                         )
+                                        
+                                        eventsWithPayment.forEach { unpaidEvent ->
+                                            WorkerDebtCard(
+                                                type = "reference_event",
+                                                projectName = unpaidEvent.eventName,
+                                                date = unpaidEvent.eventDate,
+                                                amount = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours,
+                                                onMarkAsPaid = { onMarkEventAsPaid(unpaidEvent.eventWorker.id) },
+                                                isReference = true
+                                            )
+                                        }
                                     }
                                 }
                             }
