@@ -44,7 +44,7 @@ fun StandardCard(
             onClick = onClick
         ) {
             Column(
-                modifier = Modifier.padding(Spacing.md),
+            modifier = Modifier.padding(Spacing.md),
                 content = content
             )
         }
@@ -376,10 +376,6 @@ fun EventCard(
         }
     }
 }
-
-/**
- * Status chip component
- */
 @Composable
 fun StatusChip(
     text: String,
@@ -474,12 +470,4 @@ fun FinancialSummary(
             )
         }
     }
-}
-
-/**
- * Currency formatting utility
- */
-fun formatCurrency(amount: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("he", "IL"))
-    return formatter.format(amount)
 }

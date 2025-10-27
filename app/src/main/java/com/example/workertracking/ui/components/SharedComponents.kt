@@ -39,9 +39,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.remember
+
 import androidx.compose.ui.unit.dp
 import com.example.workertracking.ui.theme.Amber40
-import com.example.workertracking.ui.theme.Error
+import com.example.workertracking.ui.theme.Error as ThemeError
 import com.example.workertracking.ui.theme.Success
 import com.example.workertracking.ui.theme.Warning
 import java.text.NumberFormat
@@ -116,24 +121,24 @@ fun StatusChip(
     modifier: Modifier = Modifier
 ) {
     val backgroundColor = when (status) {
-        StatusType.SUCCESS -> Success.copy(alpha = 0.1f)
-        StatusType.WARNING -> Warning.copy(alpha = 0.1f)
-        StatusType.ERROR -> Error.copy(alpha = 0.1f)
+        StatusType.SUCCESS -> com.example.workertracking.ui.theme.Success.copy(alpha = 0.1f)
+        StatusType.WARNING -> com.example.workertracking.ui.theme.Warning.copy(alpha = 0.1f)
+        StatusType.ERROR -> ThemeError.copy(alpha = 0.1f)
         StatusType.INFO -> MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
     }
     
     val textColor = when (status) {
-        StatusType.SUCCESS -> Success
-        StatusType.WARNING -> Warning
-        StatusType.ERROR -> Error
+        StatusType.SUCCESS -> com.example.workertracking.ui.theme.Success
+        StatusType.WARNING -> com.example.workertracking.ui.theme.Warning
+        StatusType.ERROR -> ThemeError
         StatusType.INFO -> MaterialTheme.colorScheme.primary
     }
     
     val icon = when (status) {
-        StatusType.SUCCESS -> Icons.Default.CheckCircle
-        StatusType.WARNING -> Icons.Default.Warning
-        StatusType.ERROR -> Icons.Default.Error
-        StatusType.INFO -> Icons.Default.Info
+        StatusType.SUCCESS -> Icons.Filled.CheckCircle
+        StatusType.WARNING -> Icons.Filled.Warning
+        StatusType.ERROR -> Icons.Filled.Error
+        StatusType.INFO -> Icons.Filled.Info
     }
     
     Surface(
@@ -171,7 +176,7 @@ fun FinancialDisplay(
 ) {
     val amountColor = when {
         isPositive == true -> Success
-        isPositive == false -> Error
+        isPositive == false -> ThemeError
         else -> MaterialTheme.colorScheme.onSurface
     }
     
@@ -355,10 +360,11 @@ enum class StatusType {
 }
 
 // Extension for clickable with ripple effect
+@Composable
 fun Modifier.clickableWithRipple(onClick: () -> Unit): Modifier = this.then(
-    androidx.compose.foundation.clickable(
-        interactionSource = androidx.compose.foundation.interaction.rememberMutableInteractionSource(),
-        indication = androidx.compose.foundation.LocalIndication.current,
+    clickable(
+        interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+        indication = LocalIndication.current,
         onClick = onClick
     )
 )

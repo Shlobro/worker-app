@@ -1,11 +1,32 @@
-# Ignore probe files
-*.probe
-
-# Ignore lock files
-*.lock
-
-# Ignore binary files
-*.bin
-
-# Ignore Gradle files
+# Android Studio
+.idea/
 .gradle/
+build/
+local.properties
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# Keystore files
+*.jks
+*.keystore
+
+# Proguard
+proguard/
+
+# Log files
+*.log
+
+# Cmake
+.cxx/
+
+# NDK
+.externalNativeBuild/
+
+# Captured snapshots
+*.snapshot
+
+# User-specific files
+.DS_Store
