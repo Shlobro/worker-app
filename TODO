@@ -9,20 +9,7 @@ Status: All bugs below have been validated against the codebase
 CRITICAL BUGS - FIX IMMEDIATELY
 ================================
 
-1. EmployerDao Join Duplication - Over-counting
-   Location: EmployerDao.kt:27-66
-   Problem: Complex joins between employers, projects, events, shifts, and workers create
-            Cartesian products. A single worker payment gets counted multiple times when
-            multiple projects/events exist.
-   Example: 2 projects × 3 events × 5 workers = 30x multiplier on costs
-   Impact: Employer profit/income/expense calculations are wildly incorrect
-   Fix Required:
-   - Rewrite getTotalProfitFromEmployer() using subqueries/CTEs
-   - Rewrite getTotalIncomeFromEmployer() using subqueries
-   - Rewrite getTotalExpensesFromEmployer() using subqueries
-   - Aggregate sums independently before joining
-
-2. Circular Reference Validation Missing
+1. Circular Reference Validation Missing
    Location: Worker.kt:12-17, WorkerRepository.kt:283-298
    Problem: Worker entity has self-referencing foreign key (referenceId) with no
             validation to prevent circular references (A→B→A)
@@ -32,7 +19,7 @@ CRITICAL BUGS - FIX IMMEDIATELY
    - Add database constraint or trigger to prevent cycles
    - Add cycle detection in WorkerRepository.getWorkerById() reference lookups
 
-3. N+1 Query Problem - Severe Performance Issue
+2. N+1 Query Problem - Severe Performance Issue
    Location: WorkersViewModel.kt:73-126, WorkerRepository.kt:283-298
    Problem: Loading worker list executes 4+ database queries per worker:
             - getUnpaidShiftWorkersForWorker(id)
@@ -220,9 +207,9 @@ ARCHITECTURE IMPROVEMENTS
 PRIORITY ORDER
 ========================================
 
-1. Fix EmployerDao Join Duplication (Bug #1) - Critical metrics broken
-2. Fix N+1 Query Problem (Bug #2) - Performance/ANR prevention
-3. Fix Flow Memory Leaks (Bug #3) - Memory stability
+1. Fix N+1 Query Problem (Bug #2) - Performance/ANR prevention
+2. Fix Circular Reference Validation (Bug #1) - Prevent infinite loops
+3. Fix Flow Memory Leaks (Bug #4) - Memory stability
 4. Remaining Major/Medium bugs as time permits
 
 
