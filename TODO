@@ -52,14 +52,6 @@ HIGH PRIORITY BUGS
 MAJOR BUGS
 ==========
 
-6. Worker Earnings Include Reference Payments
-    Location: WorkerRepository.kt:251
-    Problem: Worker "earnings" calculation includes reference payments made to OTHER workers
-    Impact: Worker earnings are inflated, showing more money than they actually earned
-    Fix Required:
-    - Remove reference payments from worker earnings calculations
-    - Only include direct worker payments (payRate, amountPaid, tipAmount)
-
 7. Project Costs Omit Reference Pay
     Location: ShiftDao.kt:28, DashboardViewModel.kt:205
     Problem: Project cost calculations don't include referencePayRate
