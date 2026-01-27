@@ -90,16 +90,7 @@ MEDIUM PRIORITY BUGS
     - Add 24 hours to endDate before comparison
     - OR: Use date-only comparison (strip time component)
 
-10. Duplicate Worker Assignment Not Prevented
-    Location: EventDetailScreen.kt:636
-    Problem: UI filtering exists but no database constraint prevents duplicate worker assignments
-    Impact: Same worker can be added twice if dialog opened twice before data refreshes
-    Fix Required:
-    - Add unique constraint: (eventId, workerId) in event_workers table
-    - Add unique constraint: (shiftId, workerId) in shift_workers table
-    - Handle constraint violations gracefully in UI
-
-11. Payment Dialog Doesn't Validate Against Total
+10. Payment Dialog Doesn't Validate Against Total
     Location: WorkerDetailScreen.kt:646-648
     Problem: Partial payment has no validation that amountPaid + currentAmountPaid <= totalDue
     Impact: Users can pay more than owed, causing negative balances
@@ -108,7 +99,7 @@ MEDIUM PRIORITY BUGS
     - Show error if payment exceeds remaining balance
     - Show remaining balance in dialog
 
-12. Missing Database Indices on Foreign Keys
+11. Missing Database Indices on Foreign Keys
     Location: All entity files
     Problem: No indices defined on foreign key columns (workerId, shiftId, eventId, etc.)
     Impact: Slow queries when joining tables, especially with large datasets
@@ -117,7 +108,7 @@ MEDIUM PRIORITY BUGS
     - Example: @Entity(indices = [Index("workerId"), Index("eventId")])
     - Create migration to add indices
 
-13. Locale Hardcoded to Hebrew
+12. Locale Hardcoded to Hebrew
     Location: Multiple files using Locale("he", "IL")
     Problem: Currency formatting hardcoded instead of using device locale
     Impact: Users in other countries see Hebrew formatting
@@ -129,7 +120,7 @@ MEDIUM PRIORITY BUGS
 LOW PRIORITY / MINOR BUGS
 ==========================
 
-14. Inconsistent Error Handling
+13. Inconsistent Error Handling
     Location: All ViewModels
     Problem: Empty catch blocks silently swallow errors
     Impact: Users have no feedback when operations fail
@@ -137,7 +128,7 @@ LOW PRIORITY / MINOR BUGS
     - Add error state to ViewModels
     - Show error messages to users
 
-15. Worker Detail Project History Hardcoded Empty
+14. Worker Detail Project History Hardcoded Empty
     Location: WorkerDetailViewModel.kt:117
     Problem: Projects hardcoded to emptyList() with TODO comment
     Impact: Worker detail screen never shows project history
@@ -145,13 +136,13 @@ LOW PRIORITY / MINOR BUGS
     - Implement actual project history query
     - Remove TODO and empty list
 
-16. Navigation Clears Entire Backstack
+15. Navigation Clears Entire Backstack
     Location: MainActivity.kt:135-142
     Problem: Dashboard navigation uses popUpTo(0) { inclusive = true }
     Impact: User can't navigate back after visiting dashboard
     Note: May be intentional design, verify with product requirements
 
-15. ShiftWorker Payment Status Not Granular
+16. ShiftWorker Payment Status Not Granular
     Location: ShiftWorker entity (inferred)
     Problem: ShiftWorker only has isPaid boolean, unlike EventWorker which has amountPaid,
              tipAmount, etc.
@@ -161,7 +152,7 @@ LOW PRIORITY / MINOR BUGS
     - Add referenceAmountPaid, referenceTipAmount fields
     - Update UI to support partial shift payments
 
-16. Manual Event Bus Instead of Reactive Data
+17. Manual Event Bus Instead of Reactive Data
     Location: MoneyOwedViewModel.kt calling appContainer.triggerDashboardRefresh()
     Problem: ViewModels manually trigger refreshes instead of using Room Flows
     Impact: Tight coupling to DI container, unnecessary complexity
@@ -173,17 +164,17 @@ LOW PRIORITY / MINOR BUGS
 POTENTIAL ISSUES - VERIFY
 ==========================
 
-17. Date Type Conversion
+18. Date Type Conversion
     Location: WorkerRepository.kt:217, 236
     Question: Is shiftDate stored as Long (millis) or Date object?
     Action: Verify data type and ensure Date(shift.shiftDate) is correct
 
-18. Worker Deletion Cascade
+19. Worker Deletion Cascade
     Location: Worker.kt:16
     Question: Should historical ShiftWorker/EventWorker records be preserved when worker deleted?
     Action: Verify intended behavior with product owner
 
-19. Reference Worker Commission on Fixed Amount
+20. Reference Worker Commission on Fixed Amount
     Location: WorkerRepository.kt:265, EventDetailScreen.kt:299-301
     Question: Should reference workers get hourly commission when referred worker got fixed payment?
     Action: Clarify business logic with product owner
@@ -192,12 +183,12 @@ POTENTIAL ISSUES - VERIFY
 ARCHITECTURE IMPROVEMENTS
 ==========================
 
-20. Split EventWorker Table
+21. Split EventWorker Table
     Recommendation: Separate worker payments from reference/manager commissions
     Benefit: Clearer data model
     Tables: EventWorker (worker pay) + EventCommission (manager commission)
 
-21. Normalize Payment Calculation Logic
+22. Normalize Payment Calculation Logic
     Recommendation: Create single source of truth for payment math
     Benefit: Consistent calculations across all ViewModels
     Implementation: Create PaymentCalculator class with all formulas

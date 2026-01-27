@@ -22,7 +22,7 @@ import com.example.workertracking.data.entity.*
         Payment::class,
         Employer::class
     ],
-    version = 20,
+    version = 21,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -43,27 +43,27 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
         private var INSTANCE: WorkerTrackingDatabase? = null
 
         private val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Remove the referencePercentage column and rename contactInfo to phoneNumber
-                database.execSQL("CREATE TABLE workers_new (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, phoneNumber TEXT NOT NULL, referenceId INTEGER, FOREIGN KEY(referenceId) REFERENCES workers(id) ON DELETE SET NULL)")
-                database.execSQL("INSERT INTO workers_new (id, name, phoneNumber, referenceId) SELECT id, name, contactInfo, referenceId FROM workers")
-                database.execSQL("DROP TABLE workers")
-                database.execSQL("ALTER TABLE workers_new RENAME TO workers")
+                db.execSQL("CREATE TABLE workers_new (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, phoneNumber TEXT NOT NULL, referenceId INTEGER, FOREIGN KEY(referenceId) REFERENCES workers(id) ON DELETE SET NULL)")
+                db.execSQL("INSERT INTO workers_new (id, name, phoneNumber, referenceId) SELECT id, name, contactInfo, referenceId FROM workers")
+                db.execSQL("DROP TABLE workers")
+                db.execSQL("ALTER TABLE workers_new RENAME TO workers")
             }
         }
 
         private val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Add globalPayRate and hourlyPayRate columns to workers table
-                database.execSQL("ALTER TABLE workers ADD COLUMN globalPayRate REAL")
-                database.execSQL("ALTER TABLE workers ADD COLUMN hourlyPayRate REAL")
+                db.execSQL("ALTER TABLE workers ADD COLUMN globalPayRate REAL")
+                db.execSQL("ALTER TABLE workers ADD COLUMN hourlyPayRate REAL")
             }
         }
 
         private val MIGRATION_3_4 = object : Migration(3, 4) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Create project_workers table for many-to-many relationship with pay rates
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE project_workers (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         projectId INTEGER NOT NULL,
@@ -77,22 +77,22 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
         }
 
         private val MIGRATION_4_5 = object : Migration(4, 5) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Remove project_workers table and worker payment rate columns
-                database.execSQL("DROP TABLE IF EXISTS project_workers")
+                db.execSQL("DROP TABLE IF EXISTS project_workers")
                 
                 // Remove payment rate columns from workers table
-                database.execSQL("CREATE TABLE workers_new (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, phoneNumber TEXT NOT NULL, referenceId INTEGER, FOREIGN KEY(referenceId) REFERENCES workers(id) ON DELETE SET NULL)")
-                database.execSQL("INSERT INTO workers_new (id, name, phoneNumber, referenceId) SELECT id, name, phoneNumber, referenceId FROM workers")
-                database.execSQL("DROP TABLE workers")
-                database.execSQL("ALTER TABLE workers_new RENAME TO workers")
+                db.execSQL("CREATE TABLE workers_new (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, phoneNumber TEXT NOT NULL, referenceId INTEGER, FOREIGN KEY(referenceId) REFERENCES workers(id) ON DELETE SET NULL)")
+                db.execSQL("INSERT INTO workers_new (id, name, phoneNumber, referenceId) SELECT id, name, phoneNumber, referenceId FROM workers")
+                db.execSQL("DROP TABLE workers")
+                db.execSQL("ALTER TABLE workers_new RENAME TO workers")
             }
         }
 
         private val MIGRATION_5_6 = object : Migration(5, 6) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Create shift_workers table
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE shift_workers (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         shiftId INTEGER NOT NULL,
@@ -105,13 +105,13 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
                 """)
                 
                 // Migrate existing shift data to new structure
-                database.execSQL("""
+                db.execSQL("""
                     INSERT INTO shift_workers (shiftId, workerId, isHourlyRate, payRate)
                     SELECT id, workerId, 1, payRate FROM shifts WHERE workerId IS NOT NULL
                 """)
                 
                 // Update shifts table to remove workerId and payRate columns
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE shifts_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         projectId INTEGER NOT NULL,
@@ -122,16 +122,16 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
                         FOREIGN KEY(projectId) REFERENCES projects(id) ON DELETE CASCADE
                     )
                 """)
-                database.execSQL("INSERT INTO shifts_new (id, projectId, date, startTime, endTime, hours) SELECT id, projectId, date, startTime, endTime, hours FROM shifts")
-                database.execSQL("DROP TABLE shifts")
-                database.execSQL("ALTER TABLE shifts_new RENAME TO shifts")
+                db.execSQL("INSERT INTO shifts_new (id, projectId, date, startTime, endTime, hours) SELECT id, projectId, date, startTime, endTime, hours FROM shifts")
+                db.execSQL("DROP TABLE shifts")
+                db.execSQL("ALTER TABLE shifts_new RENAME TO shifts")
             }
         }
 
         private val MIGRATION_6_7 = object : Migration(6, 7) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Create project_income table
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE project_income (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         projectId INTEGER NOT NULL,
@@ -146,24 +146,24 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
         }
 
         private val MIGRATION_7_8 = object : Migration(7, 8) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Add name column to shifts table
-                database.execSQL("ALTER TABLE shifts ADD COLUMN name TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE shifts ADD COLUMN name TEXT NOT NULL DEFAULT ''")
             }
         }
 
         private val MIGRATION_8_9 = object : Migration(8, 9) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Add status and endDate columns to projects table
-                database.execSQL("ALTER TABLE projects ADD COLUMN status TEXT NOT NULL DEFAULT 'ACTIVE'")
-                database.execSQL("ALTER TABLE projects ADD COLUMN endDate INTEGER")
+                db.execSQL("ALTER TABLE projects ADD COLUMN status TEXT NOT NULL DEFAULT 'ACTIVE'")
+                db.execSQL("ALTER TABLE projects ADD COLUMN endDate INTEGER")
             }
         }
 
         private val MIGRATION_9_10 = object : Migration(9, 10) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Remove incomeType and incomeAmount columns from projects table
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE projects_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         name TEXT NOT NULL,
@@ -173,16 +173,16 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
                         endDate INTEGER
                     )
                 """)
-                database.execSQL("INSERT INTO projects_new (id, name, location, startDate, status, endDate) SELECT id, name, location, startDate, status, endDate FROM projects")
-                database.execSQL("DROP TABLE projects")
-                database.execSQL("ALTER TABLE projects_new RENAME TO projects")
+                db.execSQL("INSERT INTO projects_new (id, name, location, startDate, status, endDate) SELECT id, name, location, startDate, status, endDate FROM projects")
+                db.execSQL("DROP TABLE projects")
+                db.execSQL("ALTER TABLE projects_new RENAME TO projects")
             }
         }
 
         private val MIGRATION_10_11 = object : Migration(10, 11) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Update events table to replace time with startTime, endTime, and hours
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE events_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         name TEXT NOT NULL,
@@ -192,59 +192,59 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
                         hours TEXT NOT NULL DEFAULT ''
                     )
                 """)
-                database.execSQL("INSERT INTO events_new (id, name, date, startTime) SELECT id, name, date, time FROM events")
-                database.execSQL("DROP TABLE events")
-                database.execSQL("ALTER TABLE events_new RENAME TO events")
+                db.execSQL("INSERT INTO events_new (id, name, date, startTime) SELECT id, name, date, time FROM events")
+                db.execSQL("DROP TABLE events")
+                db.execSQL("ALTER TABLE events_new RENAME TO events")
             }
         }
 
         private val MIGRATION_11_12 = object : Migration(11, 12) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Add referencePayRate column to shift_workers table
-                database.execSQL("ALTER TABLE shift_workers ADD COLUMN referencePayRate REAL")
+                db.execSQL("ALTER TABLE shift_workers ADD COLUMN referencePayRate REAL")
             }
         }
 
         private val MIGRATION_12_13 = object : Migration(12, 13) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Add income column to events table
-                database.execSQL("ALTER TABLE events ADD COLUMN income REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE events ADD COLUMN income REAL NOT NULL DEFAULT 0.0")
             }
         }
 
         private val MIGRATION_13_14 = object : Migration(13, 14) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Add photoUris column to workers table
-                database.execSQL("ALTER TABLE workers ADD COLUMN photoUris TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE workers ADD COLUMN photoUris TEXT NOT NULL DEFAULT ''")
             }
         }
 
         private val MIGRATION_14_15 = object : Migration(14, 15) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Add isPaid column to shift_workers and event_workers tables
-                database.execSQL("ALTER TABLE shift_workers ADD COLUMN isPaid INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE event_workers ADD COLUMN isPaid INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE shift_workers ADD COLUMN isPaid INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE event_workers ADD COLUMN isPaid INTEGER NOT NULL DEFAULT 0")
             }
         }
 
         private val MIGRATION_15_16 = object : Migration(15, 16) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Add referencePayRate column to event_workers table
-                database.execSQL("ALTER TABLE event_workers ADD COLUMN referencePayRate REAL")
+                db.execSQL("ALTER TABLE event_workers ADD COLUMN referencePayRate REAL")
             }
         }
 
         private val MIGRATION_16_17 = object : Migration(16, 17) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Add isHourlyRate column to event_workers table (default to true to maintain existing behavior)
-                database.execSQL("ALTER TABLE event_workers ADD COLUMN isHourlyRate INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("ALTER TABLE event_workers ADD COLUMN isHourlyRate INTEGER NOT NULL DEFAULT 1")
             }
         }
 
         private val MIGRATION_17_18 = object : Migration(17, 18) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Create employers table
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE employers (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         name TEXT NOT NULL,
@@ -253,27 +253,37 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
                 """)
                 
                 // Add employerId column to projects table
-                database.execSQL("ALTER TABLE projects ADD COLUMN employerId INTEGER REFERENCES employers(id) ON DELETE SET NULL")
+                db.execSQL("ALTER TABLE projects ADD COLUMN employerId INTEGER REFERENCES employers(id) ON DELETE SET NULL")
                 
                 // Add employerId column to events table
-                database.execSQL("ALTER TABLE events ADD COLUMN employerId INTEGER REFERENCES employers(id) ON DELETE SET NULL")
+                db.execSQL("ALTER TABLE events ADD COLUMN employerId INTEGER REFERENCES employers(id) ON DELETE SET NULL")
             }
         }
 
         private val MIGRATION_18_19 = object : Migration(18, 19) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Add amountPaid and tipAmount columns to event_workers table
-                database.execSQL("ALTER TABLE event_workers ADD COLUMN amountPaid REAL NOT NULL DEFAULT 0.0")
-                database.execSQL("ALTER TABLE event_workers ADD COLUMN tipAmount REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE event_workers ADD COLUMN amountPaid REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE event_workers ADD COLUMN tipAmount REAL NOT NULL DEFAULT 0.0")
             }
         }
 
         private val MIGRATION_19_20 = object : Migration(19, 20) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Add isReferencePaid, referenceAmountPaid, referenceTipAmount to event_workers table
-                database.execSQL("ALTER TABLE event_workers ADD COLUMN isReferencePaid INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE event_workers ADD COLUMN referenceAmountPaid REAL NOT NULL DEFAULT 0.0")
-                database.execSQL("ALTER TABLE event_workers ADD COLUMN referenceTipAmount REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE event_workers ADD COLUMN isReferencePaid INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE event_workers ADD COLUMN referenceAmountPaid REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE event_workers ADD COLUMN referenceTipAmount REAL NOT NULL DEFAULT 0.0")
+            }
+        }
+
+        private val MIGRATION_20_21 = object : Migration(20, 21) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add unique constraint to prevent duplicate worker assignments in event_workers
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_event_workers_eventId_workerId ON event_workers(eventId, workerId)")
+
+                // Add unique constraint to prevent duplicate worker assignments in shift_workers
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_shift_workers_shiftId_workerId ON shift_workers(shiftId, workerId)")
             }
         }
 
@@ -283,7 +293,7 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
                     context.applicationContext,
                     WorkerTrackingDatabase::class.java,
                     "worker_tracking_database"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20).build()
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21).build()
                 INSTANCE = instance
                 instance
             }

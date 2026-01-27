@@ -729,8 +729,7 @@ fun WorkerTrackingApp() {
                 val viewModel: ShiftDetailViewModel = viewModel {
                     ShiftDetailViewModel(
                         application.container.shiftRepository,
-                        application.container.workerRepository,
-                        application.container.projectRepository
+                        application.container.workerRepository
                     )
                 }
                 val shift by viewModel.shift.collectAsState()
@@ -768,8 +767,7 @@ fun WorkerTrackingApp() {
                 val viewModel: ShiftDetailViewModel = viewModel {
                     ShiftDetailViewModel(
                         application.container.shiftRepository,
-                        application.container.workerRepository,
-                        application.container.projectRepository
+                        application.container.workerRepository
                     )
                 }
                 val shift by viewModel.shift.collectAsState()

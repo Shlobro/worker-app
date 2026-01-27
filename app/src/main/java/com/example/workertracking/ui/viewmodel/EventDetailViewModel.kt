@@ -10,7 +10,6 @@ import com.example.workertracking.repository.WorkerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.util.Date
 
@@ -45,6 +44,9 @@ class EventDetailViewModel(
     private val _allWorkers = MutableStateFlow<List<Worker>>(emptyList())
     val allWorkers: StateFlow<List<Worker>> = _allWorkers.asStateFlow()
 
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
     fun loadEvent(eventId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -59,7 +61,7 @@ class EventDetailViewModel(
         }
     }
 
-    private suspend fun loadAllWorkers() {
+    private fun loadAllWorkers() {
         viewModelScope.launch {
             workerRepository.getAllWorkers().collect { workers ->
                 _allWorkers.value = workers
@@ -67,7 +69,7 @@ class EventDetailViewModel(
         }
     }
 
-    private suspend fun loadEventWorkers(eventId: Long) {
+    private fun loadEventWorkers(eventId: Long) {
         viewModelScope.launch {
             eventRepository.getWorkersForEvent(eventId).collect { eventWorkers ->
                 val eventWorkersWithNames = eventWorkers.map { eventWorker ->
@@ -145,7 +147,12 @@ class EventDetailViewModel(
                 loadEventWorkers(eventId)
                 loadTotalCost(eventId)
             } catch (e: Exception) {
-                // Handle error silently or add error state if needed
+                if (e.message?.contains("UNIQUE constraint failed") == true ||
+                    e.message?.contains("index_event_workers_eventId_workerId") == true) {
+                    _error.value = "This worker is already assigned to this event"
+                } else {
+                    _error.value = e.message ?: "Failed to add worker to event"
+                }
             }
         }
     }
@@ -168,21 +175,6 @@ class EventDetailViewModel(
         viewModelScope.launch {
             try {
                 workerRepository.updateEventWorker(eventWorker)
-                _event.value?.let { event ->
-                    loadEventWorkers(event.id)
-                    loadTotalCost(event.id)
-                }
-            } catch (e: Exception) {
-                // Handle error silently or add error state if needed
-            }
-        }
-    }
-
-    fun markEventWorkerAsPaid(eventWorkerId: Long) {
-        viewModelScope.launch {
-            try {
-                workerRepository.markEventWorkerAsPaid(eventWorkerId)
-                // Refresh data to reflect payment status change
                 _event.value?.let { event ->
                     loadEventWorkers(event.id)
                     loadTotalCost(event.id)
@@ -219,5 +211,9 @@ class EventDetailViewModel(
                 // Handle error silently or add error state if needed
             }
         }
+    }
+
+    fun clearError() {
+        _error.value = null
     }
 }

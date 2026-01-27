@@ -2,6 +2,7 @@ package com.example.workertracking.data.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
@@ -19,6 +20,9 @@ import androidx.room.PrimaryKey
             childColumns = ["workerId"],
             onDelete = ForeignKey.CASCADE
         )
+    ],
+    indices = [
+        Index(value = ["shiftId", "workerId"], unique = true)
     ]
 )
 data class ShiftWorker(

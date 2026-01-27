@@ -7,15 +7,13 @@ import com.example.workertracking.data.entity.ShiftWorker
 import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.repository.ShiftRepository
 import com.example.workertracking.repository.WorkerRepository
-import com.example.workertracking.repository.ProjectRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Date
 
 class ShiftDetailViewModel(
     private val shiftRepository: ShiftRepository,
-    private val workerRepository: WorkerRepository,
-    private val projectRepository: ProjectRepository
+    private val workerRepository: WorkerRepository
 ) : ViewModel() {
     
     private val _isLoading = MutableStateFlow(false)
@@ -76,13 +74,18 @@ class ShiftDetailViewModel(
                     payRate = payRate,
                     referencePayRate = referencePayRate
                 )
-                
+
                 shiftRepository.addWorkerToShift(shiftWorker)
-                
+
                 // Refresh shift workers
                 loadShiftWorkers(shiftId)
             } catch (e: Exception) {
-                _error.value = e.message
+                if (e.message?.contains("UNIQUE constraint failed") == true ||
+                    e.message?.contains("index_shift_workers_shiftId_workerId") == true) {
+                    _error.value = "This worker is already assigned to this shift"
+                } else {
+                    _error.value = e.message ?: "Failed to add worker to shift"
+                }
             }
         }
     }

@@ -14,7 +14,8 @@
       "Bash(find:*)",
       "Bash(grep:*)",
       "Bash(dir:*)",
-      "Bash(xargs basename:*)"
+      "Bash(xargs basename:*)",
+      "Bash(awk:*)"
     ],
     "deny": [],
     "ask": [],
