@@ -42,16 +42,16 @@ fun EditEventScreen(
                 digitsOnly.length == 2 -> digitsOnly
                 digitsOnly.length == 3 -> {
                     // For 3-digit input, check if it makes sense as HMM (e.g., "800" -> "08:00")
-                    // But if the first digit would create invalid minutes (like "180" -> "1:80" or "999" -> "9:99"), 
+                    // But if the first digit would create invalid minutes (like "180" -> "1:80" or "999" -> "9:99"),
                     // treat it as incomplete 4-digit input instead
                     val firstDigitHour = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
                     val remainingMinutes = digitsOnly.substring(1).toIntOrNull() ?: 0
-                    
+
                     if (firstDigitHour <= 9 && remainingMinutes <= 59) {
                         // Valid 3-digit format: H:MM (only hours 0-2 are valid for 3-digit)
-                        val hours = digitsOnly.substring(0, 1).padStart(2, '0')
-                        val minutes = digitsOnly.substring(1)
-                        "$hours:$minutes"
+                        val hoursStr = digitsOnly.substring(0, 1).padStart(2, '0')
+                        val minutesStr = digitsOnly.substring(1)
+                        "$hoursStr:$minutesStr"
                     } else {
                         // Invalid as 3-digit, show as incomplete 4-digit input
                         digitsOnly
@@ -59,12 +59,12 @@ fun EditEventScreen(
                 }
                 digitsOnly.length >= 4 -> {
                     // Handle 4-digit input like "0800" or "1800" -> "08:00" or "18:00"
-                    val hours = digitsOnly.substring(0, 2)
-                    val minutes = digitsOnly.substring(2)
-                    val h = hours.toIntOrNull() ?: 0
-                    val m = minutes.toIntOrNull() ?: 0
+                    val hoursStr = digitsOnly.substring(0, 2)
+                    val minutesStr = digitsOnly.substring(2)
+                    val h = hoursStr.toIntOrNull() ?: 0
+                    val m = minutesStr.toIntOrNull() ?: 0
                     if (h <= 23 && m <= 59) {
-                        "$hours:$minutes"
+                        "$hoursStr:$minutesStr"
                     } else {
                         ""
                     }
@@ -144,7 +144,7 @@ fun EditEventScreen(
             return if (calculatedHours == calculatedHours.toInt().toDouble()) {
                 calculatedHours.toInt().toString()
             } else {
-                String.format("%.1f", calculatedHours)
+                String.format(Locale.US, "%.1f", calculatedHours)
             }
         } catch (e: Exception) {
             return ""
@@ -192,7 +192,7 @@ fun EditEventScreen(
     if (event == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = androidx.compose.ui.Alignment.Center
+            contentAlignment = Alignment.Center
         ) {
             Text("Event not found")
         }
@@ -255,14 +255,14 @@ fun EditEventScreen(
                         3 -> {
                             // For 3-digit input, only allow valid H:MM patterns (0-9 for first digit, 0-59 for minutes)
                             val firstDigit = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
-                            val minutes = digitsOnly.substring(1).toIntOrNull() ?: 0
-                            if (firstDigit > 9 || minutes > 59) return@OutlinedTextField
+                            val minutesInt = digitsOnly.substring(1).toIntOrNull() ?: 0
+                            if (firstDigit > 9 || minutesInt > 59) return@OutlinedTextField
                         }
                         4 -> {
                             // For 4-digit input, validate as HH:MM
-                            val hours = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
-                            val minutes = digitsOnly.substring(2).toIntOrNull() ?: 0
-                            if (hours > 23 || minutes > 59) return@OutlinedTextField
+                            val hoursInt = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
+                            val minutesInt = digitsOnly.substring(2).toIntOrNull() ?: 0
+                            if (hoursInt > 23 || minutesInt > 59) return@OutlinedTextField
                         }
                     }
                     startTime = digitsOnly
@@ -285,14 +285,14 @@ fun EditEventScreen(
                         3 -> {
                             // For 3-digit input, only allow valid H:MM patterns (0-9 for first digit, 0-59 for minutes)
                             val firstDigit = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
-                            val minutes = digitsOnly.substring(1).toIntOrNull() ?: 0
-                            if (firstDigit > 9 || minutes > 59) return@OutlinedTextField
+                            val minutesInt = digitsOnly.substring(1).toIntOrNull() ?: 0
+                            if (firstDigit > 9 || minutesInt > 59) return@OutlinedTextField
                         }
                         4 -> {
                             // For 4-digit input, validate as HH:MM
-                            val hours = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
-                            val minutes = digitsOnly.substring(2).toIntOrNull() ?: 0
-                            if (hours > 23 || minutes > 59) return@OutlinedTextField
+                            val hoursInt = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
+                            val minutesInt = digitsOnly.substring(2).toIntOrNull() ?: 0
+                            if (hoursInt > 23 || minutesInt > 59) return@OutlinedTextField
                         }
                     }
                     endTime = digitsOnly

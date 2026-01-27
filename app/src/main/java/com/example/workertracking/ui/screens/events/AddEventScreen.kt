@@ -59,12 +59,12 @@ fun AddEventScreen(
                     // But for inputs like "180", treat as incomplete 4-digit input (user typing "1800")
                     val firstDigitHour = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
                     val remainingMinutes = digitsOnly.substring(1).toIntOrNull() ?: 0
-                    
+
                     if (firstDigitHour <= 2 && remainingMinutes <= 59) {
                         // Valid 3-digit format: H:MM (only hours 0-2 work for single digit hours)
-                        val hours = digitsOnly.substring(0, 1).padStart(2, '0')
-                        val minutes = digitsOnly.substring(1)
-                        "$hours:$minutes"
+                        val hoursStr = digitsOnly.substring(0, 1).padStart(2, '0')
+                        val minutesStr = digitsOnly.substring(1)
+                        "$hoursStr:$minutesStr"
                     } else {
                         // Treat as incomplete 4-digit input (e.g., "180" -> "180" waiting for final digit)
                         digitsOnly
@@ -72,12 +72,12 @@ fun AddEventScreen(
                 }
                 digitsOnly.length >= 4 -> {
                     // Handle 4-digit input like "0800" or "1800" -> "08:00" or "18:00"
-                    val hours = digitsOnly.substring(0, 2)
-                    val minutes = digitsOnly.substring(2)
-                    val h = hours.toIntOrNull() ?: 0
-                    val m = minutes.toIntOrNull() ?: 0
+                    val hoursStr = digitsOnly.substring(0, 2)
+                    val minutesStr = digitsOnly.substring(2)
+                    val h = hoursStr.toIntOrNull() ?: 0
+                    val m = minutesStr.toIntOrNull() ?: 0
                     if (h <= 23 && m <= 59) {
-                        "$hours:$minutes"
+                        "$hoursStr:$minutesStr"
                     } else {
                         ""
                     }
@@ -157,7 +157,7 @@ fun AddEventScreen(
             return if (calculatedHours == calculatedHours.toInt().toDouble()) {
                 calculatedHours.toInt().toString()
             } else {
-                String.format("%.1f", calculatedHours)
+                String.format(Locale.US, "%.1f", calculatedHours)
             }
         } catch (e: Exception) {
             return ""
@@ -233,9 +233,9 @@ fun AddEventScreen(
                         }
                         4 -> {
                             // For 4-digit input, validate as HH:MM
-                            val hours = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
-                            val minutes = digitsOnly.substring(2).toIntOrNull() ?: 0
-                            if (hours > 23 || minutes > 59) return@OutlinedTextField
+                            val hoursInt = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
+                            val minutesInt = digitsOnly.substring(2).toIntOrNull() ?: 0
+                            if (hoursInt > 23 || minutesInt > 59) return@OutlinedTextField
                         }
                     }
                     startTime = digitsOnly
@@ -264,9 +264,9 @@ fun AddEventScreen(
                         }
                         4 -> {
                             // For 4-digit input, validate as HH:MM
-                            val hours = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
-                            val minutes = digitsOnly.substring(2).toIntOrNull() ?: 0
-                            if (hours > 23 || minutes > 59) return@OutlinedTextField
+                            val hoursInt = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
+                            val minutesInt = digitsOnly.substring(2).toIntOrNull() ?: 0
+                            if (hoursInt > 23 || minutesInt > 59) return@OutlinedTextField
                         }
                     }
                     endTime = digitsOnly
