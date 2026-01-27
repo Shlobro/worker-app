@@ -439,22 +439,7 @@ Junior Dev CL review:
         Consequently, if the manager (reference) has not been paid yet, their debt disappears
         from the "Unpaid" list. The manager will never see that money.
 
-        B. Fixed Price Setting Ignored
-        Location:
-        app/src/main/java/com/example/workertracking/ui/viewmodel/AddWorkerToEventViewModel.kt
-        Description:
-        The addWorkerToEvent function forces isHourlyRate = true, ignoring the intention of the
-        UI/User.
-         1 val eventWorker = EventWorker(
-         2     ...
-         3     isHourlyRate = true, // Default to hourly rate for backward compatibility
-         4     ...
-         5 )
-        Impact: Users cannot create fixed-price event entries. Even if they select "Fixed
-        Price" in the UI (which EventDetailScreen supports), it is saved as "Hourly" in the
-        database.
-
-        C. Incorrect Debt Calculation in DAO
+        B. Incorrect Debt Calculation in DAO
         Location: app/src/main/java/com/example/workertracking/data/dao/WorkerDao.kt
         Description:
         The getTotalOwedToWorker query unconditionally multiplies hours by rate:
@@ -495,8 +480,7 @@ Junior Dev CL review:
         4. Recommendations
          1. Refactor Payment Model: Split EventWorker into EventWorker (worker pay) and
             EventCommission (manager pay) tables to decouple their "Paid" statuses.
-         2. Fix ViewModel Logic: Update AddWorkerToEventViewModel to accept isHourlyRate.
-         3. Optimize Queries: Create a specific DAO query for WorkerWithDebt that aggregates
+         2. Optimize Queries: Create a specific DAO query for WorkerWithDebt that aggregates
             totals in SQL, avoiding the N+1 loop.
-         4. Use Room Flows: Rely on Flow<List<Data>> from Room to automatically update the UI
+         3. Use Room Flows: Rely on Flow<List<Data>> from Room to automatically update the UI
             when data changes, removing the need for manual refresh triggers.

@@ -313,7 +313,7 @@ fun EditEventScreen(
             ) {
                 OutlinedTextField(
                     value = hours,
-                    onValueChange = { 
+                    onValueChange = {
                         hours = it
                         isAutoCalculate = false
                     },
@@ -321,9 +321,15 @@ fun EditEventScreen(
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     placeholder = { Text("0.0") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    isError = hours.isNotEmpty() && (hours.toDoubleOrNull()?.let { it <= 0 } != false),
+                    supportingText = {
+                        if (hours.isNotEmpty() && (hours.toDoubleOrNull()?.let { it <= 0 } != false)) {
+                            Text("חובה להזין שעות תקינות גדולות מ-0")
+                        }
+                    }
                 )
-                
+
                 Button(
                     onClick = {
                         isAutoCalculate = true
@@ -349,7 +355,11 @@ fun EditEventScreen(
             
             Button(
                 onClick = {
-                    if (eventName.isNotBlank() && (startTime.length == 3 || startTime.length == 4) && (endTime.length == 3 || endTime.length == 4)) {
+                    val hoursValue = hours.toDoubleOrNull()
+                    if (eventName.isNotBlank() &&
+                        (startTime.length == 3 || startTime.length == 4) &&
+                        (endTime.length == 3 || endTime.length == 4) &&
+                        hoursValue != null && hoursValue > 0) {
                         val incomeValue = income.toDoubleOrNull() ?: 0.0
                         // Pad times to 4 digits and format
                         val startPadded = startTime.padStart(4, '0')
@@ -360,7 +370,10 @@ fun EditEventScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = eventName.isNotBlank() && (startTime.length == 3 || startTime.length == 4) && (endTime.length == 3 || endTime.length == 4)
+                enabled = eventName.isNotBlank() &&
+                         (startTime.length == 3 || startTime.length == 4) &&
+                         (endTime.length == 3 || endTime.length == 4) &&
+                         hours.toDoubleOrNull()?.let { it > 0 } == true
             ) {
                 Text(stringResource(R.string.save))
             }

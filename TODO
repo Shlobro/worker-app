@@ -142,15 +142,6 @@ MAJOR BUGS
     - Apply date range filter to project_income queries
     - Ensure all income/expense calculations respect date filter
 
-13. Event Hours Validation Missing
-    Location: AddEventScreen.kt:357, EventDetailScreen.kt:635
-    Problem: Add Event allows saving with blank/invalid hours. Workers inherit
-             event.hours.toDoubleOrNull() ?: 0.0, creating 0-hour assignments
-    Impact: Zero-hour workers create zero costs, breaking payment calculations
-    Fix Required:
-    - Add validation in AddEventScreen before save
-    - Prevent saving events with empty/invalid hours
-    - Show error message to user
 
 
 MEDIUM PRIORITY BUGS
@@ -291,13 +282,12 @@ PRIORITY ORDER
 ========================================
 
 1. Fix Hidden Manager Debt (Bug #1) - Prevents actual money loss
-2. Fix Payment Calculation Inconsistencies (Bugs #2, #7, #10) - Data integrity
+2. Fix Payment Calculation Inconsistencies (Bugs #2, #6, #9) - Data integrity
 3. Fix EmployerDao Join Duplication (Bug #3) - Critical metrics broken
 4. Add Circular Reference Validation (Bug #4) - Prevents crashes
-5. Fix Fixed Price Ignored (Bug #5) - Feature completely broken
-6. Fix N+1 Query Problem (Bug #6) - Performance/ANR prevention
-7. Fix Flow Memory Leaks (Bug #8) - Memory stability
-8. Remaining Major/Medium bugs as time permits
+5. Fix N+1 Query Problem (Bug #5) - Performance/ANR prevention
+6. Fix Flow Memory Leaks (Bug #7) - Memory stability
+7. Remaining Major/Medium bugs as time permits
 
 
 ========================================
