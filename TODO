@@ -65,17 +65,6 @@ HIGH PRIORITY BUGS
 MAJOR BUGS
 ==========
 
-5. WorkerDao Treats Fixed Payments as Hourly (Landmine)
-   Location: WorkerDao.kt:30-40
-   Problem: getTotalOwedToWorker() unconditionally multiplies hours × payRate for ALL
-            event_workers, ignoring isHourlyRate flag
-   Code: COALESCE(SUM(ew.hours * ew.payRate), 0)  -- Wrong for fixed price
-   Example: Fixed $500 × 5 hours = $2500 calculated debt instead of $500
-   Impact: Dangerous landmine if method ever gets used (currently unused in UI)
-   Fix Required:
-   - Add CASE statement: CASE WHEN ew.isHourlyRate = 1 THEN ew.hours * ew.payRate ELSE ew.payRate END
-   - Match the logic used in shift_workers part of same query
-
 6. Worker Earnings Include Reference Payments
     Location: WorkerRepository.kt:251
     Problem: Worker "earnings" calculation includes reference payments made to OTHER workers

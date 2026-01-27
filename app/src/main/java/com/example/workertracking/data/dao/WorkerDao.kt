@@ -15,9 +15,6 @@ interface WorkerDao {
     @Query("SELECT * FROM workers WHERE id = :id")
     fun getWorkerByIdFlow(id: Long): Flow<Worker?>
 
-    @Query("SELECT * FROM workers WHERE referenceId = :referenceId")
-    suspend fun getWorkersByReference(referenceId: Long): List<Worker>
-
     @Insert
     suspend fun insertWorker(worker: Worker): Long
 
@@ -28,9 +25,9 @@ interface WorkerDao {
     suspend fun deleteWorker(worker: Worker)
 
     @Query("""
-        SELECT 
-            COALESCE(SUM(CASE WHEN sw.isHourlyRate = 1 THEN sw.payRate * s.hours ELSE sw.payRate END), 0) + 
-            COALESCE(SUM(ew.hours * ew.payRate), 0)
+        SELECT
+            COALESCE(SUM(CASE WHEN sw.isHourlyRate = 1 THEN sw.payRate * s.hours ELSE sw.payRate END), 0) +
+            COALESCE(SUM(CASE WHEN ew.isHourlyRate = 1 THEN ew.hours * ew.payRate ELSE ew.payRate END), 0)
         FROM workers w
         LEFT JOIN shift_workers sw ON w.id = sw.workerId
         LEFT JOIN shifts s ON sw.shiftId = s.id
