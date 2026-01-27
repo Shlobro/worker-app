@@ -7,7 +7,10 @@ import com.example.workertracking.data.dao.EventWorkerDao
 import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.data.entity.UnpaidShiftWorkerInfo
 import com.example.workertracking.data.entity.UnpaidEventWorkerInfo
+import com.example.workertracking.data.entity.WorkerWithDebt
+import com.example.workertracking.data.entity.WorkerWithDebtData
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.util.*
 
 class WorkerRepository(
@@ -18,9 +21,20 @@ class WorkerRepository(
 ) {
     
     fun getAllWorkers(): Flow<List<Worker>> = workerDao.getAllWorkers()
-    
+
+    @Suppress("unused")
+    fun getAllWorkersWithDebt(): Flow<List<WorkerWithDebt>> {
+        return workerDao.getAllWorkersWithDebtData().map { dataList ->
+            dataList.map { it.toWorkerWithDebt() }
+        }
+    }
+
+    fun getAllWorkersWithDebtData(): Flow<List<WorkerWithDebtData>> {
+        return workerDao.getAllWorkersWithDebtData()
+    }
+
     suspend fun getWorkerById(id: Long): Worker? = workerDao.getWorkerById(id)
-    
+
     fun getWorkerByIdFlow(id: Long): Flow<Worker?> = workerDao.getWorkerByIdFlow(id)
 
     suspend fun insertWorker(worker: Worker): Long {

@@ -35,9 +35,7 @@ class WorkersViewModel(
     
     init {
         loadWorkers()
-        loadWorkersWithDebt()
-        loadWorkerEarnings()
-        loadReferenceWorkerNames()
+        loadWorkersWithDebtOptimized()
     }
     
     private fun loadWorkers() {
@@ -68,7 +66,24 @@ class WorkersViewModel(
     fun clearError() {
         _error.value = null
     }
-    
+
+    private fun loadWorkersWithDebtOptimized() {
+        viewModelScope.launch {
+            try {
+                workerRepository.getAllWorkersWithDebtData().collect { dataList ->
+                    _workersWithDebt.value = dataList.map { it.toWorkerWithDebt() }
+                    _workerEarnings.value = dataList.associate { it.id to it.totalEarnings }
+                    _referenceWorkerNames.value = dataList.mapNotNull { data ->
+                        data.referenceWorkerName?.let { data.id to it }
+                    }.toMap()
+                }
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+
+    @Deprecated("Use loadWorkersWithDebtOptimized instead - this causes N+1 query problem")
     private fun loadWorkersWithDebt() {
         viewModelScope.launch {
             try {
@@ -76,7 +91,7 @@ class WorkersViewModel(
                     val workersWithDebt = workerList.map { worker ->
                         val unpaidShifts = workerRepository.getUnpaidShiftWorkersForWorker(worker.id)
                         val unpaidEvents = workerRepository.getUnpaidEventWorkersForWorker(worker.id)
-                        
+
                         // Calculate direct payments owed TO this worker (exclude reference payments they make)
                         val shiftTotal = unpaidShifts.sumOf { unpaidShift ->
                             if (unpaidShift.shiftWorker.isHourlyRate) {
@@ -85,7 +100,7 @@ class WorkersViewModel(
                                 unpaidShift.shiftWorker.payRate
                             }
                         }
-                        
+
                         val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
                             val basePayment = if (unpaidEvent.eventWorker.isHourlyRate) {
                                 unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
@@ -94,20 +109,20 @@ class WorkersViewModel(
                             }
                             basePayment - unpaidEvent.eventWorker.amountPaid - unpaidEvent.eventWorker.tipAmount
                         }
-                        
+
                         // Calculate reference payments owed TO this worker (when they are the reference worker)
                         val unpaidReferenceShifts = workerRepository.getUnpaidReferenceShiftsForWorker(worker.id)
                         val unpaidReferenceEvents = workerRepository.getUnpaidReferenceEventsForWorker(worker.id)
-                        
+
                         val referenceShiftTotal = unpaidReferenceShifts.sumOf { shift ->
                             (shift.shiftWorker.referencePayRate ?: 0.0) * shift.shiftHours
                         }
-                        
+
                         val referenceEventTotal = unpaidReferenceEvents.sumOf { event ->
                             val baseReferencePayment = (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
                             baseReferencePayment - event.eventWorker.referenceAmountPaid - event.eventWorker.referenceTipAmount
                         }
-                        
+
                         WorkerWithDebt(
                             worker = worker,
                             totalOwed = shiftTotal + eventTotal,
@@ -125,18 +140,19 @@ class WorkersViewModel(
             }
         }
     }
-    
+
+    @Deprecated("Use loadWorkersWithDebtOptimized instead - this causes N+1 query problem")
     private fun loadWorkerEarnings() {
         viewModelScope.launch {
             try {
                 workerRepository.getAllWorkers().collect { workerList ->
                     val earningsMap = mutableMapOf<Long, Double>()
-                    
+
                     workerList.forEach { worker ->
                         val totalEarnings = workerRepository.getTotalEarningsForWorker(worker.id)
                         earningsMap[worker.id] = totalEarnings
                     }
-                    
+
                     _workerEarnings.value = earningsMap
                 }
             } catch (e: Exception) {
@@ -144,14 +160,15 @@ class WorkersViewModel(
             }
         }
     }
-    
-    
+
+
+    @Deprecated("Use loadWorkersWithDebtOptimized instead - this causes N+1 query problem")
     private fun loadReferenceWorkerNames() {
         viewModelScope.launch {
             try {
                 workerRepository.getAllWorkers().collect { workerList ->
                     val referenceNamesMap = mutableMapOf<Long, String>()
-                    
+
                     workerList.forEach { worker ->
                         if (worker.referenceId != null) {
                             val referenceWorker = workerRepository.getWorkerById(worker.referenceId)
@@ -160,7 +177,7 @@ class WorkersViewModel(
                             }
                         }
                     }
-                    
+
                     _referenceWorkerNames.value = referenceNamesMap
                 }
             } catch (e: Exception) {

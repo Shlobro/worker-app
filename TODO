@@ -19,20 +19,6 @@ CRITICAL BUGS - FIX IMMEDIATELY
    - Add database constraint or trigger to prevent cycles
    - Add cycle detection in WorkerRepository.getWorkerById() reference lookups
 
-2. N+1 Query Problem - Severe Performance Issue
-   Location: WorkersViewModel.kt:73-126, WorkerRepository.kt:283-298
-   Problem: Loading worker list executes 4+ database queries per worker:
-            - getUnpaidShiftWorkersForWorker(id)
-            - getUnpaidEventWorkersForWorker(id)
-            - getUnpaidReferenceShiftsForWorker(id) ← Also does N+1 inside with getWorkerById()
-            - getUnpaidReferenceEventsForWorker(id) ← Also does N+1 inside with getWorkerById()
-   Impact: 50 workers with 100 shifts = 500+ database queries, causing UI lag/ANR
-   Fix Required:
-   - Create WorkerWithDebtDao query that aggregates all debt in single SQL query
-   - Use LEFT JOIN with SUM/GROUP BY to calculate totals
-   - Return Flow<List<WorkerWithDebt>> from repository
-
-
 HIGH PRIORITY BUGS
 ==================
 
@@ -190,10 +176,9 @@ ARCHITECTURE IMPROVEMENTS
 PRIORITY ORDER
 ========================================
 
-1. Fix N+1 Query Problem (Bug #2) - Performance/ANR prevention
-2. Fix Circular Reference Validation (Bug #1) - Prevent infinite loops
-3. Fix Flow Memory Leaks (Bug #4) - Memory stability
-4. Remaining Major/Medium bugs as time permits
+1. Fix Circular Reference Validation (Bug #1) - Prevent infinite loops [COMPLETED]
+2. Fix Flow Memory Leaks (Bug #4) - Memory stability
+3. Remaining Major/Medium bugs as time permits
 
 
 ========================================
