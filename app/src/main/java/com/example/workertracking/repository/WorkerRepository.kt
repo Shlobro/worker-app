@@ -22,10 +22,52 @@ class WorkerRepository(
     suspend fun getWorkerById(id: Long): Worker? = workerDao.getWorkerById(id)
     
     fun getWorkerByIdFlow(id: Long): Flow<Worker?> = workerDao.getWorkerByIdFlow(id)
-    
-    suspend fun insertWorker(worker: Worker): Long = workerDao.insertWorker(worker)
-    
-    suspend fun updateWorker(worker: Worker) = workerDao.updateWorker(worker)
+
+    suspend fun insertWorker(worker: Worker): Long {
+        validateNoCircularReference(worker.referenceId, worker.id)
+        return workerDao.insertWorker(worker)
+    }
+
+    suspend fun updateWorker(worker: Worker) {
+        validateNoCircularReference(worker.referenceId, worker.id)
+        workerDao.updateWorker(worker)
+    }
+
+    /**
+     * Validates that setting a reference worker doesn't create a circular reference chain.
+     * A circular reference occurs when: A -> B -> C -> A
+     *
+     * @param referenceId The ID of the worker being set as a reference
+     * @param workerId The ID of the worker being created/updated
+     * @throws IllegalArgumentException if a circular reference is detected
+     */
+    private suspend fun validateNoCircularReference(referenceId: Long?, workerId: Long) {
+        if (referenceId == null) return
+
+        // Check if trying to reference self
+        if (referenceId == workerId) {
+            throw IllegalArgumentException("A worker cannot reference themselves")
+        }
+
+        // Check if the reference worker exists
+        val referenceWorker = workerDao.getWorkerById(referenceId)
+            ?: throw IllegalArgumentException("Reference worker with ID $referenceId does not exist")
+
+        // Traverse the reference chain to detect cycles
+        val visited = mutableSetOf<Long>()
+        visited.add(workerId) // Add the current worker to visited set
+
+        var currentRefId: Long? = referenceWorker.referenceId
+        while (currentRefId != null) {
+            if (visited.contains(currentRefId)) {
+                throw IllegalArgumentException("Circular reference detected: setting this reference would create a cycle in the worker reference chain")
+            }
+            visited.add(currentRefId)
+
+            val nextWorker = workerDao.getWorkerById(currentRefId)
+            currentRefId = nextWorker?.referenceId
+        }
+    }
     
     suspend fun deleteWorker(worker: Worker) = workerDao.deleteWorker(worker)
     

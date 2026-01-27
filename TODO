@@ -164,7 +164,7 @@ LOW PRIORITY / MINOR BUGS
     Impact: User can't navigate back after visiting dashboard
     Note: May be intentional design, verify with product requirements
 
-17. ShiftWorker Payment Status Not Granular
+15. ShiftWorker Payment Status Not Granular
     Location: ShiftWorker entity (inferred)
     Problem: ShiftWorker only has isPaid boolean, unlike EventWorker which has amountPaid,
              tipAmount, etc.
@@ -174,7 +174,7 @@ LOW PRIORITY / MINOR BUGS
     - Add referenceAmountPaid, referenceTipAmount fields
     - Update UI to support partial shift payments
 
-18. Manual Event Bus Instead of Reactive Data
+16. Manual Event Bus Instead of Reactive Data
     Location: MoneyOwedViewModel.kt calling appContainer.triggerDashboardRefresh()
     Problem: ViewModels manually trigger refreshes instead of using Room Flows
     Impact: Tight coupling to DI container, unnecessary complexity
@@ -186,17 +186,17 @@ LOW PRIORITY / MINOR BUGS
 POTENTIAL ISSUES - VERIFY
 ==========================
 
-19. Date Type Conversion
+17. Date Type Conversion
     Location: WorkerRepository.kt:217, 236
     Question: Is shiftDate stored as Long (millis) or Date object?
     Action: Verify data type and ensure Date(shift.shiftDate) is correct
 
-20. Worker Deletion Cascade
+18. Worker Deletion Cascade
     Location: Worker.kt:16
     Question: Should historical ShiftWorker/EventWorker records be preserved when worker deleted?
     Action: Verify intended behavior with product owner
 
-21. Reference Worker Commission on Fixed Amount
+19. Reference Worker Commission on Fixed Amount
     Location: WorkerRepository.kt:265, EventDetailScreen.kt:299-301
     Question: Should reference workers get hourly commission when referred worker got fixed payment?
     Action: Clarify business logic with product owner
@@ -205,12 +205,12 @@ POTENTIAL ISSUES - VERIFY
 ARCHITECTURE IMPROVEMENTS
 ==========================
 
-22. Split EventWorker Table
+20. Split EventWorker Table
     Recommendation: Separate worker payments from reference/manager commissions
     Benefit: Clearer data model
     Tables: EventWorker (worker pay) + EventCommission (manager commission)
 
-23. Normalize Payment Calculation Logic
+21. Normalize Payment Calculation Logic
     Recommendation: Create single source of truth for payment math
     Benefit: Consistent calculations across all ViewModels
     Implementation: Create PaymentCalculator class with all formulas
@@ -221,10 +221,9 @@ PRIORITY ORDER
 ========================================
 
 1. Fix EmployerDao Join Duplication (Bug #1) - Critical metrics broken
-2. Add Circular Reference Validation (Bug #2) - Prevents crashes
-3. Fix N+1 Query Problem (Bug #3) - Performance/ANR prevention
-4. Fix Flow Memory Leaks (Bug #4) - Memory stability
-5. Remaining Major/Medium bugs as time permits
+2. Fix N+1 Query Problem (Bug #2) - Performance/ANR prevention
+3. Fix Flow Memory Leaks (Bug #3) - Memory stability
+4. Remaining Major/Medium bugs as time permits
 
 
 ========================================

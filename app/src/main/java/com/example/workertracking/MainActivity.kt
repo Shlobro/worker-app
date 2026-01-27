@@ -1,18 +1,12 @@
 package com.example.workertracking
 
-import android.content.Context
-import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import java.util.*
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.unit.dp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -364,21 +358,26 @@ fun WorkerTrackingApp() {
                 }
                 val saveSuccess by viewModel.saveSuccess.collectAsState()
                 val availableWorkers by viewModel.availableWorkers.collectAsState()
-                
+                val error by viewModel.error.collectAsState()
+
                 LaunchedEffect(saveSuccess) {
                     if (saveSuccess) {
                         viewModel.clearSaveSuccess()
                         navController.popBackStack()
                     }
                 }
-                
+
                 AddWorkerScreen(
                     availableWorkers = availableWorkers,
+                    error = error,
                     onNavigateBack = {
                         navController.popBackStack()
                     },
                     onSaveWorker = { name, phoneNumber, referenceId ->
                         viewModel.saveWorker(name, phoneNumber, referenceId)
+                    },
+                    onClearError = {
+                        viewModel.clearError()
                     }
                 )
             }
@@ -501,26 +500,31 @@ fun WorkerTrackingApp() {
                 val worker by viewModel.worker.collectAsState()
                 val allWorkers by viewModel.allWorkers.collectAsState()
                 val updateSuccess by viewModel.updateSuccess.collectAsState()
-                
+                val error by viewModel.error.collectAsState()
+
                 LaunchedEffect(workerId) {
                     viewModel.loadWorker(workerId)
                 }
-                
+
                 LaunchedEffect(updateSuccess) {
                     if (updateSuccess) {
                         viewModel.clearUpdateSuccess()
                         navController.popBackStack()
                     }
                 }
-                
+
                 EditWorkerScreen(
                     worker = worker,
                     availableWorkers = allWorkers,
+                    error = error,
                     onNavigateBack = {
                         navController.popBackStack()
                     },
                     onUpdateWorker = { name, phoneNumber, referenceId ->
                         viewModel.updateWorker(name, phoneNumber, referenceId)
+                    },
+                    onClearError = {
+                        viewModel.clearError()
                     }
                 )
             }
@@ -771,8 +775,7 @@ fun WorkerTrackingApp() {
                 val shift by viewModel.shift.collectAsState()
                 val shiftWorkers by viewModel.shiftWorkers.collectAsState()
                 val allWorkers by viewModel.allWorkers.collectAsState()
-                val isLoading by viewModel.isLoading.collectAsState()
-                
+
                 LaunchedEffect(shiftId) {
                     viewModel.loadShiftDetails(shiftId)
                 }

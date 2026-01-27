@@ -81,6 +81,9 @@ class WorkerDetailViewModel(
     private val _showPaidItems = MutableStateFlow(false)
     val showPaidItems: StateFlow<Boolean> = _showPaidItems.asStateFlow()
 
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
     fun loadWorker(workerId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -141,13 +144,17 @@ class WorkerDetailViewModel(
                     _updateSuccess.value = true
                 }
             } catch (e: Exception) {
-                // Handle error silently or add error state if needed
+                _error.value = e.message
             }
         }
     }
     
     fun clearUpdateSuccess() {
         _updateSuccess.value = false
+    }
+
+    fun clearError() {
+        _error.value = null
     }
     
     fun deleteWorker() {

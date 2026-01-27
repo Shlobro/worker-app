@@ -5,8 +5,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
@@ -20,7 +18,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import com.example.workertracking.R
 import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.ui.components.SearchableWorkerSelector
@@ -30,20 +27,31 @@ import com.example.workertracking.ui.components.SearchableWorkerSelector
 fun EditWorkerScreen(
     worker: Worker?,
     availableWorkers: List<Worker> = emptyList(),
+    error: String? = null,
     onNavigateBack: () -> Unit,
-    onUpdateWorker: (String, String, Long?) -> Unit
+    onUpdateWorker: (String, String, Long?) -> Unit,
+    onClearError: () -> Unit = {}
 ) {
     var workerName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var selectedReferenceWorker by remember { mutableStateOf<Worker?>(null) }
     var showWorkerSelector by remember { mutableStateOf(false) }
     var phoneNumberError by remember { mutableStateOf<String?>(null) }
-    
-    fun isValidPhoneNumber(phone: String): Boolean {
-        val pattern = Regex("^\\d{3}-\\d{7}$")
-        return pattern.matches(phone)
+
+    // Show error dialog when error is not null
+    if (error != null) {
+        AlertDialog(
+            onDismissRequest = onClearError,
+            title = { Text("Error") },
+            text = { Text(error) },
+            confirmButton = {
+                Button(onClick = onClearError) {
+                    Text("OK")
+                }
+            }
+        )
     }
-    
+
     class PhoneNumberVisualTransformation : VisualTransformation {
         override fun filter(text: AnnotatedString): TransformedText {
             val digitsOnly = text.text.filter { it.isDigit() }.take(10)
