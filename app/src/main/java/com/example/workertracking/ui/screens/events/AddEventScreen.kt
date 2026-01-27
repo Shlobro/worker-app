@@ -225,11 +225,11 @@ fun AddEventScreen(
                     // Validate input based on length
                     when (digitsOnly.length) {
                         3 -> {
-                            // For 3-digit input, allow any combination that could lead to valid 4-digit time
-                            // Don't validate as H:MM yet since user might be typing HHMM
-                            // Just ensure first digit is reasonable for hours (0-2)
+                            // For 3-digit input, validate as H:MM format
                             val firstDigit = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
-                            if (firstDigit > 2) return@OutlinedTextField
+                            val minutes = digitsOnly.substring(1).toIntOrNull() ?: 0
+                            // Allow only if valid H:MM (first digit 0-9 and minutes 00-59)
+                            if (firstDigit > 9 || minutes > 59) return@OutlinedTextField
                         }
                         4 -> {
                             // For 4-digit input, validate as HH:MM
@@ -256,11 +256,11 @@ fun AddEventScreen(
                     // Validate input based on length
                     when (digitsOnly.length) {
                         3 -> {
-                            // For 3-digit input, allow any combination that could lead to valid 4-digit time
-                            // Don't validate as H:MM yet since user might be typing HHMM
-                            // Just ensure first digit is reasonable for hours (0-2)
+                            // For 3-digit input, validate as H:MM format
                             val firstDigit = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
-                            if (firstDigit > 2) return@OutlinedTextField
+                            val minutes = digitsOnly.substring(1).toIntOrNull() ?: 0
+                            // Allow only if valid H:MM (first digit 0-9 and minutes 00-59)
+                            if (firstDigit > 9 || minutes > 59) return@OutlinedTextField
                         }
                         4 -> {
                             // For 4-digit input, validate as HH:MM

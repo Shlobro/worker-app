@@ -44,7 +44,7 @@ fun EditShiftScreen(
     if (shift == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = androidx.compose.ui.Alignment.Center
+            contentAlignment = Alignment.Center
         ) {
             Text("Shift not found")
         }
@@ -60,16 +60,16 @@ fun EditShiftScreen(
                 digitsOnly.length == 2 -> digitsOnly
                 digitsOnly.length == 3 -> {
                     // For 3-digit input, check if it makes sense as HMM (e.g., "800" -> "08:00")
-                    // But if the first digit would create invalid minutes (like "180" -> "1:80" or "999" -> "9:99"), 
+                    // But if the first digit would create invalid minutes (like "180" -> "1:80" or "999" -> "9:99"),
                     // treat it as incomplete 4-digit input instead
                     val firstDigitHour = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
                     val remainingMinutes = digitsOnly.substring(1).toIntOrNull() ?: 0
-                    
+
                     if (firstDigitHour <= 9 && remainingMinutes <= 59) {
                         // Valid 3-digit format: H:MM (only hours 0-2 are valid for 3-digit)
-                        val hours = digitsOnly.substring(0, 1).padStart(2, '0')
-                        val minutes = digitsOnly.substring(1)
-                        "$hours:$minutes"
+                        val hoursStr = digitsOnly.substring(0, 1).padStart(2, '0')
+                        val minutesStr = digitsOnly.substring(1)
+                        "$hoursStr:$minutesStr"
                     } else {
                         // Invalid as 3-digit, show as incomplete 4-digit input
                         digitsOnly
@@ -77,12 +77,12 @@ fun EditShiftScreen(
                 }
                 digitsOnly.length >= 4 -> {
                     // Handle 4-digit input like "0800" or "1800" -> "08:00" or "18:00"
-                    val hours = digitsOnly.substring(0, 2)
-                    val minutes = digitsOnly.substring(2)
-                    val h = hours.toIntOrNull() ?: 0
-                    val m = minutes.toIntOrNull() ?: 0
+                    val hoursStr = digitsOnly.substring(0, 2)
+                    val minutesStr = digitsOnly.substring(2)
+                    val h = hoursStr.toIntOrNull() ?: 0
+                    val m = minutesStr.toIntOrNull() ?: 0
                     if (h <= 23 && m <= 59) {
-                        "$hours:$minutes"
+                        "$hoursStr:$minutesStr"
                     } else {
                         ""
                     }
@@ -174,7 +174,7 @@ fun EditShiftScreen(
                 hours = if (calculatedHours == calculatedHours.toInt().toDouble()) {
                     calculatedHours.toInt().toString()
                 } else {
-                    String.format("%.1f", calculatedHours)
+                    String.format(Locale.US, "%.1f", calculatedHours)
                 }
             }
         }
@@ -239,20 +239,19 @@ fun EditShiftScreen(
                     // Validate input based on length
                     when (digitsOnly.length) {
                         3 -> {
-                            // For 3-digit input, allow all input as user might be typing 4-digit time
-                            // Only validate if it could be a valid H:MM pattern
+                            // For 3-digit input, validate as H:MM format
                             val firstDigit = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
-                            val minutes = digitsOnly.substring(1).toIntOrNull() ?: 0
-                            // Allow input if first digit <= 2 (could become 2x:xx) or if minutes <= 59 (valid H:MM)
-                            if (firstDigit <= 2 || minutes <= 59) {
+                            val minutesValue = digitsOnly.substring(1).toIntOrNull() ?: 0
+                            // Allow only if valid H:MM (first digit 0-9 and minutes 00-59)
+                            if (firstDigit <= 9 && minutesValue <= 59) {
                                 startTimeInput = digitsOnly
                             }
                         }
                         4 -> {
                             // For 4-digit input, validate as HH:MM
-                            val hours = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
-                            val minutes = digitsOnly.substring(2).toIntOrNull() ?: 0
-                            if (hours <= 23 && minutes <= 59) {
+                            val hoursValue = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
+                            val minutesValue = digitsOnly.substring(2).toIntOrNull() ?: 0
+                            if (hoursValue <= 23 && minutesValue <= 59) {
                                 startTimeInput = digitsOnly
                             }
                         }
@@ -278,20 +277,19 @@ fun EditShiftScreen(
                     // Validate input based on length
                     when (digitsOnly.length) {
                         3 -> {
-                            // For 3-digit input, allow all input as user might be typing 4-digit time
-                            // Only validate if it could be a valid H:MM pattern
+                            // For 3-digit input, validate as H:MM format
                             val firstDigit = digitsOnly.substring(0, 1).toIntOrNull() ?: 0
-                            val minutes = digitsOnly.substring(1).toIntOrNull() ?: 0
-                            // Allow input if first digit <= 2 (could become 2x:xx) or if minutes <= 59 (valid H:MM)
-                            if (firstDigit <= 2 || minutes <= 59) {
+                            val minutesValue = digitsOnly.substring(1).toIntOrNull() ?: 0
+                            // Allow only if valid H:MM (first digit 0-9 and minutes 00-59)
+                            if (firstDigit <= 9 && minutesValue <= 59) {
                                 endTimeInput = digitsOnly
                             }
                         }
                         4 -> {
                             // For 4-digit input, validate as HH:MM
-                            val hours = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
-                            val minutes = digitsOnly.substring(2).toIntOrNull() ?: 0
-                            if (hours <= 23 && minutes <= 59) {
+                            val hoursValue = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
+                            val minutesValue = digitsOnly.substring(2).toIntOrNull() ?: 0
+                            if (hoursValue <= 23 && minutesValue <= 59) {
                                 endTimeInput = digitsOnly
                             }
                         }
@@ -344,7 +342,7 @@ fun EditShiftScreen(
                                     hours = if (calculatedHours == calculatedHours.toInt().toDouble()) {
                                         calculatedHours.toInt().toString()
                                     } else {
-                                        String.format("%.1f", calculatedHours)
+                                        String.format(Locale.US, "%.1f", calculatedHours)
                                     }
                                 }
                             }
