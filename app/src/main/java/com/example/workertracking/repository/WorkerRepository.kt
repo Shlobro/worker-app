@@ -54,7 +54,7 @@ class WorkerRepository(
                 }
                 val ref = (eventInfo.eventWorker.referencePayRate ?: 0.0) * eventInfo.eventWorker.hours
                 val totalCost = cost + ref
-                totalCost - eventInfo.eventWorker.amountPaid
+                totalCost - eventInfo.eventWorker.amountPaid - eventInfo.eventWorker.tipAmount
             }
         }
         
@@ -64,7 +64,7 @@ class WorkerRepository(
         
         val refEventsOwed = getUnpaidReferenceEventsForWorker(workerId).sumOf { event ->
             val totalRefCost = (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
-            if (event.eventWorker.isReferencePaid) 0.0 else totalRefCost - event.eventWorker.referenceAmountPaid
+            if (event.eventWorker.isReferencePaid) 0.0 else totalRefCost - event.eventWorker.referenceAmountPaid - event.eventWorker.referenceTipAmount
         }
         
         return shiftsOwed + eventsOwed + refShiftsOwed + refEventsOwed
@@ -301,15 +301,16 @@ class WorkerRepository(
     suspend fun getTotalReferencePaymentsOwedToWorker(workerId: Long): Double {
         val referenceShifts = getUnpaidReferenceShiftsForWorker(workerId)
         val referenceEvents = getUnpaidReferenceEventsForWorker(workerId)
-        
+
         val shiftReferenceTotal = referenceShifts.sumOf { shift ->
             (shift.shiftWorker.referencePayRate ?: 0.0) * shift.shiftHours
         }
-        
+
         val eventReferenceTotal = referenceEvents.sumOf { event ->
-            (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
+            val totalRefCost = (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
+            totalRefCost - event.eventWorker.referenceAmountPaid - event.eventWorker.referenceTipAmount
         }
-        
+
         return shiftReferenceTotal + eventReferenceTotal
     }
     

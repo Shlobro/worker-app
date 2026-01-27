@@ -204,7 +204,7 @@ class WorkerDetailViewModel(
                         unpaidEvent.eventWorker.payRate
                     }
                     val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours
-                    workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid
+                    workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid - unpaidEvent.eventWorker.tipAmount
                 }
                 
                 // Calculate reference payments owed TO this worker
@@ -213,7 +213,8 @@ class WorkerDetailViewModel(
                 }
                 
                 val referenceEventTotal = unpaidReferenceEvents.sumOf { event ->
-                    (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
+                    val totalRefCost = (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
+                    totalRefCost - event.eventWorker.referenceAmountPaid - event.eventWorker.referenceTipAmount
                 }
                 
                 _totalOwed.value = shiftTotal + eventTotal
