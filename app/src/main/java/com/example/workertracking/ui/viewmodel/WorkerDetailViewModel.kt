@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.data.entity.Project
 import com.example.workertracking.data.entity.Event
-import com.example.workertracking.data.entity.Shift
 import com.example.workertracking.data.entity.UnpaidShiftWorkerInfo
 import com.example.workertracking.data.entity.UnpaidEventWorkerInfo
 import com.example.workertracking.repository.WorkerRepository
@@ -20,9 +19,9 @@ import java.util.*
 
 class WorkerDetailViewModel(
     private val workerRepository: WorkerRepository,
-    private val projectRepository: ProjectRepository,
+    @Suppress("unused") private val projectRepository: ProjectRepository,
     private val eventRepository: EventRepository,
-    private val shiftRepository: ShiftRepository
+    @Suppress("unused") private val shiftRepository: ShiftRepository
 ) : ViewModel() {
 
     private val _worker = MutableStateFlow<Worker?>(null)
@@ -204,7 +203,7 @@ class WorkerDetailViewModel(
                         unpaidEvent.eventWorker.payRate
                     }
                     val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours
-                    workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid - unpaidEvent.eventWorker.tipAmount
+                    workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid - unpaidEvent.eventWorker.tipAmount - unpaidEvent.eventWorker.referenceAmountPaid - unpaidEvent.eventWorker.referenceTipAmount
                 }
                 
                 // Calculate reference payments owed TO this worker

@@ -72,7 +72,7 @@ class MoneyOwedViewModel(
                         unpaidEvent.eventWorker.payRate
                     }
                     val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours
-                    workerPayment + referencePayment
+                    workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid - unpaidEvent.eventWorker.tipAmount - unpaidEvent.eventWorker.referenceAmountPaid - unpaidEvent.eventWorker.referenceTipAmount
                 }
                 
                 _uiState.value = _uiState.value.copy(

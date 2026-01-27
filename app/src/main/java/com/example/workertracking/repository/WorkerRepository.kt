@@ -12,7 +12,7 @@ import java.util.*
 
 class WorkerRepository(
     private val workerDao: WorkerDao,
-    private val paymentDao: PaymentDao,
+    @Suppress("unused") private val paymentDao: PaymentDao,
     private val shiftWorkerDao: ShiftWorkerDao,
     private val eventWorkerDao: EventWorkerDao
 ) {
@@ -29,6 +29,7 @@ class WorkerRepository(
     
     suspend fun deleteWorker(worker: Worker) = workerDao.deleteWorker(worker)
     
+    @Suppress("unused")
     suspend fun getTotalOwedToWorker(workerId: Long): Double {
         val shifts = shiftWorkerDao.getAllShiftWorkersForWorker(workerId)
         val events = eventWorkerDao.getAllEventWorkersForWorker(workerId)
@@ -91,7 +92,7 @@ class WorkerRepository(
                 unpaidEvent.eventWorker.payRate
             }
             val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours
-            workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid
+            workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid - unpaidEvent.eventWorker.tipAmount - unpaidEvent.eventWorker.referenceAmountPaid - unpaidEvent.eventWorker.referenceTipAmount
         }
         
         return shiftTotal + eventTotal
@@ -133,6 +134,7 @@ class WorkerRepository(
         eventWorkerDao.updateEventWorker(eventWorker)
     }
 
+    @Suppress("unused")
     suspend fun deleteEventWorker(eventWorker: com.example.workertracking.data.entity.EventWorker) {
         eventWorkerDao.deleteEventWorker(eventWorker)
     }
@@ -161,10 +163,12 @@ class WorkerRepository(
         return eventWorkerDao.getAllPaidEventWorkers()
     }
 
+    @Suppress("unused")
     suspend fun getAllShiftWorkersForWorker(workerId: Long): List<UnpaidShiftWorkerInfo> {
         return shiftWorkerDao.getAllShiftWorkersForWorker(workerId)
     }
 
+    @Suppress("unused")
     suspend fun getAllEventWorkersForWorker(workerId: Long): List<UnpaidEventWorkerInfo> {
         return eventWorkerDao.getAllEventWorkersForWorker(workerId)
     }
@@ -216,11 +220,10 @@ class WorkerRepository(
         return shifts.filter { shift ->
             val shiftDate = Date(shift.shiftDate)
             when {
-                startDate != null && endDate != null -> 
+                startDate != null && endDate != null ->
                     shiftDate >= startDate && shiftDate <= endDate
                 startDate != null -> shiftDate >= startDate
-                endDate != null -> shiftDate <= endDate
-                else -> true
+                else -> shiftDate <= endDate!!
             }
         }
     }
@@ -235,11 +238,10 @@ class WorkerRepository(
         return events.filter { event ->
             val eventDate = Date(event.eventDate)
             when {
-                startDate != null && endDate != null -> 
+                startDate != null && endDate != null ->
                     eventDate >= startDate && eventDate <= endDate
                 startDate != null -> eventDate >= startDate
-                endDate != null -> eventDate <= endDate
-                else -> true
+                else -> eventDate <= endDate!!
             }
         }
     }
@@ -298,6 +300,7 @@ class WorkerRepository(
         }
     }
     
+    @Suppress("unused")
     suspend fun getTotalReferencePaymentsOwedToWorker(workerId: Long): Double {
         val referenceShifts = getUnpaidReferenceShiftsForWorker(workerId)
         val referenceEvents = getUnpaidReferenceEventsForWorker(workerId)

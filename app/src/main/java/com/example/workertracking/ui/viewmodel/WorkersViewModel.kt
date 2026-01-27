@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.*
 
 class WorkersViewModel(
     private val workerRepository: WorkerRepository
@@ -88,11 +87,12 @@ class WorkersViewModel(
                         }
                         
                         val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
-                            if (unpaidEvent.eventWorker.isHourlyRate) {
+                            val basePayment = if (unpaidEvent.eventWorker.isHourlyRate) {
                                 unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
                             } else {
                                 unpaidEvent.eventWorker.payRate
                             }
+                            basePayment - unpaidEvent.eventWorker.amountPaid - unpaidEvent.eventWorker.tipAmount
                         }
                         
                         // Calculate reference payments owed TO this worker (when they are the reference worker)
@@ -104,7 +104,8 @@ class WorkersViewModel(
                         }
                         
                         val referenceEventTotal = unpaidReferenceEvents.sumOf { event ->
-                            (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
+                            val baseReferencePayment = (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
+                            baseReferencePayment - event.eventWorker.referenceAmountPaid - event.eventWorker.referenceTipAmount
                         }
                         
                         WorkerWithDebt(

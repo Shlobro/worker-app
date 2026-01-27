@@ -88,15 +88,6 @@ MAJOR BUGS
    - Add CASE statement: CASE WHEN ew.isHourlyRate = 1 THEN ew.hours * ew.payRate ELSE ew.payRate END
    - Match the logic used in shift_workers part of same query
 
-7. Tips Not Included in Money Owed Totals
-    Location: MoneyOwedViewModel.kt:68-76, WorkersViewModel.kt:90-96
-    Problem: Multiple debt calculation locations don't include tipAmount in totals
-    Code: workerPayment + referencePayment  (Missing: - tipAmount - referenceTipAmount)
-    Impact: Money owed totals don't match individual worker debts
-    Fix Required:
-    - Include tipAmount and referenceTipAmount in all debt calculations
-    - Ensure consistent calculation logic across all ViewModels
-
 8. Worker Earnings Include Reference Payments
     Location: WorkerRepository.kt:251
     Problem: Worker "earnings" calculation includes reference payments made to OTHER workers
