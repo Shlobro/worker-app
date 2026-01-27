@@ -292,11 +292,11 @@ class WorkerRepository(
     }
     
     suspend fun getUnpaidReferenceEventsForWorker(workerId: Long): List<UnpaidEventWorkerInfo> {
-        val allUnpaidEvents = eventWorkerDao.getUnpaidEventWorkers()
-        return allUnpaidEvents.filter { event ->
+        val allUnpaidReferencePayments = eventWorkerDao.getUnpaidReferencePayments()
+        return allUnpaidReferencePayments.filter { event ->
             // Find workers who have this worker as their reference
             val worker = workerDao.getWorkerById(event.eventWorker.workerId)
-            worker?.referenceId == workerId && event.eventWorker.referencePayRate != null
+            worker?.referenceId == workerId
         }
     }
     
