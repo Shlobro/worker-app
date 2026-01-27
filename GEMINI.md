@@ -1,48 +1,9 @@
-# Gemini Project Overview: Worker Tracking Android App
-
-## Project Overview
-
-This is a native Android application for managing construction projects, workers, and work shifts. It's built with Kotlin, Jetpack Compose, and follows the MVVM architecture pattern. The app uses a Room database for local data persistence and includes features for financial tracking, worker management, and shift scheduling.
-
-**Key Technologies:**
-
-*   **UI:** Jetpack Compose with Material 3
-*   **Architecture:** MVVM (Model-View-ViewModel) with a Repository pattern
-*   **Database:** Room
-*   **Asynchronous Operations:** Kotlin Coroutines
-*   **Navigation:** Jetpack Navigation Compose
-*   **Image Loading:** Coil
-*   **JSON Serialization:** Gson
-
-## Building and Running
-
-The project uses Gradle for building. Here are the most common commands:
-
-*   **Build the debug APK:**
-    ```bash
-    gradlew.bat assembleDebug
-    ```
-*   **Install the debug APK on a connected device:**
-    ```bash
-    gradlew.bat installDebug
-    ```
-*   **Run unit tests:**
-    ```bash
-    gradlew.bat test
-    ```
-*   **Run instrumented tests:**
-    ```bash
-    gradlew.bat connectedAndroidTest
-    ```
-*   **Run lint checks:**
-    ```bash
-    gradlew.bat lint
-    ```
-
-## Development Conventions
-
-*   **UI:** The UI is built entirely with Jetpack Compose. Follow Material 3 design principles and use existing theme components.
-*   **State Management:** ViewModels are used to manage the UI state.
-*   **Data:** The Room database is the single source of truth for all data. Repositories are used to abstract data access.
-*   **Localization:** The app is localized in Hebrew. Maintain this localization when adding new UI elements.
-*   **Code Style:** Follow the standard Kotlin coding conventions.
+- always read the .md file in every folder you work in. if there is no .md file in this folder create it if it is in the backend folder for example then it should be called backend_developer_guide.md, if you are creating the .md file make sure it is written in a way that is geared towards developers, it should explain all the files and subfolders in that folder in a way that a developer that has never seen the code will know how to work with the code. these files should never be over 500 lines long.
+- when changing any file or doing any edits make sure to update the .md file in that folder and in the ancestor folders as well. these .md files should never be longer than 500 lines long. the point of these .md files are to allow a new developer to understand everything without needing to read the code itself. they are not to document changes. only changes that require additional information for a developer that has never seen the code should be added into the .md files.
+- no code file generated or edited should exceed 1000 lines of code ever. if while editing or creating a file, the file exceeds 1000 lines this file must be split up into multiple files.
+- whenever creating a new file, think very carefully which folder this file should be put in, if needed make a new folder so that there is clear separation between folders.
+- each folder should only have 1 .md file. never create summary files or visualization .md files.
+- never build the android project allow the user to build and provide any build errors
+- never mention legacy functionality or recent changes in the MD files they are only needed to get engineers into what is happening right now in the code.
+- always ask if a commit message is good before commiting.
+- backward compatibility is never a concern, always assume that everyone has the latest installed.

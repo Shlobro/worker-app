@@ -198,11 +198,13 @@ class WorkerDetailViewModel(
                 }
                 
                 val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
-                    if (unpaidEvent.eventWorker.isHourlyRate) {
+                    val workerPayment = if (unpaidEvent.eventWorker.isHourlyRate) {
                         unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
                     } else {
                         unpaidEvent.eventWorker.payRate
                     }
+                    val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours
+                    workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid
                 }
                 
                 // Calculate reference payments owed TO this worker
@@ -266,6 +268,23 @@ class WorkerDetailViewModel(
         viewModelScope.launch {
             try {
                 workerRepository.markEventWorkerAsPaid(eventWorkerId)
+                _worker.value?.let { worker ->
+                    loadUnpaidItems(worker.id) // Refresh the data
+                    loadCompleteHistory(worker.id) // Refresh complete history too
+                    if (_showPaidItems.value) {
+                        loadPaidItems(worker.id) // Refresh paid items if showing
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun updateEventWorkerPayment(eventWorkerId: Long, isPaid: Boolean, amountPaid: Double, tipAmount: Double) {
+        viewModelScope.launch {
+            try {
+                workerRepository.updateEventWorkerPayment(eventWorkerId, isPaid, amountPaid, tipAmount)
                 _worker.value?.let { worker ->
                     loadUnpaidItems(worker.id) // Refresh the data
                     loadCompleteHistory(worker.id) // Refresh complete history too

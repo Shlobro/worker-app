@@ -21,6 +21,9 @@ import com.example.workertracking.data.entity.Event
 import com.example.workertracking.data.entity.EventWorker
 import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.ui.components.AddWorkerDialog
+import com.example.workertracking.ui.components.EditEventWorkerDialog
+import com.example.workertracking.ui.components.EditPaymentDialog
+import com.example.workertracking.ui.components.PaymentDialog
 import com.example.workertracking.ui.viewmodel.EventWorkerWithName
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -38,12 +41,26 @@ fun EventDetailScreen(
     onDeleteEvent: () -> Unit = {},
     onAddWorkerToEvent: (Long, Long, Double, Boolean, Double, Double?) -> Unit = { _, _, _, _, _, _ -> }, // eventId, workerId, hours, isHourlyRate, payRate, refPayRate
     onRemoveWorker: (EventWorker) -> Unit = {},
-    onMarkAsPaid: (Long) -> Unit = {}, // eventWorkerId
+    onUpdatePayment: (Long, Boolean, Double, Double) -> Unit = { _, _, _, _ -> }, // eventWorkerId, isPaid, amountPaid, tipAmount
+    onUpdateReferencePayment: (Long, Boolean, Double, Double) -> Unit = { _, _, _, _ -> }, // eventWorkerId, isPaid, amountPaid, tipAmount
+    onUpdateWorker: (EventWorker) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showAddWorkerDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    
+    // Payment Dialog State
+    var showPaymentDialog by remember { mutableStateOf<EventWorker?>(null) }
+    var showEditPaymentDialog by remember { mutableStateOf<EventWorker?>(null) }
+    var showEditWorkerDialog by remember { mutableStateOf<EventWorker?>(null) }
+    
+    // Reference Payment Dialog State
+    var showReferencePaymentDialog by remember { mutableStateOf<EventWorker?>(null) }
+    var showReferenceEditPaymentDialog by remember { mutableStateOf<EventWorker?>(null) }
+    
+    var paymentDialogTotalDue by remember { mutableStateOf(0.0) }
+
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
     val filteredWorkers = allWorkers.filter { worker ->
@@ -324,36 +341,76 @@ fun EventDetailScreen(
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     fontWeight = FontWeight.Medium
                                                 )
+                                                
+                                                // Payment Status Display
                                                 if (workerWithName.eventWorker.isPaid) {
-                                                    Text(
-                                                        text = stringResource(R.string.paid),
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        color = Color(0xFF4CAF50),
-                                                        fontWeight = FontWeight.Medium
-                                                    )
+                                                    TextButton(
+                                                        onClick = { 
+                                                            paymentDialogTotalDue = workerPayment
+                                                            showEditPaymentDialog = workerWithName.eventWorker
+                                                        },
+                                                        contentPadding = PaddingValues(0.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = stringResource(R.string.paid),
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = Color(0xFF4CAF50),
+                                                            fontWeight = FontWeight.Medium
+                                                        )
+                                                    }
+                                                } else if (workerWithName.eventWorker.amountPaid > 0) {
+                                                    // Partial Payment
+                                                    TextButton(
+                                                        onClick = { 
+                                                            paymentDialogTotalDue = workerPayment
+                                                            showEditPaymentDialog = workerWithName.eventWorker
+                                                        },
+                                                        contentPadding = PaddingValues(0.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = "שולם חלקית: ₪${String.format("%.2f", workerWithName.eventWorker.amountPaid)}",
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = Color(0xFFFFA000), // Orange for partial
+                                                            fontWeight = FontWeight.Medium
+                                                        )
+                                                    }
+                                                } else {
+                                                    TextButton(
+                                                        onClick = { 
+                                                            paymentDialogTotalDue = workerPayment
+                                                            showPaymentDialog = workerWithName.eventWorker
+                                                        },
+                                                        colors = ButtonDefaults.textButtonColors(
+                                                            contentColor = MaterialTheme.colorScheme.primary
+                                                        )
+                                                    ) {
+                                                        Text(
+                                                            text = stringResource(R.string.mark_as_paid),
+                                                            style = MaterialTheme.typography.bodySmall
+                                                        )
+                                                    }
                                                 }
                                             }
-                                            if (!workerWithName.eventWorker.isPaid) {
-                                                TextButton(
-                                                    onClick = { onMarkAsPaid(workerWithName.eventWorker.id) },
-                                                    colors = ButtonDefaults.textButtonColors(
-                                                        contentColor = Color(0xFF4CAF50)
-                                                    )
+                                            
+                                            Row {
+                                                IconButton(
+                                                    onClick = { showEditWorkerDialog = workerWithName.eventWorker }
                                                 ) {
-                                                    Text(
-                                                        text = stringResource(R.string.mark_as_paid),
-                                                        style = MaterialTheme.typography.bodySmall
+                                                    Icon(
+                                                        imageVector = Icons.Default.Edit,
+                                                        contentDescription = "Edit Worker",
+                                                        tint = MaterialTheme.colorScheme.primary
                                                     )
                                                 }
-                                            }
-                                            IconButton(
-                                                onClick = { onRemoveWorker(workerWithName.eventWorker) }
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Delete,
-                                                    contentDescription = stringResource(R.string.remove_worker),
-                                                    tint = MaterialTheme.colorScheme.error
-                                                )
+                                                IconButton(
+                                                    onClick = { onRemoveWorker(workerWithName.eventWorker) }
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Delete,
+                                                        contentDescription = stringResource(R.string.remove_worker),
+                                                        tint = MaterialTheme.colorScheme.error
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -363,33 +420,18 @@ fun EventDetailScreen(
                                 }
                             }
                             
-                            // Show reference workers section if there are any reference payments
+                            // Reference Workers Section
                             val referencePayments = eventWorkers.mapNotNull { workerWithName ->
                                 workerWithName.eventWorker.referencePayRate?.let { refRate ->
                                     val worker = allWorkers.find { it.id == workerWithName.eventWorker.workerId }
                                     worker?.referenceId?.let { referenceId ->
                                         val referenceWorker = allWorkers.find { it.id == referenceId }
                                         referenceWorker?.let { refWorker ->
-                                            // Return the EventWorker record along with reference info for payment tracking
-                                            Pair(workerWithName.eventWorker, Triple(refWorker, refRate, refRate * workerWithName.eventWorker.hours))
+                                            // Return: (ReferenceWorker, EventWorker record, Commission Amount)
+                                            Triple(refWorker, workerWithName.eventWorker, refRate * workerWithName.eventWorker.hours)
                                         }
                                     }
                                 }
-                            }.groupBy { it.second.first.id }.map { (referenceWorkerId, eventWorkerPayments) ->
-                                val refWorker = eventWorkerPayments.first().second.first
-                                val totalRefPayment = eventWorkerPayments.sumOf { it.second.third }
-                                // Find all workers that this reference worker referenced in this event
-                                val referencedWorkerNames = eventWorkerPayments.mapNotNull { (eventWorker, _) ->
-                                    val worker = allWorkers.find { it.id == eventWorker.workerId }
-                                    if (worker?.referenceId == referenceWorkerId && eventWorker.referencePayRate != null) {
-                                        worker.name
-                                    } else null
-                                }
-                                // Get all EventWorker records for this reference worker to check payment status
-                                val eventWorkersForRef = eventWorkerPayments.map { it.first }
-                                val allPaid = eventWorkersForRef.all { it.isPaid }
-                                
-                                Pair(Triple(refWorker, totalRefPayment, referencedWorkerNames), Pair(eventWorkersForRef, allPaid))
                             }
                             
                             if (referencePayments.isNotEmpty()) {
@@ -400,9 +442,8 @@ fun EventDetailScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 
-                                referencePayments.forEach { (referenceInfo, paymentInfo) ->
-                                    val (referenceWorker, totalPayment, referencedWorkerNames) = referenceInfo
-                                    val (eventWorkersForRef, allPaid) = paymentInfo
+                                referencePayments.forEach { (referenceWorker, eventWorker, commissionAmount) ->
+                                    val referredWorker = allWorkers.find { it.id == eventWorker.workerId }
                                     
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Card(
@@ -425,17 +466,10 @@ fun EventDetailScreen(
                                                     fontWeight = FontWeight.Medium
                                                 )
                                                 Text(
-                                                    text = "עובד מפנה",
+                                                    text = "עבור: ${referredWorker?.name ?: "Unknown"}",
                                                     style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.secondary
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
-                                                if (referencedWorkerNames.isNotEmpty()) {
-                                                    Text(
-                                                        text = "הפנה את: ${referencedWorkerNames.joinToString(", ")}",
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
-                                                }
                                             }
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
@@ -445,36 +479,57 @@ fun EventDetailScreen(
                                                     horizontalAlignment = Alignment.End
                                                 ) {
                                                     Text(
-                                                        text = "₪${String.format("%.2f", totalPayment)}",
+                                                        text = "₪${String.format("%.2f", commissionAmount)}",
                                                         style = MaterialTheme.typography.bodyMedium,
                                                         fontWeight = FontWeight.Medium,
                                                         color = MaterialTheme.colorScheme.secondary
                                                     )
-                                                    if (allPaid) {
-                                                        Text(
-                                                            text = stringResource(R.string.paid),
-                                                            style = MaterialTheme.typography.bodySmall,
-                                                            color = Color(0xFF4CAF50),
-                                                            fontWeight = FontWeight.Medium
-                                                        )
-                                                    }
-                                                }
-                                                if (!allPaid) {
-                                                    TextButton(
-                                                        onClick = { 
-                                                            // Mark all reference payments for this worker as paid
-                                                            eventWorkersForRef.forEach { eventWorker ->
-                                                                onMarkAsPaid(eventWorker.id)
-                                                            }
-                                                        },
-                                                        colors = ButtonDefaults.textButtonColors(
-                                                            contentColor = Color(0xFF4CAF50)
-                                                        )
-                                                    ) {
-                                                        Text(
-                                                            text = stringResource(R.string.mark_as_paid),
-                                                            style = MaterialTheme.typography.bodySmall
-                                                        )
+                                                    
+                                                    if (eventWorker.isReferencePaid) {
+                                                        TextButton(
+                                                            onClick = { 
+                                                                paymentDialogTotalDue = commissionAmount
+                                                                showReferenceEditPaymentDialog = eventWorker
+                                                            },
+                                                            contentPadding = PaddingValues(0.dp)
+                                                        ) {
+                                                            Text(
+                                                                text = stringResource(R.string.paid),
+                                                                style = MaterialTheme.typography.bodySmall,
+                                                                color = Color(0xFF4CAF50),
+                                                                fontWeight = FontWeight.Medium
+                                                            )
+                                                        }
+                                                    } else if (eventWorker.referenceAmountPaid > 0) {
+                                                        TextButton(
+                                                            onClick = { 
+                                                                paymentDialogTotalDue = commissionAmount
+                                                                showReferenceEditPaymentDialog = eventWorker
+                                                            },
+                                                            contentPadding = PaddingValues(0.dp)
+                                                        ) {
+                                                            Text(
+                                                                text = "שולם חלקית: ₪${String.format("%.2f", eventWorker.referenceAmountPaid)}",
+                                                                style = MaterialTheme.typography.bodySmall,
+                                                                color = Color(0xFFFFA000),
+                                                                fontWeight = FontWeight.Medium
+                                                            )
+                                                        }
+                                                    } else {
+                                                        TextButton(
+                                                            onClick = { 
+                                                                paymentDialogTotalDue = commissionAmount
+                                                                showReferencePaymentDialog = eventWorker
+                                                            },
+                                                            colors = ButtonDefaults.textButtonColors(
+                                                                contentColor = Color(0xFF4CAF50)
+                                                            )
+                                                        ) {
+                                                            Text(
+                                                                text = stringResource(R.string.mark_as_paid),
+                                                                style = MaterialTheme.typography.bodySmall
+                                                            )
+                                                        }
                                                     }
                                                 }
                                             }
@@ -486,6 +541,83 @@ fun EventDetailScreen(
                     }
                 }
             }
+        }
+    }
+    
+    // Payment Dialog (Main Worker)
+    if (showPaymentDialog != null) {
+        PaymentDialog(
+            totalAmount = paymentDialogTotalDue,
+            onConfirm = { isFullPayment, amount, tip ->
+                val amountToPay = if (isFullPayment) paymentDialogTotalDue else amount
+                onUpdatePayment(showPaymentDialog!!.id, isFullPayment, amountToPay, tip)
+                showPaymentDialog = null
+            },
+            onDismiss = { showPaymentDialog = null }
+        )
+    }
+
+    // Edit Payment Dialog (Main Worker)
+    if (showEditPaymentDialog != null) {
+        EditPaymentDialog(
+            currentPaidAmount = showEditPaymentDialog!!.amountPaid,
+            currentTipAmount = showEditPaymentDialog!!.tipAmount,
+            totalDue = paymentDialogTotalDue,
+            isPaid = showEditPaymentDialog!!.isPaid,
+            onConfirm = { isPaid, amount, tip ->
+                onUpdatePayment(showEditPaymentDialog!!.id, isPaid, amount, tip)
+                showEditPaymentDialog = null
+            },
+            onDismiss = { showEditPaymentDialog = null }
+        )
+    }
+    
+    // Reference Payment Dialog
+    if (showReferencePaymentDialog != null) {
+        PaymentDialog(
+            totalAmount = paymentDialogTotalDue,
+            onConfirm = { isFullPayment, amount, tip ->
+                val amountToPay = if (isFullPayment) paymentDialogTotalDue else amount
+                onUpdateReferencePayment(showReferencePaymentDialog!!.id, isFullPayment, amountToPay, tip)
+                showReferencePaymentDialog = null
+            },
+            onDismiss = { showReferencePaymentDialog = null }
+        )
+    }
+
+    // Edit Reference Payment Dialog
+    if (showReferenceEditPaymentDialog != null) {
+        EditPaymentDialog(
+            currentPaidAmount = showReferenceEditPaymentDialog!!.referenceAmountPaid,
+            currentTipAmount = showReferenceEditPaymentDialog!!.referenceTipAmount,
+            totalDue = paymentDialogTotalDue,
+            isPaid = showReferenceEditPaymentDialog!!.isReferencePaid,
+            onConfirm = { isPaid, amount, tip ->
+                onUpdateReferencePayment(showReferenceEditPaymentDialog!!.id, isPaid, amount, tip)
+                showReferenceEditPaymentDialog = null
+            },
+            onDismiss = { showReferenceEditPaymentDialog = null }
+        )
+    }
+    
+    // Edit Worker Dialog
+    if (showEditWorkerDialog != null) {
+        val worker = allWorkers.find { it.id == showEditWorkerDialog!!.workerId }
+        val referenceWorker = worker?.referenceId?.let { refId ->
+            allWorkers.find { it.id == refId }
+        }
+        
+        if (worker != null) {
+            EditEventWorkerDialog(
+                eventWorker = showEditWorkerDialog!!,
+                worker = worker,
+                referenceWorker = referenceWorker,
+                onDismiss = { showEditWorkerDialog = null },
+                onConfirm = { updatedEventWorker ->
+                    onUpdateWorker(updatedEventWorker)
+                    showEditWorkerDialog = null
+                }
+            )
         }
     }
     

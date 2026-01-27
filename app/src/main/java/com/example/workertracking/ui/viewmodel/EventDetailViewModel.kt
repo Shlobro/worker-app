@@ -164,11 +164,53 @@ class EventDetailViewModel(
         }
     }
 
+    fun updateWorkerInEvent(eventWorker: EventWorker) {
+        viewModelScope.launch {
+            try {
+                workerRepository.updateEventWorker(eventWorker)
+                _event.value?.let { event ->
+                    loadEventWorkers(event.id)
+                    loadTotalCost(event.id)
+                }
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
+    }
+
     fun markEventWorkerAsPaid(eventWorkerId: Long) {
         viewModelScope.launch {
             try {
                 workerRepository.markEventWorkerAsPaid(eventWorkerId)
                 // Refresh data to reflect payment status change
+                _event.value?.let { event ->
+                    loadEventWorkers(event.id)
+                    loadTotalCost(event.id)
+                }
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
+    }
+
+    fun updateEventWorkerPayment(eventWorkerId: Long, isPaid: Boolean, amountPaid: Double, tipAmount: Double) {
+        viewModelScope.launch {
+            try {
+                workerRepository.updateEventWorkerPayment(eventWorkerId, isPaid, amountPaid, tipAmount)
+                _event.value?.let { event ->
+                    loadEventWorkers(event.id)
+                    loadTotalCost(event.id)
+                }
+            } catch (e: Exception) {
+                // Handle error silently or add error state if needed
+            }
+        }
+    }
+
+    fun updateEventWorkerReferencePayment(eventWorkerId: Long, isReferencePaid: Boolean, referenceAmountPaid: Double, referenceTipAmount: Double) {
+        viewModelScope.launch {
+            try {
+                workerRepository.updateEventWorkerReferencePayment(eventWorkerId, isReferencePaid, referenceAmountPaid, referenceTipAmount)
                 _event.value?.let { event ->
                     loadEventWorkers(event.id)
                     loadTotalCost(event.id)

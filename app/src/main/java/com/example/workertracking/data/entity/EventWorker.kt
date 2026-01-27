@@ -30,5 +30,10 @@ data class EventWorker(
     val isHourlyRate: Boolean, // true for hourly, false for fixed amount
     val payRate: Double, // hourly rate or fixed amount
     val referencePayRate: Double? = null, // reference worker hourly rate when applicable
-    val isPaid: Boolean = false // payment status
+    val isPaid: Boolean = false, // payment status
+    val amountPaid: Double = 0.0,
+    val tipAmount: Double = 0.0,
+    val isReferencePaid: Boolean = false,
+    val referenceAmountPaid: Double = 0.0,
+    val referenceTipAmount: Double = 0.0
 )

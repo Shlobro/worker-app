@@ -30,9 +30,44 @@ class WorkerRepository(
     suspend fun deleteWorker(worker: Worker) = workerDao.deleteWorker(worker)
     
     suspend fun getTotalOwedToWorker(workerId: Long): Double {
-        val totalEarned = workerDao.getTotalOwedToWorker(workerId) ?: 0.0
-        val totalPaid = paymentDao.getTotalPaymentsToWorker(workerId) ?: 0.0
-        return totalEarned - totalPaid
+        val shifts = shiftWorkerDao.getAllShiftWorkersForWorker(workerId)
+        val events = eventWorkerDao.getAllEventWorkersForWorker(workerId)
+        
+        val shiftsOwed = shifts.sumOf { shiftInfo ->
+            if (shiftInfo.shiftWorker.isPaid) 0.0 else {
+                val cost = if (shiftInfo.shiftWorker.isHourlyRate) {
+                    shiftInfo.shiftWorker.payRate * shiftInfo.shiftHours
+                } else {
+                    shiftInfo.shiftWorker.payRate
+                }
+                val ref = (shiftInfo.shiftWorker.referencePayRate ?: 0.0) * shiftInfo.shiftHours
+                cost + ref
+            }
+        }
+        
+        val eventsOwed = events.sumOf { eventInfo ->
+            if (eventInfo.eventWorker.isPaid) 0.0 else {
+                val cost = if (eventInfo.eventWorker.isHourlyRate) {
+                    eventInfo.eventWorker.hours * eventInfo.eventWorker.payRate
+                } else {
+                    eventInfo.eventWorker.payRate
+                }
+                val ref = (eventInfo.eventWorker.referencePayRate ?: 0.0) * eventInfo.eventWorker.hours
+                val totalCost = cost + ref
+                totalCost - eventInfo.eventWorker.amountPaid
+            }
+        }
+        
+        val refShiftsOwed = getUnpaidReferenceShiftsForWorker(workerId).sumOf { shift ->
+            (shift.shiftWorker.referencePayRate ?: 0.0) * shift.shiftHours
+        }
+        
+        val refEventsOwed = getUnpaidReferenceEventsForWorker(workerId).sumOf { event ->
+            val totalRefCost = (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
+            if (event.eventWorker.isReferencePaid) 0.0 else totalRefCost - event.eventWorker.referenceAmountPaid
+        }
+        
+        return shiftsOwed + eventsOwed + refShiftsOwed + refEventsOwed
     }
     
     suspend fun getTotalPaymentsOwed(): Double {
@@ -56,7 +91,7 @@ class WorkerRepository(
                 unpaidEvent.eventWorker.payRate
             }
             val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours
-            workerPayment + referencePayment
+            workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid
         }
         
         return shiftTotal + eventTotal
@@ -84,6 +119,22 @@ class WorkerRepository(
 
     suspend fun markEventWorkerAsPaid(eventWorkerId: Long) {
         eventWorkerDao.updatePaymentStatus(eventWorkerId, true)
+    }
+
+    suspend fun updateEventWorkerPayment(eventWorkerId: Long, isPaid: Boolean, amountPaid: Double, tipAmount: Double) {
+        eventWorkerDao.updatePaymentDetails(eventWorkerId, isPaid, amountPaid, tipAmount)
+    }
+
+    suspend fun updateEventWorkerReferencePayment(eventWorkerId: Long, isReferencePaid: Boolean, referenceAmountPaid: Double, referenceTipAmount: Double) {
+        eventWorkerDao.updateReferencePaymentDetails(eventWorkerId, isReferencePaid, referenceAmountPaid, referenceTipAmount)
+    }
+
+    suspend fun updateEventWorker(eventWorker: com.example.workertracking.data.entity.EventWorker) {
+        eventWorkerDao.updateEventWorker(eventWorker)
+    }
+
+    suspend fun deleteEventWorker(eventWorker: com.example.workertracking.data.entity.EventWorker) {
+        eventWorkerDao.deleteEventWorker(eventWorker)
     }
 
     suspend fun revokeShiftWorkerPayment(shiftWorkerId: Long) {

@@ -458,7 +458,9 @@ fun WorkerTrackingApp() {
                     },
                     onMarkEventAsPaid = { eventWorkerId ->
                         viewModel.markEventAsPaid(eventWorkerId)
-                        application.container.triggerDashboardRefresh()
+                    },
+                    onUpdateEventPayment = { eventWorkerId, isPaid, amountPaid, tipAmount ->
+                        viewModel.updateEventWorkerPayment(eventWorkerId, isPaid, amountPaid, tipAmount)
                     },
                     onRevokeShiftPayment = { shiftWorkerId ->
                         viewModel.revokeShiftPayment(shiftWorkerId)
@@ -639,8 +641,14 @@ fun WorkerTrackingApp() {
                     onRemoveWorker = { eventWorker ->
                         viewModel.removeWorkerFromEvent(eventWorker)
                     },
-                    onMarkAsPaid = { eventWorkerId ->
-                        viewModel.markEventWorkerAsPaid(eventWorkerId)
+                    onUpdatePayment = { eventWorkerId, isPaid, amountPaid, tipAmount ->
+                        viewModel.updateEventWorkerPayment(eventWorkerId, isPaid, amountPaid, tipAmount)
+                    },
+                    onUpdateReferencePayment = { eventWorkerId, isPaid, amountPaid, tipAmount ->
+                        viewModel.updateEventWorkerReferencePayment(eventWorkerId, isPaid, amountPaid, tipAmount)
+                    },
+                    onUpdateWorker = { eventWorker ->
+                        viewModel.updateWorkerInEvent(eventWorker)
                     }
                 )
             }

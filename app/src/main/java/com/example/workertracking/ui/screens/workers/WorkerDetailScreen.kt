@@ -21,6 +21,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +32,9 @@ import com.example.workertracking.data.entity.Project
 import com.example.workertracking.data.entity.Event
 import com.example.workertracking.data.entity.UnpaidShiftWorkerInfo
 import com.example.workertracking.data.entity.UnpaidEventWorkerInfo
+import com.example.workertracking.data.entity.EventWorker
+import com.example.workertracking.ui.components.PaymentDialog
+import com.example.workertracking.ui.components.EditPaymentDialog
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -60,6 +64,7 @@ fun WorkerDetailScreen(
     onViewPhotos: () -> Unit = {},
     onMarkShiftAsPaid: (Long) -> Unit = {},
     onMarkEventAsPaid: (Long) -> Unit = {},
+    onUpdateEventPayment: (Long, Boolean, Double, Double) -> Unit = { _, _, _, _ -> },
     onRevokeShiftPayment: (Long) -> Unit = {},
     onRevokeEventPayment: (Long) -> Unit = {},
     onMarkAllAsPaid: () -> Unit = {},
@@ -70,6 +75,12 @@ fun WorkerDetailScreen(
 ) {
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
+    
+    // Dialog States
+    var showPaymentDialog by remember { mutableStateOf<EventWorker?>(null) }
+    var showEditPaymentDialog by remember { mutableStateOf<EventWorker?>(null) }
+    var paymentDialogTotalDue by remember { mutableStateOf(0.0) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -256,16 +267,25 @@ fun WorkerDetailScreen(
                                     )
                                     
                                     unpaidEvents.forEach { unpaidEvent ->
+                                        val amount = if (unpaidEvent.eventWorker.isHourlyRate) {
+                                            unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
+                                        } else {
+                                            unpaidEvent.eventWorker.payRate
+                                        }
                                         WorkerDebtCard(
                                             type = "event",
                                             projectName = unpaidEvent.eventName,
                                             date = unpaidEvent.eventDate,
-                                            amount = if (unpaidEvent.eventWorker.isHourlyRate) {
-                                                unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
-                                            } else {
-                                                unpaidEvent.eventWorker.payRate
+                                            amount = amount,
+                                            onMarkAsPaid = { 
+                                                paymentDialogTotalDue = amount
+                                                if (unpaidEvent.eventWorker.amountPaid > 0) {
+                                                    showEditPaymentDialog = unpaidEvent.eventWorker
+                                                } else {
+                                                    showPaymentDialog = unpaidEvent.eventWorker
+                                                }
                                             },
-                                            onMarkAsPaid = { onMarkEventAsPaid(unpaidEvent.eventWorker.id) }
+                                            partialAmount = if (unpaidEvent.eventWorker.amountPaid > 0) unpaidEvent.eventWorker.amountPaid else null
                                         )
                                     }
                                 }
@@ -296,7 +316,6 @@ fun WorkerDetailScreen(
                 }
                 
                 // Reference payments owed TO this worker section
-                // Filter to check if there are actual reference payments with amounts > 0
                 val hasReferenceShiftsWithPayment = unpaidReferenceShifts.any { unpaidShift ->
                     (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours > 0
                 }
@@ -331,11 +350,9 @@ fun WorkerDetailScreen(
                                 )
                                 
                                 if (unpaidReferenceShifts.isNotEmpty()) {
-                                    // Filter out shifts with zero reference payment
                                     val shiftsWithPayment = unpaidReferenceShifts.filter { unpaidShift ->
                                         (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours > 0
                                     }
-                                    
                                     if (shiftsWithPayment.isNotEmpty()) {
                                         Text(
                                             text = "משמרות בהפניה",
@@ -343,7 +360,6 @@ fun WorkerDetailScreen(
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSecondaryContainer
                                         )
-                                        
                                         shiftsWithPayment.forEach { unpaidShift ->
                                             WorkerDebtCard(
                                                 type = "reference_shift",
@@ -358,11 +374,9 @@ fun WorkerDetailScreen(
                                 }
                                 
                                 if (unpaidReferenceEvents.isNotEmpty()) {
-                                    // Filter out events with zero reference payment
                                     val eventsWithPayment = unpaidReferenceEvents.filter { unpaidEvent ->
                                         (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours > 0
                                     }
-                                    
                                     if (eventsWithPayment.isNotEmpty()) {
                                         Text(
                                             text = "אירועים בהפניה",
@@ -370,7 +384,6 @@ fun WorkerDetailScreen(
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSecondaryContainer
                                         )
-                                        
                                         eventsWithPayment.forEach { unpaidEvent ->
                                             WorkerDebtCard(
                                                 type = "reference_event",
@@ -415,7 +428,6 @@ fun WorkerDetailScreen(
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.secondary
                                     )
-                                    
                                     paidShifts.forEach { paidShift ->
                                         WorkerPaidCard(
                                             type = "shift",
@@ -438,23 +450,27 @@ fun WorkerDetailScreen(
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.secondary
                                     )
-                                    
                                     paidEvents.forEach { paidEvent ->
+                                        val amount = if (paidEvent.eventWorker.isHourlyRate) {
+                                            paidEvent.eventWorker.hours * paidEvent.eventWorker.payRate
+                                        } else {
+                                            paidEvent.eventWorker.payRate
+                                        }
                                         WorkerPaidCard(
                                             type = "event",
                                             projectName = paidEvent.eventName,
                                             date = paidEvent.eventDate,
-                                            amount = if (paidEvent.eventWorker.isHourlyRate) {
-                                                paidEvent.eventWorker.hours * paidEvent.eventWorker.payRate
-                                            } else {
-                                                paidEvent.eventWorker.payRate
-                                            },
-                                            onRevokePayment = { onRevokeEventPayment(paidEvent.eventWorker.id) }
+                                            amount = amount,
+                                            onRevokePayment = { onRevokeEventPayment(paidEvent.eventWorker.id) },
+                                            // Add Edit support
+                                            onEditPayment = {
+                                                paymentDialogTotalDue = amount
+                                                showEditPaymentDialog = paidEvent.eventWorker
+                                            }
                                         )
                                     }
                                 }
-
-                                // Show empty state if no paid items
+                                
                                 if (paidShifts.isEmpty() && paidEvents.isEmpty()) {
                                     Text(
                                         text = "אין פריטים ששולמו עדיין",
@@ -531,7 +547,6 @@ fun WorkerDetailScreen(
                 
                 // Work History section
                 if (allShifts.isNotEmpty() || allEvents.isNotEmpty()) {
-                    
                     // All shifts history
                     if (allShifts.isNotEmpty()) {
                         item {
@@ -542,7 +557,6 @@ fun WorkerDetailScreen(
                                 modifier = Modifier.padding(top = 8.dp)
                             )
                         }
-                        
                         items(allShifts) { shiftInfo ->
                             WorkerHistoryCard(
                                 type = "shift",
@@ -571,20 +585,30 @@ fun WorkerDetailScreen(
                                 modifier = Modifier.padding(top = 8.dp)
                             )
                         }
-                        
                         items(allEvents) { eventInfo ->
+                            val amount = (if (eventInfo.eventWorker.isHourlyRate) {
+                                eventInfo.eventWorker.hours * eventInfo.eventWorker.payRate
+                            } else {
+                                eventInfo.eventWorker.payRate
+                            }) + ((eventInfo.eventWorker.referencePayRate ?: 0.0) * eventInfo.eventWorker.hours)
+                            
                             WorkerHistoryCard(
                                 type = "event",
                                 projectName = eventInfo.eventName,
                                 date = eventInfo.eventDate,
-                                amount = (if (eventInfo.eventWorker.isHourlyRate) {
-                                    eventInfo.eventWorker.hours * eventInfo.eventWorker.payRate
-                                } else {
-                                    eventInfo.eventWorker.payRate
-                                }) + ((eventInfo.eventWorker.referencePayRate ?: 0.0) * eventInfo.eventWorker.hours),
+                                amount = amount,
                                 isPaid = eventInfo.eventWorker.isPaid,
                                 onMarkAsPaid = if (!eventInfo.eventWorker.isPaid) {
-                                    { onMarkEventAsPaid(eventInfo.eventWorker.id) }
+                                    { 
+                                        paymentDialogTotalDue = amount
+                                        showPaymentDialog = eventInfo.eventWorker
+                                    }
+                                } else null,
+                                onEditPayment = if (eventInfo.eventWorker.isPaid || eventInfo.eventWorker.amountPaid > 0) {
+                                    {
+                                        paymentDialogTotalDue = amount
+                                        showEditPaymentDialog = eventInfo.eventWorker
+                                    }
                                 } else null
                             )
                         }
@@ -613,6 +637,33 @@ fun WorkerDetailScreen(
                 )
             }
         }
+    }
+    
+    // Payment Dialogs
+    if (showPaymentDialog != null) {
+        PaymentDialog(
+            totalAmount = paymentDialogTotalDue,
+            onConfirm = { isFullPayment, amount, tip ->
+                val amountToPay = if (isFullPayment) paymentDialogTotalDue else amount
+                onUpdateEventPayment(showPaymentDialog!!.id, isFullPayment, amountToPay, tip)
+                showPaymentDialog = null
+            },
+            onDismiss = { showPaymentDialog = null }
+        )
+    }
+
+    if (showEditPaymentDialog != null) {
+        EditPaymentDialog(
+            currentPaidAmount = showEditPaymentDialog!!.amountPaid,
+            currentTipAmount = showEditPaymentDialog!!.tipAmount,
+            totalDue = paymentDialogTotalDue,
+            isPaid = showEditPaymentDialog!!.isPaid,
+            onConfirm = { isPaid, amount, tip ->
+                onUpdateEventPayment(showEditPaymentDialog!!.id, isPaid, amount, tip)
+                showEditPaymentDialog = null
+            },
+            onDismiss = { showEditPaymentDialog = null }
+        )
     }
     
     // Delete confirmation dialog
@@ -655,7 +706,8 @@ private fun WorkerDebtCard(
     date: Long,
     amount: Double,
     onMarkAsPaid: () -> Unit,
-    isReference: Boolean = false
+    isReference: Boolean = false,
+    partialAmount: Double? = null
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
@@ -692,6 +744,16 @@ private fun WorkerDebtCard(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.error
                 )
+                
+                if (partialAmount != null) {
+                    Text(
+                        text = "שולם: ₪${String.format("%.2f", partialAmount)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFFFA000),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                
                 FilledTonalButton(
                     onClick = onMarkAsPaid,
                     modifier = Modifier.padding(top = 4.dp)
@@ -703,7 +765,7 @@ private fun WorkerDebtCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = stringResource(R.string.mark_as_paid),
+                        text = if (partialAmount != null) "השלם תשלום" else stringResource(R.string.mark_as_paid),
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
@@ -718,7 +780,8 @@ private fun WorkerPaidCard(
     projectName: String,
     date: Long,
     amount: Double,
-    onRevokePayment: () -> Unit
+    onRevokePayment: () -> Unit,
+    onEditPayment: (() -> Unit)? = null
 ) {
     var showRevokeDialog by remember { mutableStateOf(false) }
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -762,20 +825,39 @@ private fun WorkerPaidCard(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
-                OutlinedButton(
-                    onClick = { showRevokeDialog = true },
-                    modifier = Modifier.padding(top = 4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = stringResource(R.string.revoke_payment),
-                        style = MaterialTheme.typography.labelSmall
-                    )
+                
+                if (onEditPayment != null) {
+                    OutlinedButton(
+                        onClick = onEditPayment,
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "ערוך",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = { showRevokeDialog = true },
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.revoke_payment),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
                 }
             }
         }
@@ -802,6 +884,99 @@ private fun WorkerPaidCard(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun WorkerHistoryCard(
+    type: String,
+    projectName: String,
+    date: Long,
+    amount: Double,
+    isPaid: Boolean,
+    onMarkAsPaid: (() -> Unit)? = null,
+    onEditPayment: (() -> Unit)? = null
+) {
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isPaid) {
+                MaterialTheme.colorScheme.surfaceVariant
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = projectName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = dateFormat.format(Date(date)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (isPaid) {
+                    Text(
+                        text = stringResource(R.string.paid),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "₪${String.format("%.2f", amount)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isPaid) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.error
+                    }
+                )
+                if (!isPaid && onMarkAsPaid != null) {
+                    FilledTonalButton(
+                        onClick = onMarkAsPaid,
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.mark_as_paid),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                } else if (onEditPayment != null) {
+                    // Allow editing history item if it is an event (which supports it)
+                    TextButton(
+                        onClick = onEditPayment,
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        Text(
+                            text = "ערוך",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -970,85 +1145,4 @@ fun DateRangePickerDialog(
             )
         }
     )
-}
-
-@Composable
-private fun WorkerHistoryCard(
-    type: String,
-    projectName: String,
-    date: Long,
-    amount: Double,
-    isPaid: Boolean,
-    onMarkAsPaid: (() -> Unit)? = null
-) {
-    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isPaid) {
-                MaterialTheme.colorScheme.surfaceVariant
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = projectName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = dateFormat.format(Date(date)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (isPaid) {
-                    Text(
-                        text = stringResource(R.string.paid),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-            
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "₪${String.format("%.2f", amount)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isPaid) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.error
-                    }
-                )
-                if (!isPaid && onMarkAsPaid != null) {
-                    FilledTonalButton(
-                        onClick = onMarkAsPaid,
-                        modifier = Modifier.padding(top = 4.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = stringResource(R.string.mark_as_paid),
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
-                }
-            }
-        }
-    }
 }

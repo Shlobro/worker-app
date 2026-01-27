@@ -12,7 +12,9 @@
       "Bash(gradlew.bat lint:*)",
       "Bash(gradlew.bat compileDebugKotlin:*)",
       "Bash(find:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(dir:*)",
+      "Bash(xargs basename:*)"
     ],
     "deny": [],
     "ask": [],

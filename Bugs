@@ -1,0 +1,502 @@
+Junior Dev CL review:
+
+🐛 COMPREHENSIVE CODE REVIEW - BUG REPORT
+
+  Critical Bugs
+
+  1. Reference Worker Circular Dependency Risk
+
+  Location: Worker.kt:12-17
+  - Severity: CRITICAL
+  - Description: The Worker entity has a self-referencing foreign key (referenceId) with
+  onDelete = ForeignKey.SET_NULL. There's no validation to prevent circular references
+  (e.g., Worker A references Worker B, and Worker B references Worker A).
+  - Impact: Could cause infinite loops in payment calculations, especially in
+  WorkerRepository.kt:283-298 where it queries workers by reference.
+  - Evidence: No validation exists in the codebase to check for circular reference
+  chains.
+
+  2. Payment Calculation Inconsistency in Event Workers
+
+  Location: WorkerRepository.kt:48-59 vs EventWorkerDao.kt:37-49
+  - Severity: CRITICAL
+  - Description: When calculating unpaid amounts for event workers:
+    - WorkerRepository (line 57): totalCost - eventInfo.eventWorker.amountPaid
+    - EventWorkerDao (line 44): Includes tipAmount + referenceTipAmount but
+  WorkerRepository doesn't account for tips in the calculation
+  - Impact: Incorrect debt calculations. Tips are included in total cost but not
+  subtracted when calculating remaining debt.
+  - Code:
+  // WorkerRepository.kt:49-58
+  val cost = if (eventInfo.eventWorker.isHourlyRate) {
+      eventInfo.eventWorker.hours * eventInfo.eventWorker.payRate
+  } else {
+      eventInfo.eventWorker.payRate
+  }
+  val ref = (eventInfo.eventWorker.referencePayRate ?: 0.0) * eventInfo.eventWorker.hours
+  val totalCost = cost + ref
+  totalCost - eventInfo.eventWorker.amountPaid  // ❌ Missing tipAmount!
+
+  3. Reference Payment Not Subtracted in Event Owed Calculation
+
+  Location: WorkerRepository.kt:65-67
+  - Severity: CRITICAL
+  - Description: Reference payment owed calculation doesn't subtract referenceAmountPaid
+  and referenceTipAmount:
+  val totalRefCost = (event.eventWorker.referencePayRate ?: 0.0) *
+  event.eventWorker.hours
+  if (event.eventWorker.isReferencePaid) 0.0 else totalRefCost -
+  event.eventWorker.referenceAmountPaid
+  This logic is correct, BUT in line 206 of WorkerDetailViewModel.kt, the same
+  calculation is done but tips are not included:
+  val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) *
+  unpaidEvent.eventWorker.hours
+  - Impact: Reference workers are shown owed more than they should be.
+
+  4. Missing Reference Payment Subtraction in Total Payments Calculation
+
+  Location: WorkerRepository.kt:86-94
+  - Severity: CRITICAL
+  - Description: getTotalPaymentsOwed() calculates total unpaid amounts but doesn't
+  subtract referenceAmountPaid or referenceTipAmount for reference workers:
+  val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) *
+  unpaidEvent.eventWorker.hours
+  workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid  // ❌ Missing
+  referenceAmountPaid!
+
+  5. Coroutine Scope Misuse in ViewModel
+
+  Location: EventDetailViewModel.kt:62-67 and WorkerDetailViewModel.kt:109-114
+  - Severity: HIGH
+  - Description: Launching new coroutines inside viewModelScope.launch blocks:
+  private suspend fun loadAllWorkers() {
+      viewModelScope.launch {  // ❌ Already inside viewModelScope.launch from loadEvent!
+          workerRepository.getAllWorkers().collect { workers ->
+              _allWorkers.value = workers
+          }
+      }
+  }
+  - Impact: Creates nested coroutine scopes unnecessarily. The loadAllWorkers() is called
+   from loadEvent() which is already inside viewModelScope.launch. This can cause memory
+  leaks as the Flow collection never completes.
+
+  6. Flow Collection Never Cancelled
+
+  Location: EventDetailViewModel.kt:72-82, WorkerDetailViewModel.kt:111-113,
+  WorkerDetailViewModel.kt:125-127
+  - Severity: HIGH
+  - Description: Multiple .collect { } calls on Flows without proper lifecycle
+  management:
+  eventRepository.getWorkersForEvent(eventId).collect { eventWorkers ->
+      // This collect runs forever!
+  }
+  - Impact: Memory leaks. These collectors continue running even after the screen is
+  destroyed because they're not cancelled.
+
+  Major Bugs
+
+  7. Duplicate Worker Assignment Not Prevented
+
+  Location: EventDetailScreen.kt:636, AddWorkerDialog usage
+  - Severity: MAJOR
+  - Description: When adding workers to events/shifts, there's filtering in the UI (line
+  66-69) but no database-level constraint preventing duplicate assignments.
+  - Impact: Same worker can be added twice to the same event/shift if the dialog is
+  opened twice before data refreshes.
+
+  8. Date Range Filter Inclusivity Issue
+
+  Location: WorkerRepository.kt:219-220
+  - Severity: MAJOR
+  - Description: Date filtering uses >= and <= which includes timestamps:
+  shiftDate >= startDate && shiftDate <= endDate
+  - Impact: If endDate is selected as "January 15, 2024", it's stored as "January 15,
+  2024 00:00:00", so shifts later that day won't be included. Should add 24 hours to
+  endDate or use date-only comparison.
+
+  9. Migration Chaining Risk
+
+  Location: WorkerTrackingDatabase.kt:286
+  - Severity: MAJOR
+  - Description: All 19 migrations must be present and in order. If a user skips versions
+   (e.g., v5 → v20), all intermediate migrations run.
+  - Issue: Missing destructive migration strategy. If any migration fails, the app
+  crashes with no fallback.
+  - Recommendation: Add .fallbackToDestructiveMigration() for non-production or implement
+   comprehensive migration testing.
+
+  10. EventWorker Hours Default Value Mismatch
+
+  Location: EventDetailScreen.kt:636
+  - Severity: MAJOR
+  - Description: When adding a worker to an event, hours are set from
+  event.hours.toDoubleOrNull() ?: 0.0, but event.hours is a String that could be empty or
+   invalid.
+  - Impact: Workers could be added with 0 hours, causing NaN or incorrect payment
+  calculations.
+
+  11. Total Cost Calculation Doesn't Match UI Display
+
+  Location: EventDetailScreen.kt:294-302 vs EventWorkerDao.kt:37-49
+  - Severity: MAJOR
+  - Description:
+    - UI calculates: workerPayment + referencePayment (excludes tips)
+    - DAO calculates: workerPayment + tipAmount + referencePayment + referenceTipAmount
+  (includes tips)
+  - Impact: The "Total Cost" shown in Financial Summary doesn't match individual worker
+  payments displayed below it.
+
+  12. Payment Dialog Doesn't Validate Against Total
+
+  Location: WorkerDetailScreen.kt:646-648
+  - Severity: MAJOR
+  - Description: When making a partial payment, there's no validation that amountPaid +
+  currentAmountPaid <= totalDue.
+  - Impact: Users can pay more than owed, causing negative balances.
+
+  Medium Bugs
+
+  13. Locale Hardcoded to Hebrew
+
+  Location: Multiple files use Locale("he", "IL")
+  - Severity: MEDIUM
+  - Description: Currency formatting is hardcoded to Hebrew locale instead of using
+  device locale.
+  - Impact: Users in other countries see Hebrew currency formatting.
+  - Example: SharedComponents.kt (if exists) or any formatCurrency calls.
+
+  14. NULL Safety Issue in Worker Query
+
+  Location: WorkerDao.kt:30-40
+  - Severity: MEDIUM
+  - Description: getTotalOwedToWorker can return null from the SQL query, but repository
+  doesn't handle null:
+  suspend fun getTotalOwedToWorker(workerId: Long): Double {
+      // No null check before using the value
+  }
+  - Impact: NPE if the SUM returns null (when there are no rows).
+
+  15. Date Picker State Not Preserved
+
+  Location: WorkerDetailScreen.kt:1069-1071
+  - Severity: MEDIUM
+  - Description: DatePickerState is recreated each recomposition. If dialog is dismissed
+  and reopened, previous selection is lost during the flow.
+  - Impact: Poor UX when selecting date ranges.
+
+  16. Navigation State Loss on Dashboard
+
+  Location: MainActivity.kt:135-142
+  - Severity: MEDIUM
+  - Description: Dashboard navigation clears entire backstack with popUpTo(0) { inclusive
+   = true }:
+  navController.navigate(Screen.Dashboard.route) {
+      popUpTo(0) { inclusive = true }
+  }
+  - Impact: If user navigates Dashboard → Worker → Project → Dashboard, they can't go
+  back to Project. This might be intentional but seems harsh.
+
+  17. ShiftWorker Payment Status Not Granular
+
+  Location: ShiftWorker entity (not shown but inferred from DAO)
+  - Severity: MEDIUM
+  - Description: Unlike EventWorker which has isPaid, amountPaid, tipAmount, the
+  ShiftWorker only has isPaid boolean.
+  - Impact: Shifts can't support partial payments or tips, causing feature inconsistency.
+
+  18. Missing Index on Foreign Keys
+
+  Location: All entity files
+  - Severity: MEDIUM
+  - Description: None of the entities define indices for foreign key columns (workerId,
+  shiftId, eventId, projectId, employerId).
+  - Impact: Slow queries when joining tables, especially getWorkersByEvent,
+  getUnpaidShiftWorkers, etc.
+  - Fix: Add @Index annotations like:
+  @Entity(
+      tableName = "shift_workers",
+      indices = [Index("shiftId"), Index("workerId")],
+      foreignKeys = [...]
+  )
+
+  Minor Bugs
+
+  19. Inconsistent Error Handling
+
+  Location: All ViewModels
+  - Severity: MINOR
+  - Description: All ViewModels have empty catch blocks:
+  } catch (e: Exception) {
+      // Handle error silently or add error state if needed
+  }
+  - Impact: Errors are silently swallowed. Users have no feedback when operations fail.
+
+  20. String Concatenation for SQL
+
+  Location: Multiple DAO files
+  - Severity: MINOR
+  - Description: While Room handles SQL injection, the multi-line SQL strings are hard to
+   maintain and test.
+  - Impact: Maintenance difficulty, potential for typos.
+
+  21. Magic Numbers in UI
+
+  Location: Throughout UI files
+  - Severity: MINOR
+  - Description: Hardcoded colors like Color(0xFF4CAF50), Color(0xFFF44336) instead of
+  theme colors.
+  - Impact: Dark mode might not work correctly; inconsistent theming.
+
+  22. Unused Parameters
+
+  Location: EventDetailScreen.kt:42
+  - Severity: MINOR
+  - Description: Some parameters have default empty lambdas but are always provided,
+  making defaults unnecessary:
+  onEditEvent: () -> Unit = {},  // Always provided in actual usage
+
+  23. Resource String Not Used
+
+  Location: EventDetailScreen.kt:401, WorkerDetailScreen.kt:94
+  - Severity: MINOR
+  - Description: Some strings are hardcoded Hebrew text instead of using string
+  resources:
+  "עובדים מפנים:"  // Should be stringResource(R.string.reference_workers)
+  - Impact: Can't be localized or changed without code changes.
+
+  24. Missing Content Descriptions
+
+  Location: EventDetailScreen.kt:401, WorkerDetailScreen.kt:402
+  - Severity: MINOR (Accessibility issue)
+  - Description: Some icons have hardcoded English content descriptions or "Edit Worker"
+  instead of using string resources.
+  - Impact: Accessibility for screen readers is compromised.
+
+  Potential Bugs (Need Verification)
+
+  25. Date Type Conversion
+
+  Location: WorkerRepository.kt:217, 236
+  - Severity: Needs verification
+  - Description: Date(shift.shiftDate) - if shiftDate is stored as Long (millis), this
+  creates a Date. But if it's already a Date, this would fail.
+  - Need to verify: What type is shiftDate in UnpaidShiftWorkerInfo?
+
+  26. Worker Deletion Cascade
+
+  Location: Worker.kt:16
+  - Severity: Needs verification
+  - Description: When a worker is deleted, all their ShiftWorker and EventWorker records
+  cascade delete due to foreign key constraints.
+  - Question: Is this intentional? Should historical data be preserved?
+
+  27. Reference Worker Commission on Fixed Amount
+
+  Location: WorkerRepository.kt:265, EventDetailScreen.kt:299-301
+  - Severity: Logic question
+  - Description: Reference payments are always calculated as referencePayRate * hours,
+  even when the main worker is paid a fixed amount (not hourly).
+  - Question: Should reference workers still get hourly commission when the referred
+  worker got a fixed payment?
+
+  ---
+  Summary Statistics
+  ┌───────────┬────────────────────────────────┐
+  │ Severity  │             Count              │
+  ├───────────┼────────────────────────────────┤
+  │ Critical  │ 6 bugs                         │
+  ├───────────┼────────────────────────────────┤
+  │ High      │ 0 bugs (grouped into Critical) │
+  ├───────────┼────────────────────────────────┤
+  │ Major     │ 8 bugs                         │
+  ├───────────┼────────────────────────────────┤
+  │ Medium    │ 6 bugs                         │
+  ├───────────┼────────────────────────────────┤
+  │ Minor     │ 5 bugs                         │
+  ├───────────┼────────────────────────────────┤
+  │ Potential │ 3 items                        │
+  └───────────┴────────────────────────────────┘
+  Total: 28 identified issues
+
+  ---
+  Recommendations Priority Order
+
+  1. Fix payment calculation inconsistencies (Bugs #2, #3, #4) - Critical data integrity
+  2. Add circular reference validation (Bug #1) - Prevent data corruption
+  3. Fix coroutine and Flow leaks (Bugs #5, #6) - Memory stability
+  4. Add database indices (Bug #18) - Performance
+  5. Implement proper error handling (Bug #19) - User experience
+  6. Add migration fallback (Bug #9) - Crash prevention
+  7. Fix date range filter (Bug #8) - Feature correctness
+  8. Add duplicate assignment prevention (Bug #7) - Data integrity
+  9. Remaining minor issues as time permits
+
+  This codebase is generally well-structured but has critical calculation bugs in the
+  payment system that need immediate attention.
+
+
+
+  Junior Dev CO review:
+
+  Findings
+
+    - Critical: employer profit/income/expense queries will over-count because projects,
+      events, project_income, shifts, shift_workers, and event_workers are all joined in
+      one query, creating cross-product duplication of sums. app/src/main/java/com/example/
+      workertracking/data/dao/EmployerDao.kt:27
+    - Critical: reference-payment tracking for events is inconsistent; reference debt is
+      filtered via getUnpaidEventWorkers() (isPaid) and Money Owed marks reference payments
+      with markEventAsPaid, so reference payments can disappear or be marked incorrectly
+      without touching isReferencePaid. app/src/main/java/com/example/workertracking/
+      repository/WorkerRepository.kt:292, app/src/main/java/com/example/workertracking/ui/
+      screens/MoneyOwedScreen.kt:181, app/src/main/java/com/example/workertracking/ui/
+      viewmodel/MoneyOwedViewModel.kt:104
+    - High: worker detail never shows project history because projects are hardcoded to
+      empty with a TODO. app/src/main/java/com/example/workertracking/ui/viewmodel/
+      WorkerDetailViewModel.kt:117
+    - High: project costs omit reference pay, so project profit is under‑reported whenever
+      referencePayRate is used. app/src/main/java/com/example/workertracking/data/dao/
+      ShiftDao.kt:28, app/src/main/java/com/example/workertracking/ui/viewmodel/
+      DashboardViewModel.kt:205
+    - High: dashboard date filter ignores project income and still uses all‑time income, so
+      filtered totals/profit are incorrect. app/src/main/java/com/example/workertracking/
+      ui/viewmodel/DashboardViewModel.kt:128
+    - High: Add Event allows saving with blank/invalid hours; later, workers inherit
+      event.hours.toDoubleOrNull() ?: 0.0, producing 0‑hour assignments and zero costs.
+      app/src/main/java/com/example/workertracking/ui/screens/events/AddEventScreen.kt:357,
+      app/src/main/java/com/example/workertracking/ui/screens/events/
+      EventDetailScreen.kt:635
+    - Medium: time input validation accepts invalid 3‑digit minute values (e.g., “299”) and
+      save only checks length, so invalid times can be persisted. app/src/main/java/com/
+      example/workertracking/ui/screens/shifts/AddShiftScreen.kt:227, app/src/main/java/
+      com/example/workertracking/ui/screens/shifts/EditShiftScreen.kt:235, app/src/main/
+      java/com/example/workertracking/ui/screens/events/AddEventScreen.kt:221
+    - Medium: money‑owed totals ignore tips and partial payments in multiple places and
+      sometimes include reference pay in direct worker debt, so totals can be wrong. app/
+      src/main/java/com/example/workertracking/ui/viewmodel/MoneyOwedViewModel.kt:58, app/
+      src/main/java/com/example/workertracking/repository/WorkerRepository.kt:32
+    - Medium: worker “earnings” includes reference payments (paid to another worker),
+      inflating totals. app/src/main/java/com/example/workertracking/repository/
+      WorkerRepository.kt:251
+    - Low: WorkerDao.getTotalOwedToWorker treats fixed event payments as hourly (hours *
+      payRate). app/src/main/java/com/example/workertracking/data/dao/WorkerDao.kt:30
+    - Low: repeated reloads start new Flow collectors without cancellation (Dashboard
+      periodic refresh, EventDetail load, ShiftDetail load), risking leaks/duplicate work.
+      app/src/main/java/com/example/workertracking/ui/viewmodel/DashboardViewModel.kt:72,
+      app/src/main/java/com/example/workertracking/ui/viewmodel/EventDetailViewModel.kt:48,
+      app/src/main/java/com/example/workertracking/ui/viewmodel/ShiftDetailViewModel.kt:39
+    - Low: Add/Edit Shift/Income screens use a hardcoded project name placeholder. app/src/
+      main/java/com/example/workertracking/MainActivity.kt:711, app/src/main/java/com/
+      example/workertracking/MainActivity.kt:749, app/src/main/java/com/example/
+      workertracking/MainActivity.kt:829
+
+    Open questions / assumptions
+
+    - I assumed tips are part of “amount owed” and should be included in debt totals; if
+      tips are informational only, the calculations should be adjusted to reflect that.
+    - I assumed reference payments are meant to be tracked independently (via
+      isReferencePaid); if not, the data model likely needs simplification.
+
+    No code changes made.
+
+    Testing gaps: I didn’t run or inspect tests; I don’t see unit coverage for payment
+    math, date filtering, or time validation.
+
+    If you want fixes, I can propose a patch. Suggested next steps:
+
+    1. Normalize payment math in one place (include tips/partials/reference) and update all
+       views to use it.
+    2. Rewrite employer aggregates with subqueries/CTEs to avoid join duplication.
+    3. Tighten time/hour validation and require event hours before saving.
+
+
+
+      Junior Dev GE review:'
+
+
+      I have completed the code review and identified several critical bugs and architectural
+        issues. I will now compile a detailed report summarizing these findings, including the
+        "Hidden Manager Debt" logic bug, the ignored fixed price setting, the N+1 query
+        performance issue, the incorrect DAO calculation, and the architectural smell in
+        MoneyOwedViewModel.
+
+        Code Review Report for WorkerTracking App
+
+        1. Critical Logic Bugs
+
+        A. Hidden Manager Debt (Data Loss Risk)
+        Location: app/src/main/java/com/example/workertracking/repository/WorkerRepository.kt &
+        EventWorkerDao.kt
+        Description:
+        The application tracks "Reference Payments" (manager commissions) on the same
+        EventWorker record as the worker's payment.
+        The getUnpaidReferenceEventsForWorker function filters events using:
+         1 val allUnpaidEvents = eventWorkerDao.getUnpaidEventWorkers()
+        EventWorkerDao.getUnpaidEventWorkers executes:
+
+         1 SELECT ... WHERE ew.isPaid = 0
+        Impact: If the worker is paid (isPaid = 1), the record is excluded from this list.
+        Consequently, if the manager (reference) has not been paid yet, their debt disappears
+        from the "Unpaid" list. The manager will never see that money.
+
+        B. Fixed Price Setting Ignored
+        Location:
+        app/src/main/java/com/example/workertracking/ui/viewmodel/AddWorkerToEventViewModel.kt
+        Description:
+        The addWorkerToEvent function forces isHourlyRate = true, ignoring the intention of the
+        UI/User.
+         1 val eventWorker = EventWorker(
+         2     ...
+         3     isHourlyRate = true, // Default to hourly rate for backward compatibility
+         4     ...
+         5 )
+        Impact: Users cannot create fixed-price event entries. Even if they select "Fixed
+        Price" in the UI (which EventDetailScreen supports), it is saved as "Hourly" in the
+        database.
+
+        C. Incorrect Debt Calculation in DAO
+        Location: app/src/main/java/com/example/workertracking/data/dao/WorkerDao.kt
+        Description:
+        The getTotalOwedToWorker query unconditionally multiplies hours by rate:
+         1 COALESCE(SUM(ew.hours * ew.payRate), 0)
+        Impact: If a worker does manage to get a fixed rate (e.g., via direct DB edit or future
+        fix), this query will calculate an astronomically high debt (e.g., Fixed $500 * 5 hours
+        = $2500 owed). Note: This method appears currently unused by the UI but is a dangerous
+        "landmine".
+
+        2. Performance Issues
+
+        Severe N+1 Query Problem
+        Location: app/src/main/java/com/example/workertracking/ui/viewmodel/WorkersViewModel.kt
+        Description:
+        Inside loadWorkersWithDebt, the code iterates over every worker and performs 4 separate
+        blocking database calls per worker to calculate debt.
+         1 workerList.map { worker ->
+         2     val unpaidShifts = workerRepository.getUnpaidShiftWorkersForWorker(worker.id)
+         3     ...
+         4 }
+        Furthermore, inside WorkerRepository.getUnpaidReferenceShiftsForWorker, it iterates
+        over all unpaid shifts and performs a generic getWorkerById query for each shift to
+        check the reference ID.
+        Impact: Loading the worker list with 50 workers and 100 shifts could result in >500
+        database queries, causing severe UI lag or ANRs (Application Not Responding).
+
+        3. Architectural Issues
+
+        Manual Event Bus in DI Container
+        Location:
+        app/src/main/java/com/example/workertracking/ui/viewmodel/MoneyOwedViewModel.kt
+        Description:
+        The ViewModel calls appContainer.triggerDashboardRefresh().
+        Impact: This tightly couples ViewModels to the DI container and suggests a lack of
+        Reactive data observation (Room Flows should automatically trigger UI updates without
+        manual refreshes).
+
+        4. Recommendations
+         1. Refactor Payment Model: Split EventWorker into EventWorker (worker pay) and
+            EventCommission (manager pay) tables to decouple their "Paid" statuses.
+         2. Fix ViewModel Logic: Update AddWorkerToEventViewModel to accept isHourlyRate.
+         3. Optimize Queries: Create a specific DAO query for WorkerWithDebt that aggregates
+            totals in SQL, avoiding the N+1 loop.
+         4. Use Room Flows: Rely on Flow<List<Data>> from Room to automatically update the UI
+            when data changes, removing the need for manual refresh triggers.
