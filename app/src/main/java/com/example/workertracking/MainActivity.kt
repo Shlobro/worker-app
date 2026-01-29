@@ -434,7 +434,6 @@ fun WorkerTrackingApp() {
                     showPaidItems = showPaidItems,
                     dateFilter = dateFilter,
                     onNavigateBack = {
-                        application.container.triggerDashboardRefresh()
                         navController.popBackStack()
                     },
                     onEditWorker = {
@@ -442,7 +441,6 @@ fun WorkerTrackingApp() {
                     },
                     onDeleteWorker = {
                         viewModel.deleteWorker()
-                        application.container.triggerDashboardRefresh()
                         navController.popBackStack()
                     },
                     onViewPhotos = {
@@ -452,7 +450,6 @@ fun WorkerTrackingApp() {
                     },
                     onMarkShiftAsPaid = { shiftWorkerId ->
                         viewModel.markShiftAsPaid(shiftWorkerId)
-                        application.container.triggerDashboardRefresh()
                     },
                     onMarkEventAsPaid = { eventWorkerId ->
                         viewModel.markEventAsPaid(eventWorkerId)
@@ -462,15 +459,12 @@ fun WorkerTrackingApp() {
                     },
                     onRevokeShiftPayment = { shiftWorkerId ->
                         viewModel.revokeShiftPayment(shiftWorkerId)
-                        application.container.triggerDashboardRefresh()
                     },
                     onRevokeEventPayment = { eventWorkerId ->
                         viewModel.revokeEventPayment(eventWorkerId)
-                        application.container.triggerDashboardRefresh()
                     },
                     onMarkAllAsPaid = {
                         viewModel.markAllAsPaid()
-                        application.container.triggerDashboardRefresh()
                     },
                     onToggleShowPaidItems = {
                         viewModel.toggleShowPaidItems()
@@ -563,7 +557,6 @@ fun WorkerTrackingApp() {
                     },
                     onDeleteEvent = { event ->
                         viewModel.deleteEvent(event)
-                        application.container.triggerDashboardRefresh()
                     }
                 )
             }
@@ -801,8 +794,11 @@ fun WorkerTrackingApp() {
                         onUpdateWorkerPayment = { shiftWorker ->
                             viewModel.updateWorkerPayment(shiftWorker)
                         },
-                        onMarkAsPaid = { shiftWorkerId ->
-                            viewModel.markShiftWorkerAsPaid(shiftWorkerId)
+                        onUpdatePayment = { shiftWorkerId, isPaid, amount, tip ->
+                            viewModel.updateShiftWorkerPayment(shiftWorkerId, isPaid, amount, tip)
+                        },
+                        onUpdateReferencePayment = { shiftWorkerId, isPaid, amount, tip ->
+                            viewModel.updateShiftWorkerReferencePayment(shiftWorkerId, isPaid, amount, tip)
                         }
                     )
                 }
@@ -908,12 +904,11 @@ fun WorkerTrackingApp() {
             }
             composable(Screen.MoneyOwed.route) {
                 val viewModel: MoneyOwedViewModel = viewModel {
-                    MoneyOwedViewModel.Factory(application.container.workerRepository, application.container).create(MoneyOwedViewModel::class.java)
+                    MoneyOwedViewModel.Factory(application.container.workerRepository).create(MoneyOwedViewModel::class.java)
                 }
-                
+
                 MoneyOwedScreen(
                     onNavigateBack = {
-                        application.container.triggerDashboardRefresh()
                         navController.popBackStack()
                     },
                     onWorkerClick = { workerId ->

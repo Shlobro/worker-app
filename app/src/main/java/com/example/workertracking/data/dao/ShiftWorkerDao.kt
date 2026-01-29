@@ -51,8 +51,14 @@ interface ShiftWorkerDao {
     @Query("UPDATE shift_workers SET isPaid = :isPaid WHERE id = :id")
     suspend fun updatePaymentStatus(id: Long, isPaid: Boolean)
 
+    @Query("UPDATE shift_workers SET isPaid = :isPaid, amountPaid = :amountPaid, tipAmount = :tipAmount WHERE id = :id")
+    suspend fun updatePaymentDetails(id: Long, isPaid: Boolean, amountPaid: Double, tipAmount: Double)
+
+    @Query("UPDATE shift_workers SET isReferencePaid = :isReferencePaid, referenceAmountPaid = :referenceAmountPaid, referenceTipAmount = :referenceTipAmount WHERE id = :id")
+    suspend fun updateReferencePaymentDetails(id: Long, isReferencePaid: Boolean, referenceAmountPaid: Double, referenceTipAmount: Double)
+
     @Query("""
-        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime 
+        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime
         FROM shift_workers sw
         INNER JOIN workers w ON sw.workerId = w.id
         INNER JOIN shifts s ON sw.shiftId = s.id
@@ -61,6 +67,17 @@ interface ShiftWorkerDao {
         ORDER BY s.date DESC
     """)
     suspend fun getUnpaidShiftWorkers(): List<UnpaidShiftWorkerInfo>
+
+    @Query("""
+        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime
+        FROM shift_workers sw
+        INNER JOIN workers w ON sw.workerId = w.id
+        INNER JOIN shifts s ON sw.shiftId = s.id
+        INNER JOIN projects p ON s.projectId = p.id
+        WHERE sw.isPaid = 0
+        ORDER BY s.date DESC
+    """)
+    fun getUnpaidShiftWorkersFlow(): Flow<List<UnpaidShiftWorkerInfo>>
 
     @Query("""
         SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime 
@@ -96,7 +113,7 @@ interface ShiftWorkerDao {
     suspend fun getPaidShiftWorkersForWorker(workerId: Long): List<UnpaidShiftWorkerInfo>
 
     @Query("""
-        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime 
+        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime
         FROM shift_workers sw
         INNER JOIN workers w ON sw.workerId = w.id
         INNER JOIN shifts s ON sw.shiftId = s.id
@@ -105,4 +122,15 @@ interface ShiftWorkerDao {
         ORDER BY s.date DESC
     """)
     suspend fun getAllPaidShiftWorkers(): List<UnpaidShiftWorkerInfo>
+
+    @Query("""
+        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime
+        FROM shift_workers sw
+        INNER JOIN workers w ON sw.workerId = w.id
+        INNER JOIN shifts s ON sw.shiftId = s.id
+        INNER JOIN projects p ON s.projectId = p.id
+        WHERE sw.isPaid = 1
+        ORDER BY s.date DESC
+    """)
+    fun getAllPaidShiftWorkersFlow(): Flow<List<UnpaidShiftWorkerInfo>>
 }

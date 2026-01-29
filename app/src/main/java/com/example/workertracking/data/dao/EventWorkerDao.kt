@@ -49,7 +49,7 @@ interface EventWorkerDao {
     suspend fun getTotalCostForEvent(eventId: Long): Double?
 
     @Query("""
-        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName 
+        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName
         FROM event_workers ew
         INNER JOIN workers w ON ew.workerId = w.id
         INNER JOIN events e ON ew.eventId = e.id
@@ -57,6 +57,16 @@ interface EventWorkerDao {
         ORDER BY e.date DESC
     """)
     suspend fun getUnpaidEventWorkers(): List<UnpaidEventWorkerInfo>
+
+    @Query("""
+        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName
+        FROM event_workers ew
+        INNER JOIN workers w ON ew.workerId = w.id
+        INNER JOIN events e ON ew.eventId = e.id
+        WHERE ew.isPaid = 0
+        ORDER BY e.date DESC
+    """)
+    fun getUnpaidEventWorkersFlow(): Flow<List<UnpaidEventWorkerInfo>>
 
     @Query("""
         SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName 
@@ -97,6 +107,16 @@ interface EventWorkerDao {
         ORDER BY e.date DESC
     """)
     suspend fun getAllPaidEventWorkers(): List<UnpaidEventWorkerInfo>
+
+    @Query("""
+        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName
+        FROM event_workers ew
+        INNER JOIN workers w ON ew.workerId = w.id
+        INNER JOIN events e ON ew.eventId = e.id
+        WHERE ew.isPaid = 1
+        ORDER BY e.date DESC
+    """)
+    fun getAllPaidEventWorkersFlow(): Flow<List<UnpaidEventWorkerInfo>>
 
     @Query("""
         SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName

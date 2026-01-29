@@ -24,23 +24,7 @@ MAJOR BUGS
 LOW PRIORITY / MINOR BUGS
 ==========================
 
-14. ShiftWorker Payment Status Not Granular
-    Location: ShiftWorker entity (inferred)
-    Problem: ShiftWorker only has isPaid boolean, unlike EventWorker which has amountPaid,
-             tipAmount, etc.
-    Impact: Shifts don't support partial payments or tips
-    Fix Required:
-    - Add amountPaid, tipAmount fields to ShiftWorker
-    - Add referenceAmountPaid, referenceTipAmount fields
-    - Update UI to support partial shift payments
-
-15. Manual Event Bus Instead of Reactive Data
-    Location: MoneyOwedViewModel.kt calling appContainer.triggerDashboardRefresh()
-    Problem: ViewModels manually trigger refreshes instead of using Room Flows
-    Impact: Tight coupling to DI container, unnecessary complexity
-    Fix Required:
-    - Use Flow<List<Data>> from Room to auto-update UI
-    - Remove manual refresh triggers
+(No low priority bugs remaining)
 
 
 POTENTIAL ISSUES - VERIFY

@@ -15,7 +15,8 @@
       "Bash(grep:*)",
       "Bash(dir:*)",
       "Bash(xargs basename:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(./gradlew.bat:*)"
     ],
     "deny": [],
     "ask": [],

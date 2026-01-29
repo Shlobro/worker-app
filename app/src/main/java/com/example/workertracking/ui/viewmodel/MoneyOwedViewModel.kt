@@ -6,10 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.workertracking.data.entity.UnpaidShiftWorkerInfo
 import com.example.workertracking.data.entity.UnpaidEventWorkerInfo
 import com.example.workertracking.repository.WorkerRepository
-import com.example.workertracking.di.AppContainer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 data class MoneyOwedUiState(
@@ -23,68 +23,75 @@ data class MoneyOwedUiState(
 )
 
 class MoneyOwedViewModel(
-    private val workerRepository: WorkerRepository,
-    private val appContainer: AppContainer
+    private val workerRepository: WorkerRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MoneyOwedUiState())
     val uiState: StateFlow<MoneyOwedUiState> = _uiState.asStateFlow()
 
+    private val _showPaidItems = MutableStateFlow(false)
+
     init {
-        loadData()
+        observeData()
     }
 
-    private fun loadData() {
+    private fun observeData() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            
-            try {
-                val unpaidShifts = workerRepository.getUnpaidShiftWorkers()
-                val unpaidEvents = workerRepository.getUnpaidEventWorkers()
-                
-                // Load paid items if needed
-                val paidShifts = if (_uiState.value.showPaidItems) {
-                    workerRepository.getAllPaidShiftWorkers()
-                } else {
-                    emptyList()
-                }
-                
-                val paidEvents = if (_uiState.value.showPaidItems) {
-                    workerRepository.getAllPaidEventWorkers()
-                } else {
-                    emptyList()
-                }
-                
-                val shiftTotal = unpaidShifts.sumOf { unpaidShift ->
-                    val workerPayment = if (unpaidShift.shiftWorker.isHourlyRate) {
-                        unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
+            combine(
+                workerRepository.getUnpaidShiftWorkersFlow(),
+                workerRepository.getUnpaidEventWorkersFlow(),
+                _showPaidItems
+            ) { unpaidShifts, unpaidEvents, showPaid ->
+                Triple(unpaidShifts, unpaidEvents, showPaid)
+            }.collect { (unpaidShifts, unpaidEvents, showPaid) ->
+                _uiState.value = _uiState.value.copy(isLoading = true)
+
+                try {
+                    // Load paid items if needed
+                    val paidShifts = if (showPaid) {
+                        workerRepository.getAllPaidShiftWorkers()
                     } else {
-                        unpaidShift.shiftWorker.payRate
+                        emptyList()
                     }
-                    val referencePayment = (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours
-                    workerPayment + referencePayment
-                }
-                
-                val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
-                    val workerPayment = if (unpaidEvent.eventWorker.isHourlyRate) {
-                        unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
+
+                    val paidEvents = if (showPaid) {
+                        workerRepository.getAllPaidEventWorkers()
                     } else {
-                        unpaidEvent.eventWorker.payRate
+                        emptyList()
                     }
-                    val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours
-                    workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid - unpaidEvent.eventWorker.tipAmount - unpaidEvent.eventWorker.referenceAmountPaid - unpaidEvent.eventWorker.referenceTipAmount
+
+                    val shiftTotal = unpaidShifts.sumOf { unpaidShift ->
+                        val workerPayment = if (unpaidShift.shiftWorker.isHourlyRate) {
+                            unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
+                        } else {
+                            unpaidShift.shiftWorker.payRate
+                        }
+                        val referencePayment = (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours
+                        workerPayment + referencePayment
+                    }
+
+                    val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
+                        val workerPayment = if (unpaidEvent.eventWorker.isHourlyRate) {
+                            unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
+                        } else {
+                            unpaidEvent.eventWorker.payRate
+                        }
+                        val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours
+                        workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid - unpaidEvent.eventWorker.tipAmount - unpaidEvent.eventWorker.referenceAmountPaid - unpaidEvent.eventWorker.referenceTipAmount
+                    }
+
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        unpaidShifts = unpaidShifts,
+                        unpaidEvents = unpaidEvents,
+                        paidShifts = paidShifts,
+                        paidEvents = paidEvents,
+                        totalDebt = shiftTotal + eventTotal,
+                        showPaidItems = showPaid
+                    )
+                } catch (e: Exception) {
+                    _uiState.value = _uiState.value.copy(isLoading = false)
                 }
-                
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    unpaidShifts = unpaidShifts,
-                    unpaidEvents = unpaidEvents,
-                    paidShifts = paidShifts,
-                    paidEvents = paidEvents,
-                    totalDebt = shiftTotal + eventTotal
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isLoading = false)
             }
         }
     }
@@ -93,8 +100,7 @@ class MoneyOwedViewModel(
         viewModelScope.launch {
             try {
                 workerRepository.markShiftWorkerAsPaid(shiftWorkerId)
-                loadData() // Refresh the data
-                appContainer.triggerDashboardRefresh() // Trigger dashboard refresh
+                // Room Flows will automatically update the UI
             } catch (e: Exception) {
                 // Handle error
             }
@@ -105,8 +111,7 @@ class MoneyOwedViewModel(
         viewModelScope.launch {
             try {
                 workerRepository.markEventWorkerAsPaid(eventWorkerId)
-                loadData() // Refresh the data
-                appContainer.triggerDashboardRefresh() // Trigger dashboard refresh
+                // Room Flows will automatically update the UI
             } catch (e: Exception) {
                 // Handle error
             }
@@ -117,8 +122,7 @@ class MoneyOwedViewModel(
         viewModelScope.launch {
             try {
                 workerRepository.revokeShiftWorkerPayment(shiftWorkerId)
-                loadData() // Refresh the data
-                appContainer.triggerDashboardRefresh() // Trigger dashboard refresh
+                // Room Flows will automatically update the UI
             } catch (e: Exception) {
                 // Handle error
             }
@@ -129,8 +133,7 @@ class MoneyOwedViewModel(
         viewModelScope.launch {
             try {
                 workerRepository.revokeEventWorkerPayment(eventWorkerId)
-                loadData() // Refresh the data
-                appContainer.triggerDashboardRefresh() // Trigger dashboard refresh
+                // Room Flows will automatically update the UI
             } catch (e: Exception) {
                 // Handle error
             }
@@ -138,20 +141,16 @@ class MoneyOwedViewModel(
     }
 
     fun toggleShowPaidItems() {
-        _uiState.value = _uiState.value.copy(
-            showPaidItems = !_uiState.value.showPaidItems
-        )
-        loadData() // Reload data to include/exclude paid items
+        _showPaidItems.value = !_showPaidItems.value
     }
 
     class Factory(
-        private val workerRepository: WorkerRepository,
-        private val appContainer: AppContainer
+        private val workerRepository: WorkerRepository
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(MoneyOwedViewModel::class.java)) {
-                return MoneyOwedViewModel(workerRepository, appContainer) as T
+                return MoneyOwedViewModel(workerRepository) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

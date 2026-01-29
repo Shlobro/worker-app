@@ -10,7 +10,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,8 +24,10 @@ import com.example.workertracking.data.entity.Shift
 import com.example.workertracking.data.entity.ShiftWorker
 import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.ui.components.AddWorkerDialog
+import com.example.workertracking.ui.components.EditPaymentDialog
+import com.example.workertracking.ui.components.PaymentDialog
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,11 +41,17 @@ fun ShiftDetailScreen(
     onAddWorkerToShift: (Long, Long, Boolean, Double, Double?) -> Unit,
     onRemoveWorkerFromShift: (Long, Long) -> Unit,
     onUpdateWorkerPayment: (ShiftWorker) -> Unit,
-    onMarkAsPaid: (Long) -> Unit = {} // shiftWorkerId
+    onUpdatePayment: (Long, Boolean, Double, Double) -> Unit = { _, _, _, _ -> }, // shiftWorkerId, isPaid, amount, tip
+    onUpdateReferencePayment: (Long, Boolean, Double, Double) -> Unit = { _, _, _, _ -> } // shiftWorkerId, isPaid, amount, tip
 ) {
     var showAddWorkerDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    var showPaymentDialog by remember { mutableStateOf<ShiftWorker?>(null) }
+    var showEditPaymentDialog by remember { mutableStateOf<ShiftWorker?>(null) }
+    var showReferencePaymentDialog by remember { mutableStateOf<ShiftWorker?>(null) }
+    var showReferenceEditPaymentDialog by remember { mutableStateOf<ShiftWorker?>(null) }
+    var paymentDialogTotalDue by remember { mutableStateOf(0.0) }
     
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
@@ -139,7 +146,7 @@ fun ShiftDetailScreen(
                         Text("שעת סיום: ${shift.endTime}")
                         Text("מספר שעות: ${shift.hours}")
                         Text(
-                            text = "סכום כולל: ${String.format("%.2f", totalCost)} ${stringResource(R.string.currency_symbol)}",
+                            text = "סכום כולל: ${String.format(Locale.getDefault(), "%.2f", totalCost)} ${stringResource(R.string.currency_symbol)}",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -200,7 +207,14 @@ fun ShiftDetailScreen(
                         shiftHours = shift.hours,
                         onRemove = { onRemoveWorkerFromShift(shift.id, worker.id) },
                         onUpdate = onUpdateWorkerPayment,
-                        onMarkAsPaid = { onMarkAsPaid(shiftWorker.id) }
+                        onPaymentClick = { totalDue ->
+                            paymentDialogTotalDue = totalDue
+                            showPaymentDialog = shiftWorker
+                        },
+                        onEditPaymentClick = { totalDue ->
+                            paymentDialogTotalDue = totalDue
+                            showEditPaymentDialog = shiftWorker
+                        }
                     )
                 }
             }
@@ -211,22 +225,13 @@ fun ShiftDetailScreen(
                     worker.referenceId?.let { referenceId ->
                         val referenceWorker = allWorkers.find { it.id == referenceId }
                         referenceWorker?.let { refWorker ->
-                            Triple(refWorker, refRate, refRate * shift.hours)
+                            // Return: (ReferenceWorker, ShiftWorker record, Commission Amount)
+                            Triple(refWorker, shiftWorker, refRate * shift.hours)
                         }
                     }
                 }
-            }.groupBy { it.first.id }.map { (referenceWorkerId, payments) ->
-                val refWorker = payments.first().first
-                val totalRefPayment = payments.sumOf { it.third }
-                // Find all workers that this reference worker referenced in this shift
-                val referencedWorkerNames = shiftWorkers.mapNotNull { (shiftWorker, worker) ->
-                    if (worker.referenceId == referenceWorkerId && shiftWorker.referencePayRate != null) {
-                        worker.name
-                    } else null
-                }
-                Triple(refWorker, totalRefPayment, referencedWorkerNames)
             }
-            
+
             if (referencePayments.isNotEmpty()) {
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -236,12 +241,22 @@ fun ShiftDetailScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                
-                items(referencePayments) { (referenceWorker, totalPayment, referencedWorkerNames) ->
+
+                items(referencePayments) { (referenceWorker, shiftWorker, commissionAmount) ->
+                    val referredWorker = allWorkers.find { it.id == shiftWorker.workerId }
                     ReferenceWorkerCard(
                         worker = referenceWorker,
-                        totalPayment = totalPayment,
-                        referencedWorkerNames = referencedWorkerNames
+                        referredWorkerName = referredWorker?.name,
+                        shiftWorker = shiftWorker,
+                        commissionAmount = commissionAmount,
+                        onReferencePaymentClick = {
+                            paymentDialogTotalDue = commissionAmount
+                            showReferencePaymentDialog = shiftWorker
+                        },
+                        onReferenceEditPaymentClick = {
+                            paymentDialogTotalDue = commissionAmount
+                            showReferenceEditPaymentDialog = shiftWorker
+                        }
                     )
                 }
             }
@@ -300,6 +315,57 @@ fun ShiftDetailScreen(
             }
         )
     }
+
+    // Payment Dialogs
+    if (showPaymentDialog != null) {
+        PaymentDialog(
+            totalAmount = paymentDialogTotalDue,
+            onConfirm = { isFullPayment, amountToPay, tip ->
+                onUpdatePayment(showPaymentDialog!!.id, isFullPayment, amountToPay, tip)
+                showPaymentDialog = null
+            },
+            onDismiss = { showPaymentDialog = null }
+        )
+    }
+
+    if (showEditPaymentDialog != null) {
+        EditPaymentDialog(
+            currentPaidAmount = showEditPaymentDialog!!.amountPaid,
+            currentTipAmount = showEditPaymentDialog!!.tipAmount,
+            totalDue = paymentDialogTotalDue,
+            isPaid = showEditPaymentDialog!!.isPaid,
+            onConfirm = { isPaid, amount, tip ->
+                onUpdatePayment(showEditPaymentDialog!!.id, isPaid, amount, tip)
+                showEditPaymentDialog = null
+            },
+            onDismiss = { showEditPaymentDialog = null }
+        )
+    }
+
+    if (showReferencePaymentDialog != null) {
+        PaymentDialog(
+            totalAmount = paymentDialogTotalDue,
+            onConfirm = { isFullPayment, amountToPay, tip ->
+                onUpdateReferencePayment(showReferencePaymentDialog!!.id, isFullPayment, amountToPay, tip)
+                showReferencePaymentDialog = null
+            },
+            onDismiss = { showReferencePaymentDialog = null }
+        )
+    }
+
+    if (showReferenceEditPaymentDialog != null) {
+        EditPaymentDialog(
+            currentPaidAmount = showReferenceEditPaymentDialog!!.referenceAmountPaid,
+            currentTipAmount = showReferenceEditPaymentDialog!!.referenceTipAmount,
+            totalDue = paymentDialogTotalDue,
+            isPaid = showReferenceEditPaymentDialog!!.isReferencePaid,
+            onConfirm = { isPaid, amount, tip ->
+                onUpdateReferencePayment(showReferenceEditPaymentDialog!!.id, isPaid, amount, tip)
+                showReferenceEditPaymentDialog = null
+            },
+            onDismiss = { showReferenceEditPaymentDialog = null }
+        )
+    }
 }
 
 @Composable
@@ -310,7 +376,8 @@ private fun ShiftWorkerCard(
     shiftHours: Double,
     onRemove: () -> Unit,
     onUpdate: (ShiftWorker) -> Unit,
-    onMarkAsPaid: () -> Unit
+    onPaymentClick: (Double) -> Unit,
+    onEditPaymentClick: (Double) -> Unit
 ) {
     var showEditDialog by remember { mutableStateOf(false) }
     
@@ -350,45 +417,59 @@ private fun ShiftWorkerCard(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 
-                
-                val referencePayment = shiftWorker.referencePayRate?.let { refRate ->
-                    refRate * shiftHours
-                } ?: 0.0
-                
                 Column(
                     horizontalAlignment = Alignment.End
                 ) {
                     Text(
-                        text = "סכום: ${String.format("%.2f", totalPayment)} ש\"ח",
+                        text = "סכום: ${String.format(Locale.getDefault(), "%.2f", totalPayment)} ש\"ח",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
+
+                    // Payment Status Display
                     if (shiftWorker.isPaid) {
-                        Text(
-                            text = stringResource(R.string.paid),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF4CAF50),
-                            fontWeight = FontWeight.Medium
-                        )
+                        TextButton(
+                            onClick = { onEditPaymentClick(totalPayment) },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.paid),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF4CAF50),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    } else if (shiftWorker.amountPaid > 0) {
+                        // Partial Payment
+                        TextButton(
+                            onClick = { onEditPaymentClick(totalPayment) },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text(
+                                text = "שולם חלקית: ₪${String.format(Locale.getDefault(), "%.2f", shiftWorker.amountPaid)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFFFFA000),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    } else {
+                        TextButton(
+                            onClick = { onPaymentClick(totalPayment) },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.mark_as_paid),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                     }
                 }
             }
-            
+
             Row {
-                if (!shiftWorker.isPaid) {
-                    TextButton(
-                        onClick = onMarkAsPaid,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color(0xFF4CAF50)
-                        )
-                    ) {
-                        Text(
-                            text = stringResource(R.string.mark_as_paid),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
                 TextButton(onClick = { showEditDialog = true }) {
                     Text("ערוך")
                 }
@@ -423,8 +504,11 @@ private fun ShiftWorkerCard(
 @Composable
 private fun ReferenceWorkerCard(
     worker: Worker,
-    totalPayment: Double,
-    referencedWorkerNames: List<String> = emptyList()
+    referredWorkerName: String?,
+    shiftWorker: ShiftWorker,
+    commissionAmount: Double,
+    onReferencePaymentClick: () -> Unit,
+    onReferenceEditPaymentClick: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -446,30 +530,65 @@ private fun ReferenceWorkerCard(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "טלפון: ${worker.phoneNumber}",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "עבור: ${referredWorkerName ?: "Unknown"}",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text(
-                    text = "עובד מפנה",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                if (referencedWorkerNames.isNotEmpty()) {
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
                     Text(
-                        text = "הפנה את: ${referencedWorkerNames.joinToString(", ")}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = "₪${String.format(Locale.getDefault(), "%.2f", commissionAmount)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.secondary
                     )
+
+                    if (shiftWorker.isReferencePaid) {
+                        TextButton(
+                            onClick = onReferenceEditPaymentClick,
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.paid),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF4CAF50),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    } else if (shiftWorker.referenceAmountPaid > 0) {
+                        TextButton(
+                            onClick = onReferenceEditPaymentClick,
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text(
+                                text = "שולם חלקית: ₪${String.format(Locale.getDefault(), "%.2f", shiftWorker.referenceAmountPaid)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFFFFA000),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    } else {
+                        TextButton(
+                            onClick = onReferencePaymentClick,
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = Color(0xFF4CAF50)
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.mark_as_paid),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
                 }
             }
-            
-            Text(
-                text = "סכום: ${String.format("%.2f", totalPayment)} ש\"ח",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.secondary
-            )
         }
     }
 }

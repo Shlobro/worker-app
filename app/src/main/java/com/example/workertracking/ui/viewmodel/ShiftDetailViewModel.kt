@@ -167,11 +167,23 @@ class ShiftDetailViewModel(
         }
     }
 
-    fun markShiftWorkerAsPaid(shiftWorkerId: Long) {
+    fun updateShiftWorkerPayment(shiftWorkerId: Long, isPaid: Boolean, amountPaid: Double, tipAmount: Double) {
         viewModelScope.launch {
             try {
-                workerRepository.markShiftWorkerAsPaid(shiftWorkerId)
-                // Refresh data to reflect payment status change
+                workerRepository.updateShiftWorkerPayment(shiftWorkerId, isPaid, amountPaid, tipAmount)
+                _shift.value?.let { shift ->
+                    loadShiftWorkers(shift.id)
+                }
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+
+    fun updateShiftWorkerReferencePayment(shiftWorkerId: Long, isReferencePaid: Boolean, referenceAmountPaid: Double, referenceTipAmount: Double) {
+        viewModelScope.launch {
+            try {
+                workerRepository.updateShiftWorkerReferencePayment(shiftWorkerId, isReferencePaid, referenceAmountPaid, referenceTipAmount)
                 _shift.value?.let { shift ->
                     loadShiftWorkers(shift.id)
                 }

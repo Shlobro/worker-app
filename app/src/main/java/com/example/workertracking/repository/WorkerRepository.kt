@@ -154,12 +154,12 @@ class WorkerRepository(
         return shiftTotal + eventTotal
     }
 
-    suspend fun getUnpaidShiftWorkers(): List<UnpaidShiftWorkerInfo> {
-        return shiftWorkerDao.getUnpaidShiftWorkers()
+    fun getUnpaidShiftWorkersFlow(): Flow<List<UnpaidShiftWorkerInfo>> {
+        return shiftWorkerDao.getUnpaidShiftWorkersFlow()
     }
 
-    suspend fun getUnpaidEventWorkers(): List<UnpaidEventWorkerInfo> {
-        return eventWorkerDao.getUnpaidEventWorkers()
+    fun getUnpaidEventWorkersFlow(): Flow<List<UnpaidEventWorkerInfo>> {
+        return eventWorkerDao.getUnpaidEventWorkersFlow()
     }
 
     suspend fun getUnpaidShiftWorkersForWorker(workerId: Long): List<UnpaidShiftWorkerInfo> {
@@ -184,6 +184,14 @@ class WorkerRepository(
 
     suspend fun updateEventWorkerReferencePayment(eventWorkerId: Long, isReferencePaid: Boolean, referenceAmountPaid: Double, referenceTipAmount: Double) {
         eventWorkerDao.updateReferencePaymentDetails(eventWorkerId, isReferencePaid, referenceAmountPaid, referenceTipAmount)
+    }
+
+    suspend fun updateShiftWorkerPayment(shiftWorkerId: Long, isPaid: Boolean, amountPaid: Double, tipAmount: Double) {
+        shiftWorkerDao.updatePaymentDetails(shiftWorkerId, isPaid, amountPaid, tipAmount)
+    }
+
+    suspend fun updateShiftWorkerReferencePayment(shiftWorkerId: Long, isReferencePaid: Boolean, referenceAmountPaid: Double, referenceTipAmount: Double) {
+        shiftWorkerDao.updateReferencePaymentDetails(shiftWorkerId, isReferencePaid, referenceAmountPaid, referenceTipAmount)
     }
 
     suspend fun updateEventWorker(eventWorker: com.example.workertracking.data.entity.EventWorker) {
