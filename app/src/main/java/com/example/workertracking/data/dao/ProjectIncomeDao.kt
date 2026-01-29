@@ -18,6 +18,9 @@ interface ProjectIncomeDao {
     @Query("SELECT SUM(amount * units) FROM project_income")
     suspend fun getTotalIncomeAllProjects(): Double?
 
+    @Query("SELECT SUM(amount * units) FROM project_income WHERE date >= :startDate AND date <= :endDate")
+    suspend fun getTotalIncomeInDateRange(startDate: Long, endDate: Long): Double?
+
     @Insert
     suspend fun insertIncome(income: ProjectIncome): Long
 

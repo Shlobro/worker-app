@@ -26,14 +26,6 @@ HIGH PRIORITY BUGS
 MAJOR BUGS
 ==========
 
-8. Dashboard Date Filter Ignores Project Income
-    Location: DashboardViewModel.kt:128
-    Problem: Date filtering applies to shifts/events but not project_income table
-    Impact: Filtered totals/profit are incorrect when date range selected
-    Fix Required:
-    - Apply date range filter to project_income queries
-    - Ensure all income/expense calculations respect date filter
-
 
 
 MEDIUM PRIORITY BUGS
@@ -158,7 +150,8 @@ PRIORITY ORDER
 
 1. Fix Circular Reference Validation (Bug #1) - Prevent infinite loops [COMPLETED]
 2. Fix Flow Memory Leaks (Bug #4) - Memory stability [COMPLETED]
-3. Remaining Major/Medium bugs as time permits
+3. Fix Dashboard Date Filter Ignores Project Income (Bug #8) - Data accuracy [COMPLETED]
+4. Remaining Major/Medium bugs as time permits
 
 
 ========================================

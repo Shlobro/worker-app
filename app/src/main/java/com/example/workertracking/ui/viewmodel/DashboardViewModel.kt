@@ -12,7 +12,6 @@ import com.example.workertracking.di.AppContainer
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
-import java.time.Instant
 import java.util.*
 import java.util.Calendar
 
@@ -26,19 +25,6 @@ data class DashboardUiState(
     val filteredStartDate: Date? = null,
     val filteredEndDate: Date? = null,
     val isLoading: Boolean = true
-)
-
-data class ProjectSummary(
-    val project: Project,
-    val totalIncome: Double,
-    val totalCosts: Double,
-    val profit: Double
-)
-
-data class EventSummary(
-    val event: Event,
-    val totalCosts: Double,
-    val profit: Double
 )
 
 class DashboardViewModel(
@@ -127,10 +113,10 @@ class DashboardViewModel(
 
     private fun calculateTotalIncome(): Flow<Double> = flow {
         val (startDate, endDate) = _dateFilter.value
-        
-        // Get project income
-        val projectIncome = projectRepository.getTotalProjectIncome()
-        
+
+        // Get project income with date filter applied
+        val projectIncome = projectRepository.getTotalProjectIncome(startDate, endDate)
+
         // Get event income
         val events = eventRepository.getAllEvents().first()
         val eventIncome = events
@@ -138,7 +124,7 @@ class DashboardViewModel(
                 isWithinDateRange(event.date, startDate, endDate)
             }
             .sumOf { it.income }
-        
+
         emit(projectIncome + eventIncome)
     }
 
@@ -200,32 +186,6 @@ class DashboardViewModel(
     
     fun refreshData() {
         loadDashboardData()
-    }
-
-    suspend fun getProjectSummaries(): List<ProjectSummary> {
-        val projects = projectRepository.getAllProjects().first()
-        return projects.map { project ->
-            val income = projectRepository.getTotalIncomeForProject(project.id)
-            val costs = shiftRepository.getTotalCostForProject(project.id) ?: 0.0
-            ProjectSummary(
-                project = project,
-                totalIncome = income,
-                totalCosts = costs,
-                profit = income - costs
-            )
-        }
-    }
-
-    suspend fun getEventSummaries(): List<EventSummary> {
-        val events = eventRepository.getAllEvents().first()
-        return events.map { event ->
-            val costs = eventRepository.getTotalEventCost(event.id) ?: 0.0
-            EventSummary(
-                event = event,
-                totalCosts = costs,
-                profit = event.income - costs
-            )
-        }
     }
 
     private fun isWithinDateRange(date: Date, startDate: Date?, endDate: Date?): Boolean {

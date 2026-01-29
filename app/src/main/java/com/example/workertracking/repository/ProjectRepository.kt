@@ -27,6 +27,13 @@ class ProjectRepository(
     suspend fun getTotalProjectIncome(): Double {
         return projectIncomeDao.getTotalIncomeAllProjects() ?: 0.0
     }
+
+    suspend fun getTotalProjectIncome(startDate: Date?, endDate: Date?): Double {
+        if (startDate == null || endDate == null) {
+            return getTotalProjectIncome()
+        }
+        return projectIncomeDao.getTotalIncomeInDateRange(startDate.time, endDate.time) ?: 0.0
+    }
     
     // Project Income methods
     fun getIncomesByProject(projectId: Long): Flow<List<ProjectIncome>> = 
