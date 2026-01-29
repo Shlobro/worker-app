@@ -48,7 +48,12 @@ interface EmployerDao {
                         CASE WHEN sw.isHourlyRate = 1
                              THEN sw.payRate * s.hours
                              ELSE sw.payRate
-                        END + COALESCE(s.hours * sw.referencePayRate, 0)
+                        END +
+                        CASE
+                            WHEN sw.referencePayRate IS NULL THEN 0
+                            WHEN sw.isReferenceHourlyRate = 1 THEN s.hours * sw.referencePayRate
+                            ELSE sw.referencePayRate
+                        END
                     )
                     FROM projects p
                     LEFT JOIN shifts s ON p.id = s.projectId
@@ -60,7 +65,12 @@ interface EmployerDao {
                         CASE WHEN ew.isHourlyRate = 1
                              THEN ew.hours * ew.payRate
                              ELSE ew.payRate
-                        END + COALESCE(ew.hours * ew.referencePayRate, 0)
+                        END +
+                        CASE
+                            WHEN ew.referencePayRate IS NULL THEN 0
+                            WHEN ew.isReferenceHourlyRate = 1 THEN ew.hours * ew.referencePayRate
+                            ELSE ew.referencePayRate
+                        END
                     )
                     FROM events e
                     LEFT JOIN event_workers ew ON e.id = ew.eventId
@@ -93,7 +103,12 @@ interface EmployerDao {
                     CASE WHEN sw.isHourlyRate = 1
                          THEN sw.payRate * s.hours
                          ELSE sw.payRate
-                    END + COALESCE(s.hours * sw.referencePayRate, 0)
+                    END +
+                    CASE
+                        WHEN sw.referencePayRate IS NULL THEN 0
+                        WHEN sw.isReferenceHourlyRate = 1 THEN s.hours * sw.referencePayRate
+                        ELSE sw.referencePayRate
+                    END
                 )
                 FROM projects p
                 LEFT JOIN shifts s ON p.id = s.projectId
@@ -105,7 +120,12 @@ interface EmployerDao {
                     CASE WHEN ew.isHourlyRate = 1
                          THEN ew.hours * ew.payRate
                          ELSE ew.payRate
-                    END + COALESCE(ew.hours * ew.referencePayRate, 0)
+                    END +
+                    CASE
+                        WHEN ew.referencePayRate IS NULL THEN 0
+                        WHEN ew.isReferenceHourlyRate = 1 THEN ew.hours * ew.referencePayRate
+                        ELSE ew.referencePayRate
+                    END
                 )
                 FROM events e
                 LEFT JOIN event_workers ew ON e.id = ew.eventId

@@ -85,7 +85,7 @@ interface WorkerDao {
         LEFT JOIN (
             SELECT
                 w2.referenceId as refWorkerId,
-                SUM(sw2.referencePayRate * s2.hours) as total,
+                SUM(CASE WHEN sw2.isReferenceHourlyRate = 1 THEN sw2.referencePayRate * s2.hours ELSE sw2.referencePayRate END) as total,
                 COUNT(*) as count
             FROM workers w2
             INNER JOIN shift_workers sw2 ON w2.id = sw2.workerId
@@ -96,7 +96,10 @@ interface WorkerDao {
         LEFT JOIN (
             SELECT
                 w3.referenceId as refWorkerId,
-                SUM((ew2.referencePayRate * ew2.hours) - ew2.referenceAmountPaid - ew2.referenceTipAmount) as total,
+                SUM(
+                    CASE WHEN ew2.isReferenceHourlyRate = 1 THEN ew2.referencePayRate * ew2.hours ELSE ew2.referencePayRate END
+                    - ew2.referenceAmountPaid - ew2.referenceTipAmount
+                ) as total,
                 COUNT(*) as count
             FROM workers w3
             INNER JOIN event_workers ew2 ON w3.id = ew2.workerId

@@ -29,15 +29,22 @@ object PaymentCalculator {
     /**
      * Calculate reference worker commission payment.
      *
-     * @param referencePayRate The commission rate per hour (null if no reference)
-     * @param hours Number of hours worked
+     * @param referencePayRate The commission rate (hourly rate or fixed amount, null if no reference)
+     * @param hours Number of hours worked (only used if isReferenceHourlyRate is true)
+     * @param isReferenceHourlyRate True if commission is hourly, false if fixed amount
      * @return Total reference commission amount
      */
     fun calculateReferencePayment(
         referencePayRate: Double?,
-        hours: Double
+        hours: Double,
+        isReferenceHourlyRate: Boolean = true
     ): Double {
-        return (referencePayRate ?: 0.0) * hours
+        if (referencePayRate == null) return 0.0
+        return if (isReferenceHourlyRate) {
+            referencePayRate * hours
+        } else {
+            referencePayRate
+        }
     }
 
     /**
@@ -46,17 +53,19 @@ object PaymentCalculator {
      * @param payRate The payment rate (hourly rate or fixed amount)
      * @param hours Number of hours worked
      * @param isHourlyRate True if payment is hourly, false if fixed amount
-     * @param referencePayRate The commission rate per hour (null if no reference)
+     * @param referencePayRate The commission rate (hourly rate or fixed amount, null if no reference)
+     * @param isReferenceHourlyRate True if commission is hourly, false if fixed amount
      * @return Total payment including worker payment and reference commission
      */
     fun calculateTotalPayment(
         payRate: Double,
         hours: Double,
         isHourlyRate: Boolean,
-        referencePayRate: Double? = null
+        referencePayRate: Double? = null,
+        isReferenceHourlyRate: Boolean = true
     ): Double {
         val workerPayment = calculateWorkerPayment(payRate, hours, isHourlyRate)
-        val referencePayment = calculateReferencePayment(referencePayRate, hours)
+        val referencePayment = calculateReferencePayment(referencePayRate, hours, isReferenceHourlyRate)
         return workerPayment + referencePayment
     }
 
@@ -98,7 +107,8 @@ object PaymentCalculator {
      * @param payRate The payment rate (hourly rate or fixed amount)
      * @param hours Number of hours worked
      * @param isHourlyRate True if payment is hourly, false if fixed amount
-     * @param referencePayRate The commission rate per hour (null if no reference)
+     * @param referencePayRate The commission rate (hourly rate or fixed amount, null if no reference)
+     * @param isReferenceHourlyRate True if commission is hourly, false if fixed amount
      * @param amountPaid Amount already paid to worker
      * @param tipAmount Tip amount already paid to worker
      * @param referenceAmountPaid Amount already paid to reference
@@ -110,13 +120,14 @@ object PaymentCalculator {
         hours: Double,
         isHourlyRate: Boolean,
         referencePayRate: Double? = null,
+        isReferenceHourlyRate: Boolean = true,
         amountPaid: Double = 0.0,
         tipAmount: Double = 0.0,
         referenceAmountPaid: Double = 0.0,
         referenceTipAmount: Double = 0.0
     ): Double {
         val workerPayment = calculateWorkerPayment(payRate, hours, isHourlyRate)
-        val referencePayment = calculateReferencePayment(referencePayRate, hours)
+        val referencePayment = calculateReferencePayment(referencePayRate, hours, isReferenceHourlyRate)
         val totalPayment = workerPayment + referencePayment
 
         return totalPayment - amountPaid - tipAmount - referenceAmountPaid - referenceTipAmount

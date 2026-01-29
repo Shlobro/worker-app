@@ -38,7 +38,7 @@ fun ShiftDetailScreen(
     onNavigateBack: () -> Unit,
     onEditShift: () -> Unit = {},
     onDeleteShift: () -> Unit = {},
-    onAddWorkerToShift: (Long, Long, Boolean, Double, Double?) -> Unit,
+    onAddWorkerToShift: (Long, Long, Boolean, Double, Double?, Boolean) -> Unit,
     onRemoveWorkerFromShift: (Long, Long) -> Unit,
     onUpdateWorkerPayment: (ShiftWorker) -> Unit,
     onUpdatePayment: (Long, Boolean, Double, Double) -> Unit = { _, _, _, _ -> }, // shiftWorkerId, isPaid, amount, tip
@@ -68,7 +68,7 @@ fun ShiftDetailScreen(
         }
         
         val referencePayment = shiftWorker.referencePayRate?.let { refRate ->
-            refRate * shift.hours // Reference payments are always hourly
+            if (shiftWorker.isReferenceHourlyRate) refRate * shift.hours else refRate
         } ?: 0.0
         
         workerPayment + referencePayment
@@ -226,7 +226,12 @@ fun ShiftDetailScreen(
                         val referenceWorker = allWorkers.find { it.id == referenceId }
                         referenceWorker?.let { refWorker ->
                             // Return: (ReferenceWorker, ShiftWorker record, Commission Amount)
-                            Triple(refWorker, shiftWorker, refRate * shift.hours)
+                            val commissionAmount = if (shiftWorker.isReferenceHourlyRate) {
+                                refRate * shift.hours
+                            } else {
+                                refRate // Fixed amount
+                            }
+                            Triple(refWorker, shiftWorker, commissionAmount)
                         }
                     }
                 }
@@ -273,8 +278,8 @@ fun ShiftDetailScreen(
                 showAddWorkerDialog = false
                 searchQuery = ""
             },
-            onAddWorker = { workerId, isHourly, payRate, refPayRate ->
-                onAddWorkerToShift(shift.id, workerId, isHourly, payRate, refPayRate)
+            onAddWorker = { workerId, isHourly, payRate, refPayRate, isRefHourly ->
+                onAddWorkerToShift(shift.id, workerId, isHourly, payRate, refPayRate, isRefHourly)
                 showAddWorkerDialog = false
                 searchQuery = ""
             },
@@ -604,6 +609,7 @@ private fun EditWorkerPaymentDialog(
     var isHourlyRate by remember { mutableStateOf(shiftWorker.isHourlyRate) }
     var payRate by remember { mutableStateOf(shiftWorker.payRate.toString()) }
     var referencePayRate by remember { mutableStateOf(shiftWorker.referencePayRate?.toString() ?: "") }
+    var isReferenceHourlyRate by remember { mutableStateOf(shiftWorker.isReferenceHourlyRate) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -649,11 +655,29 @@ private fun EditWorkerPaymentDialog(
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.secondary
                         )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            FilterChip(
+                                onClick = { isReferenceHourlyRate = true },
+                                label = { Text("שכר שעתי") },
+                                selected = isReferenceHourlyRate
+                            )
+                            FilterChip(
+                                onClick = { isReferenceHourlyRate = false },
+                                label = { Text("סכום קבוע") },
+                                selected = !isReferenceHourlyRate
+                            )
+                        }
                         OutlinedTextField(
                             value = referencePayRate,
                             onValueChange = { referencePayRate = it },
-                            label = { 
-                                Text("שכר שעתי לעובד מפנה (ש\"ח)")
+                            label = {
+                                Text(
+                                    if (isReferenceHourlyRate) "שכר שעתי לעובד מפנה (ש\"ח)"
+                                    else "סכום קבוע לעובד מפנה (ש\"ח)"
+                                )
                             },
                             modifier = Modifier.fillMaxWidth(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -671,13 +695,14 @@ private fun EditWorkerPaymentDialog(
                         referencePayRate.toDoubleOrNull()
                     } else null
                     
-                    if (rate != null && rate > 0 && 
+                    if (rate != null && rate > 0 &&
                         (worker.referenceId == null || refRate != null)) {
                         onUpdate(
                             shiftWorker.copy(
                                 isHourlyRate = isHourlyRate,
                                 payRate = rate,
-                                referencePayRate = refRate
+                                referencePayRate = refRate,
+                                isReferenceHourlyRate = isReferenceHourlyRate
                             )
                         )
                     }

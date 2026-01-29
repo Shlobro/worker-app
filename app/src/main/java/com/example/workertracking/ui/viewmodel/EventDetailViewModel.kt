@@ -127,7 +127,7 @@ class EventDetailViewModel(
         _deleteSuccess.value = false
     }
 
-    fun addWorkerToEvent(eventId: Long, workerId: Long, hours: Double, isHourlyRate: Boolean, payRate: Double, referencePayRate: Double? = null) {
+    fun addWorkerToEvent(eventId: Long, workerId: Long, hours: Double, isHourlyRate: Boolean, payRate: Double, referencePayRate: Double? = null, isReferenceHourlyRate: Boolean = true) {
         viewModelScope.launch {
             try {
                 val eventWorker = EventWorker(
@@ -136,7 +136,8 @@ class EventDetailViewModel(
                     hours = hours,
                     isHourlyRate = isHourlyRate,
                     payRate = payRate,
-                    referencePayRate = referencePayRate
+                    referencePayRate = referencePayRate,
+                    isReferenceHourlyRate = isReferenceHourlyRate
                 )
                 eventRepository.insertEventWorker(eventWorker)
                 loadEventWorkers(eventId)

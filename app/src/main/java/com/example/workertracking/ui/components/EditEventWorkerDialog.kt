@@ -11,6 +11,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.workertracking.data.entity.EventWorker
 import com.example.workertracking.data.entity.Worker
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,6 +25,7 @@ fun EditEventWorkerDialog(
     var isHourlyRate by remember { mutableStateOf(eventWorker.isHourlyRate) }
     var payRate by remember { mutableStateOf(eventWorker.payRate.toString()) }
     var referencePayRate by remember { mutableStateOf(eventWorker.referencePayRate?.toString() ?: "") }
+    var isReferenceHourlyRate by remember { mutableStateOf(eventWorker.isReferenceHourlyRate) }
     var hours by remember { mutableStateOf(eventWorker.hours.toString()) }
 
     AlertDialog(
@@ -83,11 +85,29 @@ fun EditEventWorkerDialog(
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.secondary
                     )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            onClick = { isReferenceHourlyRate = true },
+                            label = { Text("שכר שעתי") },
+                            selected = isReferenceHourlyRate
+                        )
+                        FilterChip(
+                            onClick = { isReferenceHourlyRate = false },
+                            label = { Text("סכום קבוע") },
+                            selected = !isReferenceHourlyRate
+                        )
+                    }
                     OutlinedTextField(
                         value = referencePayRate,
                         onValueChange = { referencePayRate = it },
                         label = {
-                            Text("שכר שעתי לעובד מפנה (ש\"ח)")
+                            Text(
+                                if (isReferenceHourlyRate) "שכר שעתי לעובד מפנה (ש\"ח)"
+                                else "סכום קבוע לעובד מפנה (ש\"ח)"
+                            )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -99,9 +119,10 @@ fun EditEventWorkerDialog(
                 val rate = payRate.toDoubleOrNull() ?: 0.0
                 val refRate = referencePayRate.toDoubleOrNull() ?: 0.0
                 val hoursVal = hours.toDoubleOrNull() ?: 0.0
-                
+
                 val workerPayment = if (!isHourlyRate) rate else rate * hoursVal
-                val totalPayment = workerPayment + (refRate * hoursVal)
+                val referencePayment = if (isReferenceHourlyRate) refRate * hoursVal else refRate
+                val totalPayment = workerPayment + referencePayment
                 
                 if (rate > 0 && hoursVal > 0) {
                     Card(
@@ -124,7 +145,7 @@ fun EditEventWorkerDialog(
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Text(
-                                text = "${String.format("%.2f", totalPayment)} ש\"ח",
+                                text = "${String.format(Locale.getDefault(), "%.2f", totalPayment)} ש\"ח",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -146,7 +167,8 @@ fun EditEventWorkerDialog(
                             isHourlyRate = isHourlyRate,
                             payRate = rate,
                             hours = hoursVal,
-                            referencePayRate = refRate
+                            referencePayRate = refRate,
+                            isReferenceHourlyRate = isReferenceHourlyRate
                         )
                         onConfirm(updatedEventWorker)
                     }

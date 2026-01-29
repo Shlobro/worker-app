@@ -30,10 +30,7 @@ LOW PRIORITY / MINOR BUGS
 POTENTIAL ISSUES - VERIFY
 ==========================
 
-18. Reference Worker Commission on Fixed Amount
-    Location: WorkerRepository.kt:265, EventDetailScreen.kt:299-301
-    Question: Should reference workers get hourly commission when referred worker got fixed payment?
-    Answer: Yes but there should also be an option to pay a comission a custom amount instead of hourly.
+(No potential issues remaining)
 
 
 ARCHITECTURE IMPROVEMENTS

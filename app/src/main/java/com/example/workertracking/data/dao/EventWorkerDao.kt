@@ -36,14 +36,18 @@ interface EventWorkerDao {
 
     @Query("""
         SELECT SUM(
-            CASE 
-                WHEN isHourlyRate = 1 THEN hours * payRate 
-                ELSE payRate 
-            END + 
+            CASE
+                WHEN isHourlyRate = 1 THEN hours * payRate
+                ELSE payRate
+            END +
             tipAmount +
-            COALESCE(hours * referencePayRate, 0.0) +
+            CASE
+                WHEN referencePayRate IS NULL THEN 0.0
+                WHEN isReferenceHourlyRate = 1 THEN hours * referencePayRate
+                ELSE referencePayRate
+            END +
             referenceTipAmount
-        ) 
+        )
         FROM event_workers WHERE eventId = :eventId
     """)
     suspend fun getTotalCostForEvent(eventId: Long): Double?

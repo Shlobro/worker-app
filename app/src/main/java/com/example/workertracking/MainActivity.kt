@@ -631,8 +631,8 @@ fun WorkerTrackingApp() {
                     onDeleteEvent = {
                         viewModel.deleteEvent()
                     },
-                    onAddWorkerToEvent = { eId, workerId, hours, isHourlyRate, payRate, referencePayRate ->
-                        viewModel.addWorkerToEvent(eId, workerId, hours, isHourlyRate, payRate, referencePayRate)
+                    onAddWorkerToEvent = { eId, workerId, hours, isHourlyRate, payRate, referencePayRate, isRefHourly ->
+                        viewModel.addWorkerToEvent(eId, workerId, hours, isHourlyRate, payRate, referencePayRate, isRefHourly)
                     },
                     onRemoveWorker = { eventWorker ->
                         viewModel.removeWorkerFromEvent(eventWorker)
@@ -785,8 +785,8 @@ fun WorkerTrackingApp() {
                             viewModel.deleteShift(shift!!)
                             navController.popBackStack()
                         },
-                        onAddWorkerToShift = { sId, wId, isHourly, payRate, referencePayRate ->
-                            viewModel.addWorkerToShift(sId, wId, isHourly, payRate, referencePayRate)
+                        onAddWorkerToShift = { sId, wId, isHourly, payRate, referencePayRate, isRefHourly ->
+                            viewModel.addWorkerToShift(sId, wId, isHourly, payRate, referencePayRate, isRefHourly)
                         },
                         onRemoveWorkerFromShift = { sId, wId ->
                             viewModel.removeWorkerFromShift(sId, wId)

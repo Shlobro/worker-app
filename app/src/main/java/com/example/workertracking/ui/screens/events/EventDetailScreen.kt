@@ -32,19 +32,19 @@ import java.util.Locale
 @Composable
 fun EventDetailScreen(
     event: Event?,
+    isLoading: Boolean,
+    onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
     eventWorkers: List<EventWorkerWithName> = emptyList(),
     allWorkers: List<Worker> = emptyList(),
     totalCost: Double = 0.0,
-    isLoading: Boolean,
-    onNavigateBack: () -> Unit,
     onEditEvent: () -> Unit = {},
     onDeleteEvent: () -> Unit = {},
-    onAddWorkerToEvent: (Long, Long, Double, Boolean, Double, Double?) -> Unit = { _, _, _, _, _, _ -> }, // eventId, workerId, hours, isHourlyRate, payRate, refPayRate
+    onAddWorkerToEvent: (Long, Long, Double, Boolean, Double, Double?, Boolean) -> Unit = { _, _, _, _, _, _, _ -> },
     onRemoveWorker: (EventWorker) -> Unit = {},
-    onUpdatePayment: (Long, Boolean, Double, Double) -> Unit = { _, _, _, _ -> }, // eventWorkerId, isPaid, amountPaid, tipAmount
-    onUpdateReferencePayment: (Long, Boolean, Double, Double) -> Unit = { _, _, _, _ -> }, // eventWorkerId, isPaid, amountPaid, tipAmount
-    onUpdateWorker: (EventWorker) -> Unit = {},
-    modifier: Modifier = Modifier
+    onUpdatePayment: (Long, Boolean, Double, Double) -> Unit = { _, _, _, _ -> },
+    onUpdateReferencePayment: (Long, Boolean, Double, Double) -> Unit = { _, _, _, _ -> },
+    onUpdateWorker: (EventWorker) -> Unit = {}
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showAddWorkerDialog by remember { mutableStateOf(false) }
@@ -212,7 +212,7 @@ fun EventDetailScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "₪${String.format("%.2f", eventData.income)}",
+                                    text = "₪${String.format(Locale.getDefault(), "%.2f", eventData.income)}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = Color(0xFF4CAF50)
                                 )
@@ -228,7 +228,7 @@ fun EventDetailScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "₪${String.format("%.2f", totalCost)}",
+                                    text = "₪${String.format(Locale.getDefault(), "%.2f", totalCost)}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = Color(0xFFF44336)
                                 )
@@ -246,7 +246,7 @@ fun EventDetailScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "₪${String.format("%.2f", kotlin.math.abs(profit))}",
+                                    text = "₪${String.format(Locale.getDefault(), "%.2f", kotlin.math.abs(profit))}",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = profitColor
@@ -290,23 +290,13 @@ fun EventDetailScreen(
                                 )
                             } else {
                                 eventWorkers.forEach { workerWithName ->
-                                    // Calculate total payment including reference payment
+                                    // Calculate worker payment
                                     val workerPayment = if (workerWithName.eventWorker.isHourlyRate) {
                                         workerWithName.eventWorker.hours * workerWithName.eventWorker.payRate
                                     } else {
                                         workerWithName.eventWorker.payRate
                                     }
-                                    val referencePayment = workerWithName.eventWorker.referencePayRate?.let { refRate ->
-                                        workerWithName.eventWorker.hours * refRate
-                                    } ?: 0.0
-                                    val totalPayment = workerPayment + referencePayment
-                                    
-                                    // Find reference worker if exists
-                                    val worker = allWorkers.find { it.id == workerWithName.eventWorker.workerId }
-                                    val referenceWorker = worker?.referenceId?.let { refId ->
-                                        allWorkers.find { it.id == refId }
-                                    }
-                                    
+
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -337,7 +327,7 @@ fun EventDetailScreen(
                                                 horizontalAlignment = Alignment.End
                                             ) {
                                                 Text(
-                                                    text = "₪${String.format("%.2f", workerPayment)}",
+                                                    text = "₪${String.format(Locale.getDefault(), "%.2f", workerPayment)}",
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     fontWeight = FontWeight.Medium
                                                 )
@@ -368,7 +358,7 @@ fun EventDetailScreen(
                                                         contentPadding = PaddingValues(0.dp)
                                                     ) {
                                                         Text(
-                                                            text = "שולם חלקית: ₪${String.format("%.2f", workerWithName.eventWorker.amountPaid)}",
+                                                            text = "שולם חלקית: ₪${String.format(Locale.getDefault(), "%.2f", workerWithName.eventWorker.amountPaid)}",
                                                             style = MaterialTheme.typography.bodySmall,
                                                             color = Color(0xFFFFA000), // Orange for partial
                                                             fontWeight = FontWeight.Medium
@@ -428,7 +418,12 @@ fun EventDetailScreen(
                                         val referenceWorker = allWorkers.find { it.id == referenceId }
                                         referenceWorker?.let { refWorker ->
                                             // Return: (ReferenceWorker, EventWorker record, Commission Amount)
-                                            Triple(refWorker, workerWithName.eventWorker, refRate * workerWithName.eventWorker.hours)
+                                            val commissionAmount = if (workerWithName.eventWorker.isReferenceHourlyRate) {
+                                                refRate * workerWithName.eventWorker.hours
+                                            } else {
+                                                refRate // Fixed amount
+                                            }
+                                            Triple(refWorker, workerWithName.eventWorker, commissionAmount)
                                         }
                                     }
                                 }
@@ -479,7 +474,7 @@ fun EventDetailScreen(
                                                     horizontalAlignment = Alignment.End
                                                 ) {
                                                     Text(
-                                                        text = "₪${String.format("%.2f", commissionAmount)}",
+                                                        text = "₪${String.format(Locale.getDefault(), "%.2f", commissionAmount)}",
                                                         style = MaterialTheme.typography.bodyMedium,
                                                         fontWeight = FontWeight.Medium,
                                                         color = MaterialTheme.colorScheme.secondary
@@ -509,7 +504,7 @@ fun EventDetailScreen(
                                                             contentPadding = PaddingValues(0.dp)
                                                         ) {
                                                             Text(
-                                                                text = "שולם חלקית: ₪${String.format("%.2f", eventWorker.referenceAmountPaid)}",
+                                                                text = "שולם חלקית: ₪${String.format(Locale.getDefault(), "%.2f", eventWorker.referenceAmountPaid)}",
                                                                 style = MaterialTheme.typography.bodySmall,
                                                                 color = Color(0xFFFFA000),
                                                                 fontWeight = FontWeight.Medium
@@ -632,8 +627,8 @@ fun EventDetailScreen(
                 showAddWorkerDialog = false
                 searchQuery = ""
             },
-            onAddWorker = { workerId, isHourlyRate, payRate, refPayRate ->
-                onAddWorkerToEvent(event.id, workerId, event.hours.toDoubleOrNull() ?: 0.0, isHourlyRate, payRate, refPayRate)
+            onAddWorker = { workerId, isHourlyRate, payRate, refPayRate, isRefHourly ->
+                onAddWorkerToEvent(event.id, workerId, event.hours.toDoubleOrNull() ?: 0.0, isHourlyRate, payRate, refPayRate, isRefHourly)
                 showAddWorkerDialog = false
                 searchQuery = ""
             },

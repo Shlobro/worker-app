@@ -64,7 +64,7 @@ class ShiftDetailViewModel(
         loadShiftWorkers(shiftId)
     }
     
-    fun addWorkerToShift(shiftId: Long, workerId: Long, isHourlyRate: Boolean, payRate: Double, referencePayRate: Double? = null) {
+    fun addWorkerToShift(shiftId: Long, workerId: Long, isHourlyRate: Boolean, payRate: Double, referencePayRate: Double? = null, isReferenceHourlyRate: Boolean = true) {
         viewModelScope.launch {
             try {
                 val shiftWorker = ShiftWorker(
@@ -72,7 +72,8 @@ class ShiftDetailViewModel(
                     workerId = workerId,
                     isHourlyRate = isHourlyRate,
                     payRate = payRate,
-                    referencePayRate = referencePayRate
+                    referencePayRate = referencePayRate,
+                    isReferenceHourlyRate = isReferenceHourlyRate
                 )
 
                 shiftRepository.addWorkerToShift(shiftWorker)

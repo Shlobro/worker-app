@@ -31,7 +31,11 @@ interface ShiftDao {
                 WHEN sw.isHourlyRate = 1 THEN sw.payRate * s.hours
                 ELSE sw.payRate
             END +
-            COALESCE(s.hours * sw.referencePayRate, 0.0)
+            CASE
+                WHEN sw.referencePayRate IS NULL THEN 0.0
+                WHEN sw.isReferenceHourlyRate = 1 THEN s.hours * sw.referencePayRate
+                ELSE sw.referencePayRate
+            END
         )
         FROM shifts s
         INNER JOIN shift_workers sw ON s.id = sw.shiftId
