@@ -13,7 +13,7 @@ import java.util.Date
             entity = Worker::class,
             parentColumns = ["id"],
             childColumns = ["workerId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [Index("workerId")]
@@ -21,7 +21,7 @@ import java.util.Date
 data class Payment(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val workerId: Long,
+    val workerId: Long?,
     val amount: Double,
     val datePaid: Date,
     val sourceType: PaymentSourceType,

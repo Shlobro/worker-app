@@ -352,16 +352,18 @@ class WorkerRepository(
         val allUnpaidShifts = shiftWorkerDao.getUnpaidShiftWorkers()
         return allUnpaidShifts.filter { shift ->
             // Find workers who have this worker as their reference
-            val worker = workerDao.getWorkerById(shift.shiftWorker.workerId)
+            val shiftWorkerId = shift.shiftWorker.workerId ?: return@filter false
+            val worker = workerDao.getWorkerById(shiftWorkerId)
             worker?.referenceId == workerId && shift.shiftWorker.referencePayRate != null
         }
     }
-    
+
     suspend fun getUnpaidReferenceEventsForWorker(workerId: Long): List<UnpaidEventWorkerInfo> {
         val allUnpaidReferencePayments = eventWorkerDao.getUnpaidReferencePayments()
         return allUnpaidReferencePayments.filter { event ->
             // Find workers who have this worker as their reference
-            val worker = workerDao.getWorkerById(event.eventWorker.workerId)
+            val eventWorkerId = event.eventWorker.workerId ?: return@filter false
+            val worker = workerDao.getWorkerById(eventWorkerId)
             worker?.referenceId == workerId
         }
     }

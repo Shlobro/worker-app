@@ -30,11 +30,6 @@ LOW PRIORITY / MINOR BUGS
 POTENTIAL ISSUES - VERIFY
 ==========================
 
-17. Worker Deletion Cascade
-    Location: Worker.kt:16
-    Question: Should historical ShiftWorker/EventWorker records be preserved when worker deleted?
-    Answer: Yes all records must be kept even if the worker was deleted.
-
 18. Reference Worker Commission on Fixed Amount
     Location: WorkerRepository.kt:265, EventDetailScreen.kt:299-301
     Question: Should reference workers get hourly commission when referred worker got fixed payment?

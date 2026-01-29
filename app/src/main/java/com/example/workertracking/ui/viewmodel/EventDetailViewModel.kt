@@ -69,10 +69,11 @@ class EventDetailViewModel(
     private suspend fun loadEventWorkers(eventId: Long) {
         val eventWorkers = eventRepository.getWorkersForEvent(eventId).first()
         val eventWorkersWithNames = eventWorkers.map { eventWorker ->
-            val worker = workerRepository.getWorkerById(eventWorker.workerId)
+            val workerId = eventWorker.workerId
+            val worker = workerId?.let { workerRepository.getWorkerById(it) }
             EventWorkerWithName(
                 eventWorker = eventWorker,
-                workerName = worker?.name ?: "Unknown"
+                workerName = worker?.name ?: "(Deleted Worker)"
             )
         }
         _eventWorkers.value = eventWorkersWithNames

@@ -4,19 +4,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.workertracking.R
 import com.example.workertracking.ui.viewmodel.MoneyOwedViewModel
@@ -39,7 +37,7 @@ fun MoneyOwedScreen(
             title = { Text(stringResource(R.string.money_owed)) },
             navigationIcon = {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
             }
         )
@@ -72,7 +70,7 @@ fun MoneyOwedScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "₪${String.format("%.2f", uiState.totalDebt)}",
+                                text = "₪${String.format(Locale.US, "%.2f", uiState.totalDebt)}",
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.error
@@ -88,7 +86,7 @@ fun MoneyOwedScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(
-                            imageVector = Icons.Default.List,
+                            imageVector = Icons.AutoMirrored.Filled.List,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )
@@ -344,16 +342,35 @@ private fun UnpaidShiftCard(
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    TextButton(
-                        onClick = { onWorkerClick(unpaidShift.shiftWorker.workerId) },
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
+                    val workerId = unpaidShift.shiftWorker.workerId
+                    if (workerId != null) {
+                        TextButton(
+                            onClick = { onWorkerClick(workerId) },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = unpaidShift.workerName ?: "(Deleted Worker)",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                                )
+                                if (isReferencePayment) {
+                                    Text(
+                                        text = "עובד מפנה",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+                                }
+                            }
+                        }
+                    } else {
                         Column {
                             Text(
-                                text = unpaidShift.workerName,
+                                text = "(Deleted Worker)",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             if (isReferencePayment) {
                                 Text(
@@ -383,9 +400,9 @@ private fun UnpaidShiftCard(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = if (isReferencePayment) {
-                            "תשלום הפניה: ₪${String.format("%.2f", displayAmount)}"
+                            "תשלום הפניה: ₪${String.format(Locale.US, "%.2f", displayAmount)}"
                         } else {
-                            "₪${String.format("%.2f", displayAmount)}"
+                            "₪${String.format(Locale.US, "%.2f", displayAmount)}"
                         },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
@@ -437,16 +454,35 @@ private fun UnpaidEventCard(
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    TextButton(
-                        onClick = { onWorkerClick(unpaidEvent.eventWorker.workerId) },
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
+                    val workerId = unpaidEvent.eventWorker.workerId
+                    if (workerId != null) {
+                        TextButton(
+                            onClick = { onWorkerClick(workerId) },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = unpaidEvent.workerName ?: "(Deleted Worker)",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                                )
+                                if (isReferencePayment) {
+                                    Text(
+                                        text = "עובד מפנה",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+                                }
+                            }
+                        }
+                    } else {
                         Column {
                             Text(
-                                text = unpaidEvent.workerName,
+                                text = "(Deleted Worker)",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             if (isReferencePayment) {
                                 Text(
@@ -476,9 +512,9 @@ private fun UnpaidEventCard(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = if (isReferencePayment) {
-                            "תשלום הפניה: ₪${String.format("%.2f", displayAmount)}"
+                            "תשלום הפניה: ₪${String.format(Locale.US, "%.2f", displayAmount)}"
                         } else {
-                            "₪${String.format("%.2f", displayAmount)}"
+                            "₪${String.format(Locale.US, "%.2f", displayAmount)}"
                         },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
@@ -531,16 +567,35 @@ private fun PaidShiftCard(
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    TextButton(
-                        onClick = { onWorkerClick(paidShift.shiftWorker.workerId) },
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
+                    val workerId = paidShift.shiftWorker.workerId
+                    if (workerId != null) {
+                        TextButton(
+                            onClick = { onWorkerClick(workerId) },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = paidShift.workerName ?: "(Deleted Worker)",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                                )
+                                if (isReferencePayment) {
+                                    Text(
+                                        text = "עובד מפנה",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+                                }
+                            }
+                        }
+                    } else {
                         Column {
                             Text(
-                                text = paidShift.workerName,
+                                text = "(Deleted Worker)",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             if (isReferencePayment) {
                                 Text(
@@ -576,9 +631,9 @@ private fun PaidShiftCard(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = if (isReferencePayment) {
-                            "תשלום הפניה: ₪${String.format("%.2f", displayAmount)}"
+                            "תשלום הפניה: ₪${String.format(Locale.US, "%.2f", displayAmount)}"
                         } else {
-                            "₪${String.format("%.2f", displayAmount)}"
+                            "₪${String.format(Locale.US, "%.2f", displayAmount)}"
                         },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
@@ -654,16 +709,35 @@ private fun PaidEventCard(
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    TextButton(
-                        onClick = { onWorkerClick(paidEvent.eventWorker.workerId) },
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
+                    val workerId = paidEvent.eventWorker.workerId
+                    if (workerId != null) {
+                        TextButton(
+                            onClick = { onWorkerClick(workerId) },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = paidEvent.workerName ?: "(Deleted Worker)",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                                )
+                                if (isReferencePayment) {
+                                    Text(
+                                        text = "עובד מפנה",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+                                }
+                            }
+                        }
+                    } else {
                         Column {
                             Text(
-                                text = paidEvent.workerName,
+                                text = "(Deleted Worker)",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isReferencePayment) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             if (isReferencePayment) {
                                 Text(
@@ -699,9 +773,9 @@ private fun PaidEventCard(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = if (isReferencePayment) {
-                            "תשלום הפניה: ₪${String.format("%.2f", displayAmount)}"
+                            "תשלום הפניה: ₪${String.format(Locale.US, "%.2f", displayAmount)}"
                         } else {
-                            "₪${String.format("%.2f", displayAmount)}"
+                            "₪${String.format(Locale.US, "%.2f", displayAmount)}"
                         },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,

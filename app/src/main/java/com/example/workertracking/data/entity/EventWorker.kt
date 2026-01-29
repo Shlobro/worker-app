@@ -18,18 +18,19 @@ import androidx.room.PrimaryKey
             entity = Worker::class,
             parentColumns = ["id"],
             childColumns = ["workerId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [
-        Index(value = ["eventId", "workerId"], unique = true)
+        Index(value = ["eventId", "workerId"], unique = true),
+        Index(value = ["workerId"])
     ]
 )
 data class EventWorker(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val eventId: Long,
-    val workerId: Long,
+    val workerId: Long?,
     val hours: Double,
     val isHourlyRate: Boolean, // true for hourly, false for fixed amount
     val payRate: Double, // hourly rate or fixed amount

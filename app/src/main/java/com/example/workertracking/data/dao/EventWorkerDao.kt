@@ -51,7 +51,7 @@ interface EventWorkerDao {
     @Query("""
         SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName
         FROM event_workers ew
-        INNER JOIN workers w ON ew.workerId = w.id
+        LEFT JOIN workers w ON ew.workerId = w.id
         INNER JOIN events e ON ew.eventId = e.id
         WHERE ew.isPaid = 0
         ORDER BY e.date DESC
@@ -61,7 +61,7 @@ interface EventWorkerDao {
     @Query("""
         SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName
         FROM event_workers ew
-        INNER JOIN workers w ON ew.workerId = w.id
+        LEFT JOIN workers w ON ew.workerId = w.id
         INNER JOIN events e ON ew.eventId = e.id
         WHERE ew.isPaid = 0
         ORDER BY e.date DESC
@@ -69,9 +69,9 @@ interface EventWorkerDao {
     fun getUnpaidEventWorkersFlow(): Flow<List<UnpaidEventWorkerInfo>>
 
     @Query("""
-        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName 
+        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName
         FROM event_workers ew
-        INNER JOIN workers w ON ew.workerId = w.id
+        LEFT JOIN workers w ON ew.workerId = w.id
         INNER JOIN events e ON ew.eventId = e.id
         WHERE ew.workerId = :workerId AND ew.isPaid = 0
         ORDER BY e.date DESC
@@ -79,9 +79,9 @@ interface EventWorkerDao {
     suspend fun getUnpaidEventWorkersForWorker(workerId: Long): List<UnpaidEventWorkerInfo>
 
     @Query("""
-        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName 
+        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName
         FROM event_workers ew
-        INNER JOIN workers w ON ew.workerId = w.id
+        LEFT JOIN workers w ON ew.workerId = w.id
         INNER JOIN events e ON ew.eventId = e.id
         WHERE ew.workerId = :workerId
         ORDER BY e.date DESC
@@ -89,9 +89,9 @@ interface EventWorkerDao {
     suspend fun getAllEventWorkersForWorker(workerId: Long): List<UnpaidEventWorkerInfo>
 
     @Query("""
-        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName 
+        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName
         FROM event_workers ew
-        INNER JOIN workers w ON ew.workerId = w.id
+        LEFT JOIN workers w ON ew.workerId = w.id
         INNER JOIN events e ON ew.eventId = e.id
         WHERE ew.workerId = :workerId AND ew.isPaid = 1
         ORDER BY e.date DESC
@@ -101,7 +101,7 @@ interface EventWorkerDao {
     @Query("""
         SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName
         FROM event_workers ew
-        INNER JOIN workers w ON ew.workerId = w.id
+        LEFT JOIN workers w ON ew.workerId = w.id
         INNER JOIN events e ON ew.eventId = e.id
         WHERE ew.isPaid = 1
         ORDER BY e.date DESC
@@ -111,7 +111,7 @@ interface EventWorkerDao {
     @Query("""
         SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName
         FROM event_workers ew
-        INNER JOIN workers w ON ew.workerId = w.id
+        LEFT JOIN workers w ON ew.workerId = w.id
         INNER JOIN events e ON ew.eventId = e.id
         WHERE ew.isPaid = 1
         ORDER BY e.date DESC
@@ -121,7 +121,7 @@ interface EventWorkerDao {
     @Query("""
         SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName
         FROM event_workers ew
-        INNER JOIN workers w ON ew.workerId = w.id
+        LEFT JOIN workers w ON ew.workerId = w.id
         INNER JOIN events e ON ew.eventId = e.id
         WHERE ew.isReferencePaid = 0 AND ew.referencePayRate IS NOT NULL
         ORDER BY e.date DESC

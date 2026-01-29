@@ -22,7 +22,7 @@ import com.example.workertracking.data.entity.*
         Payment::class,
         Employer::class
     ],
-    version = 23,
+    version = 24,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -310,13 +310,98 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_23_24 = object : Migration(23, 24) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Preserve historical records when worker is deleted by changing CASCADE to SET NULL
+                // This requires recreating tables as SQLite doesn't support ALTER CONSTRAINT
+
+                // Recreate shift_workers table with SET NULL on worker delete
+                db.execSQL("""
+                    CREATE TABLE shift_workers_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        shiftId INTEGER NOT NULL,
+                        workerId INTEGER,
+                        isHourlyRate INTEGER NOT NULL,
+                        payRate REAL NOT NULL,
+                        referencePayRate REAL,
+                        isPaid INTEGER NOT NULL DEFAULT 0,
+                        amountPaid REAL NOT NULL DEFAULT 0.0,
+                        tipAmount REAL NOT NULL DEFAULT 0.0,
+                        isReferencePaid INTEGER NOT NULL DEFAULT 0,
+                        referenceAmountPaid REAL NOT NULL DEFAULT 0.0,
+                        referenceTipAmount REAL NOT NULL DEFAULT 0.0,
+                        FOREIGN KEY(shiftId) REFERENCES shifts(id) ON DELETE CASCADE,
+                        FOREIGN KEY(workerId) REFERENCES workers(id) ON DELETE SET NULL
+                    )
+                """)
+                db.execSQL("""
+                    INSERT INTO shift_workers_new
+                    SELECT id, shiftId, workerId, isHourlyRate, payRate, referencePayRate,
+                           isPaid, amountPaid, tipAmount, isReferencePaid, referenceAmountPaid, referenceTipAmount
+                    FROM shift_workers
+                """)
+                db.execSQL("DROP TABLE shift_workers")
+                db.execSQL("ALTER TABLE shift_workers_new RENAME TO shift_workers")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_shift_workers_shiftId_workerId ON shift_workers(shiftId, workerId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_shift_workers_workerId ON shift_workers(workerId)")
+
+                // Recreate event_workers table with SET NULL on worker delete
+                db.execSQL("""
+                    CREATE TABLE event_workers_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        eventId INTEGER NOT NULL,
+                        workerId INTEGER,
+                        hours REAL NOT NULL,
+                        isHourlyRate INTEGER NOT NULL,
+                        payRate REAL NOT NULL,
+                        referencePayRate REAL,
+                        isPaid INTEGER NOT NULL DEFAULT 0,
+                        amountPaid REAL NOT NULL DEFAULT 0.0,
+                        tipAmount REAL NOT NULL DEFAULT 0.0,
+                        isReferencePaid INTEGER NOT NULL DEFAULT 0,
+                        referenceAmountPaid REAL NOT NULL DEFAULT 0.0,
+                        referenceTipAmount REAL NOT NULL DEFAULT 0.0,
+                        FOREIGN KEY(eventId) REFERENCES events(id) ON DELETE CASCADE,
+                        FOREIGN KEY(workerId) REFERENCES workers(id) ON DELETE SET NULL
+                    )
+                """)
+                db.execSQL("""
+                    INSERT INTO event_workers_new
+                    SELECT id, eventId, workerId, hours, isHourlyRate, payRate, referencePayRate,
+                           isPaid, amountPaid, tipAmount, isReferencePaid, referenceAmountPaid, referenceTipAmount
+                    FROM event_workers
+                """)
+                db.execSQL("DROP TABLE event_workers")
+                db.execSQL("ALTER TABLE event_workers_new RENAME TO event_workers")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_event_workers_eventId_workerId ON event_workers(eventId, workerId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_event_workers_workerId ON event_workers(workerId)")
+
+                // Recreate payments table with SET NULL on worker delete
+                db.execSQL("""
+                    CREATE TABLE payments_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        workerId INTEGER,
+                        amount REAL NOT NULL,
+                        datePaid INTEGER NOT NULL,
+                        sourceType TEXT NOT NULL,
+                        sourceId INTEGER,
+                        FOREIGN KEY(workerId) REFERENCES workers(id) ON DELETE SET NULL
+                    )
+                """)
+                db.execSQL("INSERT INTO payments_new SELECT * FROM payments")
+                db.execSQL("DROP TABLE payments")
+                db.execSQL("ALTER TABLE payments_new RENAME TO payments")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_payments_workerId ON payments(workerId)")
+            }
+        }
+
         fun getDatabase(context: Context): WorkerTrackingDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     WorkerTrackingDatabase::class.java,
                     "worker_tracking_database"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23).build()
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24).build()
                 INSTANCE = instance
                 instance
             }

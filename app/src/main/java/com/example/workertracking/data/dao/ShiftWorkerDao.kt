@@ -60,7 +60,7 @@ interface ShiftWorkerDao {
     @Query("""
         SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime
         FROM shift_workers sw
-        INNER JOIN workers w ON sw.workerId = w.id
+        LEFT JOIN workers w ON sw.workerId = w.id
         INNER JOIN shifts s ON sw.shiftId = s.id
         INNER JOIN projects p ON s.projectId = p.id
         WHERE sw.isPaid = 0
@@ -71,7 +71,7 @@ interface ShiftWorkerDao {
     @Query("""
         SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime
         FROM shift_workers sw
-        INNER JOIN workers w ON sw.workerId = w.id
+        LEFT JOIN workers w ON sw.workerId = w.id
         INNER JOIN shifts s ON sw.shiftId = s.id
         INNER JOIN projects p ON s.projectId = p.id
         WHERE sw.isPaid = 0
@@ -80,9 +80,9 @@ interface ShiftWorkerDao {
     fun getUnpaidShiftWorkersFlow(): Flow<List<UnpaidShiftWorkerInfo>>
 
     @Query("""
-        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime 
+        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime
         FROM shift_workers sw
-        INNER JOIN workers w ON sw.workerId = w.id
+        LEFT JOIN workers w ON sw.workerId = w.id
         INNER JOIN shifts s ON sw.shiftId = s.id
         INNER JOIN projects p ON s.projectId = p.id
         WHERE sw.workerId = :workerId AND sw.isPaid = 0
@@ -91,9 +91,9 @@ interface ShiftWorkerDao {
     suspend fun getUnpaidShiftWorkersForWorker(workerId: Long): List<UnpaidShiftWorkerInfo>
 
     @Query("""
-        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime 
+        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime
         FROM shift_workers sw
-        INNER JOIN workers w ON sw.workerId = w.id
+        LEFT JOIN workers w ON sw.workerId = w.id
         INNER JOIN shifts s ON sw.shiftId = s.id
         INNER JOIN projects p ON s.projectId = p.id
         WHERE sw.workerId = :workerId
@@ -102,9 +102,9 @@ interface ShiftWorkerDao {
     suspend fun getAllShiftWorkersForWorker(workerId: Long): List<UnpaidShiftWorkerInfo>
 
     @Query("""
-        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime 
+        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime
         FROM shift_workers sw
-        INNER JOIN workers w ON sw.workerId = w.id
+        LEFT JOIN workers w ON sw.workerId = w.id
         INNER JOIN shifts s ON sw.shiftId = s.id
         INNER JOIN projects p ON s.projectId = p.id
         WHERE sw.workerId = :workerId AND sw.isPaid = 1
@@ -115,7 +115,7 @@ interface ShiftWorkerDao {
     @Query("""
         SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime
         FROM shift_workers sw
-        INNER JOIN workers w ON sw.workerId = w.id
+        LEFT JOIN workers w ON sw.workerId = w.id
         INNER JOIN shifts s ON sw.shiftId = s.id
         INNER JOIN projects p ON s.projectId = p.id
         WHERE sw.isPaid = 1
@@ -126,7 +126,7 @@ interface ShiftWorkerDao {
     @Query("""
         SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime
         FROM shift_workers sw
-        INNER JOIN workers w ON sw.workerId = w.id
+        LEFT JOIN workers w ON sw.workerId = w.id
         INNER JOIN shifts s ON sw.shiftId = s.id
         INNER JOIN projects p ON s.projectId = p.id
         WHERE sw.isPaid = 1
