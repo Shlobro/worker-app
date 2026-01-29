@@ -31,15 +31,6 @@ MAJOR BUGS
 MEDIUM PRIORITY BUGS
 ====================
 
-9. Date Range Filter Inclusivity Issue
-    Location: WorkerRepository.kt:219-220
-    Problem: Date filtering uses >= and <= with timestamps. If endDate is "Jan 15 00:00:00",
-             shifts later that day won't be included
-    Impact: Date range filtering excludes data from end date
-    Fix Required:
-    - Add 24 hours to endDate before comparison
-    - OR: Use date-only comparison (strip time component)
-
 10. Payment Dialog Doesn't Validate Against Total
     Location: WorkerDetailScreen.kt:646-648
     Problem: Partial payment has no validation that amountPaid + currentAmountPaid <= totalDue

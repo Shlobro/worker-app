@@ -267,37 +267,43 @@ class WorkerRepository(
     }
     
     private fun filterShiftsByDate(
-        shifts: List<UnpaidShiftWorkerInfo>, 
-        startDate: Date?, 
+        shifts: List<UnpaidShiftWorkerInfo>,
+        startDate: Date?,
         endDate: Date?
     ): List<UnpaidShiftWorkerInfo> {
         if (startDate == null && endDate == null) return shifts
-        
+
+        // Add 24 hours to endDate to include the entire day (endDate at 23:59:59.999)
+        val adjustedEndDate = endDate?.let { Date(it.time + 24 * 60 * 60 * 1000 - 1) }
+
         return shifts.filter { shift ->
             val shiftDate = Date(shift.shiftDate)
             when {
-                startDate != null && endDate != null ->
-                    shiftDate >= startDate && shiftDate <= endDate
+                startDate != null && adjustedEndDate != null ->
+                    shiftDate >= startDate && shiftDate <= adjustedEndDate
                 startDate != null -> shiftDate >= startDate
-                else -> shiftDate <= endDate!!
+                else -> shiftDate <= adjustedEndDate!!
             }
         }
     }
     
     private fun filterEventsByDate(
-        events: List<UnpaidEventWorkerInfo>, 
-        startDate: Date?, 
+        events: List<UnpaidEventWorkerInfo>,
+        startDate: Date?,
         endDate: Date?
     ): List<UnpaidEventWorkerInfo> {
         if (startDate == null && endDate == null) return events
-        
+
+        // Add 24 hours to endDate to include the entire day (endDate at 23:59:59.999)
+        val adjustedEndDate = endDate?.let { Date(it.time + 24 * 60 * 60 * 1000 - 1) }
+
         return events.filter { event ->
             val eventDate = Date(event.eventDate)
             when {
-                startDate != null && endDate != null ->
-                    eventDate >= startDate && eventDate <= endDate
+                startDate != null && adjustedEndDate != null ->
+                    eventDate >= startDate && eventDate <= adjustedEndDate
                 startDate != null -> eventDate >= startDate
-                else -> eventDate <= endDate!!
+                else -> eventDate <= adjustedEndDate!!
             }
         }
     }
