@@ -10,6 +10,7 @@ import com.example.workertracking.repository.WorkerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Date
 
@@ -61,27 +62,20 @@ class EventDetailViewModel(
         }
     }
 
-    private fun loadAllWorkers() {
-        viewModelScope.launch {
-            workerRepository.getAllWorkers().collect { workers ->
-                _allWorkers.value = workers
-            }
-        }
+    private suspend fun loadAllWorkers() {
+        _allWorkers.value = workerRepository.getAllWorkers().first()
     }
 
-    private fun loadEventWorkers(eventId: Long) {
-        viewModelScope.launch {
-            eventRepository.getWorkersForEvent(eventId).collect { eventWorkers ->
-                val eventWorkersWithNames = eventWorkers.map { eventWorker ->
-                    val worker = workerRepository.getWorkerById(eventWorker.workerId)
-                    EventWorkerWithName(
-                        eventWorker = eventWorker,
-                        workerName = worker?.name ?: "Unknown"
-                    )
-                }
-                _eventWorkers.value = eventWorkersWithNames
-            }
+    private suspend fun loadEventWorkers(eventId: Long) {
+        val eventWorkers = eventRepository.getWorkersForEvent(eventId).first()
+        val eventWorkersWithNames = eventWorkers.map { eventWorker ->
+            val worker = workerRepository.getWorkerById(eventWorker.workerId)
+            EventWorkerWithName(
+                eventWorker = eventWorker,
+                workerName = worker?.name ?: "Unknown"
+            )
         }
+        _eventWorkers.value = eventWorkersWithNames
     }
 
     private suspend fun loadTotalCost(eventId: Long) {

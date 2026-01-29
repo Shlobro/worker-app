@@ -14,6 +14,7 @@ import com.example.workertracking.repository.ShiftRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -108,26 +109,17 @@ class WorkerDetailViewModel(
         }
     }
 
-    private fun loadAllWorkers() {
-        viewModelScope.launch {
-            workerRepository.getAllWorkers().collect { workers ->
-                _allWorkers.value = workers
-            }
-        }
+    private suspend fun loadAllWorkers() {
+        _allWorkers.value = workerRepository.getAllWorkers().first()
     }
 
-    private fun loadWorkerProjectsAndEvents(workerId: Long) {
-        viewModelScope.launch {
-            // For now, load empty projects list
-            // TODO: Implement proper project loading for worker through ShiftWorker table
-            _projects.value = emptyList()
-        }
-        viewModelScope.launch {
-            // Load only events where this worker is assigned
-            eventRepository.getEventsForWorker(workerId).collect { events ->
-                _events.value = events
-            }
-        }
+    private suspend fun loadWorkerProjectsAndEvents(workerId: Long) {
+        // For now, load empty projects list
+        // TODO: Implement proper project loading for worker through ShiftWorker table
+        _projects.value = emptyList()
+
+        // Load only events where this worker is assigned
+        _events.value = eventRepository.getEventsForWorker(workerId).first()
     }
     
     fun updateWorker(name: String, phoneNumber: String, referenceId: Long?) {
