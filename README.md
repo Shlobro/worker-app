@@ -205,6 +205,7 @@ gradlew.bat clean
 - **Per-Shift Configuration**: Payment rates set individually per shift
 - **Reference Worker System**: Use reference workers for consistent rate calculations
 - **Automatic Calculations**: Real-time payment and profit calculations
+- **Shared Calculator**: Payment math is centralized in `util/PaymentCalculator.kt` for consistent net and total calculations
 
 ### Financial Management
 - **Project Income**: Multiple income entries with flexible units (days, hours, fixed amounts)

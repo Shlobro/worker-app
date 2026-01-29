@@ -17,6 +17,7 @@ This is the main Android application module.
   - **AndroidManifest.xml**: App manifest and component declarations.
   - **java/com/example/workertracking**: Kotlin source root (see `workertracking_developer_guide.md` for UI and feature packages).
   - Financial UI formatting follows locale-aware conventions in screen-level summaries, including shift payment dialogs.
+  - Payment calculations in ViewModels rely on `util/PaymentCalculator.kt` for consistent net/total summaries.
 - **res**: Android resources used by Compose UI and the system.
     - **drawable**: Vector assets and images.
     - **mipmap-***: App launcher icons.

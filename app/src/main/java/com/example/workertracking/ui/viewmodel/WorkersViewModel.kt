@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.data.entity.WorkerWithDebt
 import com.example.workertracking.repository.WorkerRepository
+import com.example.workertracking.util.PaymentCalculator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -94,20 +95,24 @@ class WorkersViewModel(
 
                         // Calculate direct payments owed TO this worker (exclude reference payments they make)
                         val shiftTotal = unpaidShifts.sumOf { unpaidShift ->
-                            if (unpaidShift.shiftWorker.isHourlyRate) {
-                                unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
-                            } else {
-                                unpaidShift.shiftWorker.payRate
-                            }
+                            PaymentCalculator.calculateWorkerPayment(
+                                payRate = unpaidShift.shiftWorker.payRate,
+                                hours = unpaidShift.shiftHours,
+                                isHourlyRate = unpaidShift.shiftWorker.isHourlyRate
+                            )
                         }
 
                         val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
-                            val basePayment = if (unpaidEvent.eventWorker.isHourlyRate) {
-                                unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
-                            } else {
-                                unpaidEvent.eventWorker.payRate
-                            }
-                            basePayment - unpaidEvent.eventWorker.amountPaid - unpaidEvent.eventWorker.tipAmount
+                            val basePayment = PaymentCalculator.calculateWorkerPayment(
+                                payRate = unpaidEvent.eventWorker.payRate,
+                                hours = unpaidEvent.eventWorker.hours,
+                                isHourlyRate = unpaidEvent.eventWorker.isHourlyRate
+                            )
+                            PaymentCalculator.calculateNetPayment(
+                                totalPayment = basePayment,
+                                amountPaid = unpaidEvent.eventWorker.amountPaid,
+                                tipAmount = unpaidEvent.eventWorker.tipAmount
+                            )
                         }
 
                         // Calculate reference payments owed TO this worker (when they are the reference worker)
@@ -115,12 +120,22 @@ class WorkersViewModel(
                         val unpaidReferenceEvents = workerRepository.getUnpaidReferenceEventsForWorker(worker.id)
 
                         val referenceShiftTotal = unpaidReferenceShifts.sumOf { shift ->
-                            (shift.shiftWorker.referencePayRate ?: 0.0) * shift.shiftHours
+                            PaymentCalculator.calculateReferencePayment(
+                                referencePayRate = shift.shiftWorker.referencePayRate,
+                                hours = shift.shiftHours
+                            )
                         }
 
                         val referenceEventTotal = unpaidReferenceEvents.sumOf { event ->
-                            val baseReferencePayment = (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
-                            baseReferencePayment - event.eventWorker.referenceAmountPaid - event.eventWorker.referenceTipAmount
+                            val baseReferencePayment = PaymentCalculator.calculateReferencePayment(
+                                referencePayRate = event.eventWorker.referencePayRate,
+                                hours = event.eventWorker.hours
+                            )
+                            PaymentCalculator.calculateNetReferencePayment(
+                                totalReferencePayment = baseReferencePayment,
+                                referenceAmountPaid = event.eventWorker.referenceAmountPaid,
+                                referenceTipAmount = event.eventWorker.referenceTipAmount
+                            )
                         }
 
                         WorkerWithDebt(

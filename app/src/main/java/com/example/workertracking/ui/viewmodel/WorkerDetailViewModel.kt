@@ -11,6 +11,7 @@ import com.example.workertracking.repository.WorkerRepository
 import com.example.workertracking.repository.ProjectRepository
 import com.example.workertracking.repository.EventRepository
 import com.example.workertracking.repository.ShiftRepository
+import com.example.workertracking.util.PaymentCalculator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -187,31 +188,44 @@ class WorkerDetailViewModel(
                 
                 // Calculate total owed directly to this worker (exclude reference payments they make)
                 val shiftTotal = unpaidShifts.sumOf { unpaidShift ->
-                    if (unpaidShift.shiftWorker.isHourlyRate) {
-                        unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
-                    } else {
-                        unpaidShift.shiftWorker.payRate
-                    }
+                    PaymentCalculator.calculateWorkerPayment(
+                        payRate = unpaidShift.shiftWorker.payRate,
+                        hours = unpaidShift.shiftHours,
+                        isHourlyRate = unpaidShift.shiftWorker.isHourlyRate
+                    )
                 }
                 
                 val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
-                    val workerPayment = if (unpaidEvent.eventWorker.isHourlyRate) {
-                        unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
-                    } else {
-                        unpaidEvent.eventWorker.payRate
-                    }
-                    val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours
-                    workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid - unpaidEvent.eventWorker.tipAmount - unpaidEvent.eventWorker.referenceAmountPaid - unpaidEvent.eventWorker.referenceTipAmount
+                    PaymentCalculator.calculateTotalNetPayment(
+                        payRate = unpaidEvent.eventWorker.payRate,
+                        hours = unpaidEvent.eventWorker.hours,
+                        isHourlyRate = unpaidEvent.eventWorker.isHourlyRate,
+                        referencePayRate = unpaidEvent.eventWorker.referencePayRate,
+                        amountPaid = unpaidEvent.eventWorker.amountPaid,
+                        tipAmount = unpaidEvent.eventWorker.tipAmount,
+                        referenceAmountPaid = unpaidEvent.eventWorker.referenceAmountPaid,
+                        referenceTipAmount = unpaidEvent.eventWorker.referenceTipAmount
+                    )
                 }
                 
                 // Calculate reference payments owed TO this worker
                 val referenceShiftTotal = unpaidReferenceShifts.sumOf { shift ->
-                    (shift.shiftWorker.referencePayRate ?: 0.0) * shift.shiftHours
+                    PaymentCalculator.calculateReferencePayment(
+                        referencePayRate = shift.shiftWorker.referencePayRate,
+                        hours = shift.shiftHours
+                    )
                 }
                 
                 val referenceEventTotal = unpaidReferenceEvents.sumOf { event ->
-                    val totalRefCost = (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
-                    totalRefCost - event.eventWorker.referenceAmountPaid - event.eventWorker.referenceTipAmount
+                    val totalRefCost = PaymentCalculator.calculateReferencePayment(
+                        referencePayRate = event.eventWorker.referencePayRate,
+                        hours = event.eventWorker.hours
+                    )
+                    PaymentCalculator.calculateNetReferencePayment(
+                        totalReferencePayment = totalRefCost,
+                        referenceAmountPaid = event.eventWorker.referenceAmountPaid,
+                        referenceTipAmount = event.eventWorker.referenceTipAmount
+                    )
                 }
                 
                 _totalOwed.value = shiftTotal + eventTotal

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.workertracking.data.entity.UnpaidShiftWorkerInfo
 import com.example.workertracking.data.entity.UnpaidEventWorkerInfo
 import com.example.workertracking.repository.WorkerRepository
+import com.example.workertracking.util.PaymentCalculator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -61,23 +62,25 @@ class MoneyOwedViewModel(
                     }
 
                     val shiftTotal = unpaidShifts.sumOf { unpaidShift ->
-                        val workerPayment = if (unpaidShift.shiftWorker.isHourlyRate) {
-                            unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
-                        } else {
-                            unpaidShift.shiftWorker.payRate
-                        }
-                        val referencePayment = (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours
-                        workerPayment + referencePayment
+                        PaymentCalculator.calculateTotalPayment(
+                            payRate = unpaidShift.shiftWorker.payRate,
+                            hours = unpaidShift.shiftHours,
+                            isHourlyRate = unpaidShift.shiftWorker.isHourlyRate,
+                            referencePayRate = unpaidShift.shiftWorker.referencePayRate
+                        )
                     }
 
                     val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
-                        val workerPayment = if (unpaidEvent.eventWorker.isHourlyRate) {
-                            unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
-                        } else {
-                            unpaidEvent.eventWorker.payRate
-                        }
-                        val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours
-                        workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid - unpaidEvent.eventWorker.tipAmount - unpaidEvent.eventWorker.referenceAmountPaid - unpaidEvent.eventWorker.referenceTipAmount
+                        PaymentCalculator.calculateTotalNetPayment(
+                            payRate = unpaidEvent.eventWorker.payRate,
+                            hours = unpaidEvent.eventWorker.hours,
+                            isHourlyRate = unpaidEvent.eventWorker.isHourlyRate,
+                            referencePayRate = unpaidEvent.eventWorker.referencePayRate,
+                            amountPaid = unpaidEvent.eventWorker.amountPaid,
+                            tipAmount = unpaidEvent.eventWorker.tipAmount,
+                            referenceAmountPaid = unpaidEvent.eventWorker.referenceAmountPaid,
+                            referenceTipAmount = unpaidEvent.eventWorker.referenceTipAmount
+                        )
                     }
 
                     _uiState.value = _uiState.value.copy(

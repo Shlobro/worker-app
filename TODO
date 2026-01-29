@@ -30,20 +30,15 @@ LOW PRIORITY / MINOR BUGS
 POTENTIAL ISSUES - VERIFY
 ==========================
 
-16. Date Type Conversion
-    Location: WorkerRepository.kt:217, 236
-    Question: Is shiftDate stored as Long (millis) or Date object?
-    Action: Verify data type and ensure Date(shift.shiftDate) is correct
-
 17. Worker Deletion Cascade
     Location: Worker.kt:16
     Question: Should historical ShiftWorker/EventWorker records be preserved when worker deleted?
-    Action: Verify intended behavior with product owner
+    Answer: Yes all records must be kept even if the worker was deleted.
 
 18. Reference Worker Commission on Fixed Amount
     Location: WorkerRepository.kt:265, EventDetailScreen.kt:299-301
     Question: Should reference workers get hourly commission when referred worker got fixed payment?
-    Action: Clarify business logic with product owner
+    Answer: Yes but there should also be an option to pay a comission a custom amount instead of hourly.
 
 
 ARCHITECTURE IMPROVEMENTS
@@ -53,9 +48,4 @@ ARCHITECTURE IMPROVEMENTS
     Recommendation: Separate worker payments from reference/manager commissions
     Benefit: Clearer data model
     Tables: EventWorker (worker pay) + EventCommission (manager commission)
-
-22. Normalize Payment Calculation Logic
-    Recommendation: Create single source of truth for payment math
-    Benefit: Consistent calculations across all ViewModels
-    Implementation: Create PaymentCalculator class with all formulas
 

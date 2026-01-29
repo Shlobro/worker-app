@@ -13,6 +13,7 @@ This package is the root of the Kotlin source code for the app. It is the entry 
 - **di**: Manual dependency injection container (AppContainer).
 - **repository**: Data access and business logic used by ViewModels.
 - **ui**: Compose UI, navigation, themes, shared components, and ViewModels.
+- **util**: Utility classes providing common functionality (PaymentCalculator for payment calculations used by ViewModels and repositories).
 
 ## Where to Start
 
@@ -21,3 +22,4 @@ This package is the root of the Kotlin source code for the app. It is the entry 
 - For project-specific UI behavior: **ui/screens/projects/ProjectDetailScreen.kt** and related screens.
 - For shift payment workflows (including reference payments): **ui/screens/shifts/ShiftDetailScreen.kt** and **ui/viewmodel/ShiftDetailViewModel.kt**.
 - For currency/financial formatting: screens use locale-aware number formatting in their summaries.
+- For payment math and net totals: **util/PaymentCalculator.kt** (used in MoneyOwedViewModel, WorkerDetailViewModel, and WorkersViewModel).

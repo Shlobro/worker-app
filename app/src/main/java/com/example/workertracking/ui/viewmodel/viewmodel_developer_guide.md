@@ -28,3 +28,4 @@ This package contains ViewModels that back Compose screens and expose UI state v
 
 - ViewModels should call repositories for all data access.
 - UI screens should observe state flows rather than perform direct queries.
+- Payment summaries should use `util/PaymentCalculator` to keep calculations consistent.

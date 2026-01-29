@@ -4,7 +4,6 @@ import com.example.workertracking.data.dao.EventDao
 import com.example.workertracking.data.dao.EventWorkerDao
 import com.example.workertracking.data.entity.Event
 import com.example.workertracking.data.entity.EventWorker
-import com.example.workertracking.data.entity.Worker
 import kotlinx.coroutines.flow.Flow
 
 class EventRepository(
@@ -35,15 +34,6 @@ class EventRepository(
     suspend fun getTotalEventCost(eventId: Long): Double? = 
         eventWorkerDao.getTotalCostForEvent(eventId)
     
-    suspend fun getEventProfit(eventId: Long): Double {
-        val event = getEventById(eventId)
-        val totalCost = getTotalEventCost(eventId) ?: 0.0
-        return (event?.income ?: 0.0) - totalCost
-    }
-    
     fun getEventsForWorker(workerId: Long): Flow<List<Event>> = 
         eventDao.getEventsForWorker(workerId)
-        
-    fun getEventWorkersForWorker(workerId: Long): Flow<List<EventWorker>> = 
-        eventWorkerDao.getEventsByWorker(workerId)
 }
