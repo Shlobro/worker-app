@@ -24,12 +24,6 @@ MAJOR BUGS
 LOW PRIORITY / MINOR BUGS
 ==========================
 
-13. Navigation Clears Entire Backstack
-    Location: MainActivity.kt:135-142
-    Problem: Dashboard navigation uses popUpTo(0) { inclusive = true }
-    Impact: User can't navigate back after visiting dashboard
-    Note: May be intentional design, verify with product requirements
-
 14. ShiftWorker Payment Status Not Granular
     Location: ShiftWorker entity (inferred)
     Problem: ShiftWorker only has isPaid boolean, unlike EventWorker which has amountPaid,
