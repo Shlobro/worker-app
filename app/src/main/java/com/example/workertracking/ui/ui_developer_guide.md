@@ -16,3 +16,4 @@ This package contains all Jetpack Compose UI code, navigation definitions, share
 - Shared UI is extracted into **components** when reused across multiple screens.
 - Top-level composables expose a `modifier` parameter to support layout control from navigation.
 - Screens that display money format numbers with the current locale.
+- Shift payment dialogs cover both direct and reference worker payments.

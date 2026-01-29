@@ -26,6 +26,7 @@ A comprehensive Android application for managing construction projects, workers,
 - Two payment types per worker:
   - **שכר שעתי** (Hourly Rate): rate × hours
   - **סכום גלובלי** (Global Amount): fixed amount
+- Shift detail includes payment status dialogs for direct and reference payments
 - Smart time input with auto-formatting (0800 → 08:00)
 - Automatic hours calculation with manual override option
 - Cross-midnight shift support

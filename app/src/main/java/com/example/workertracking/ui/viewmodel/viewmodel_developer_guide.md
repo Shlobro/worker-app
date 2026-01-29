@@ -19,7 +19,7 @@ This package contains ViewModels that back Compose screens and expose UI state v
 - **MoneyOwedViewModel.kt**: Outstanding payment totals and grouping.
 - **ProjectDetailViewModel.kt**: Project detail data, shifts, and income.
 - **ProjectsViewModel.kt**: Project list data and filters.
-- **ShiftDetailViewModel.kt**: Shift detail data and worker assignments.
+- **ShiftDetailViewModel.kt**: Shift detail data, worker assignments, and payment updates (direct and reference).
 - **WorkerDetailViewModel.kt**: Worker detail data, payments, and related history.
 - **WorkerPhotoGalleryViewModel.kt**: Worker photo gallery state and actions.
 - **WorkersViewModel.kt**: Worker list data and filters.

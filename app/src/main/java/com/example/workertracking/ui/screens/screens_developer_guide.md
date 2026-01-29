@@ -13,5 +13,5 @@ This package contains top-level Compose screens. Feature screens are organized i
 - **employers**: Employer list, detail, add, and edit screens.
 - **events**: Event list, detail, add/edit, and worker assignment screens.
 - **projects**: Project list, detail, add/edit, and project income screens (detail includes a locale-aware financial summary and shift list).
-- **shifts**: Shift detail, add, and edit screens.
+- **shifts**: Shift detail, add, and edit screens including worker/reference payment status dialogs.
 - **workers**: Worker list, detail, add, and edit screens.
