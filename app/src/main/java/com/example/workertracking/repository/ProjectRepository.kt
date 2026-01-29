@@ -51,6 +51,9 @@ class ProjectRepository(
     suspend fun updateIncome(income: ProjectIncome) = 
         projectIncomeDao.updateIncome(income)
     
-    suspend fun deleteIncome(income: ProjectIncome) = 
+    suspend fun deleteIncome(income: ProjectIncome) =
         projectIncomeDao.deleteIncome(income)
+
+    suspend fun getProjectsForWorker(workerId: Long): List<Project> =
+        projectDao.getProjectsForWorker(workerId)
 }

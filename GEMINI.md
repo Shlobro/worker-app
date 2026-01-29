@@ -3,7 +3,6 @@
 - no code file generated or edited should exceed 1000 lines of code ever. if while editing or creating a file, the file exceeds 1000 lines this file must be split up into multiple files.
 - whenever creating a new file, think very carefully which folder this file should be put in, if needed make a new folder so that there is clear separation between folders.
 - each folder should only have 1 .md file. never create summary files or visualization .md files.
-- never build the android project allow the user to build and provide any build errors
 - never mention legacy functionality or recent changes in the MD files they are only needed to get engineers into what is happening right now in the code.
 - always ask if a commit message is good before commiting.
 - backward compatibility is never a concern, always assume that everyone has the latest installed.
@@ -15,3 +14,4 @@
     - Locale issues (always use `String.format(Locale(...), format, args)` instead of `String.format(format, args)`)
     - Missing indices on foreign keys
   * Do not introduce new warnings - clean code is maintained code
+- make sure to always build the project and make sure that is successful 

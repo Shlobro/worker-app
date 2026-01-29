@@ -27,4 +27,13 @@ interface ProjectDao {
 
     @Query("SELECT * FROM projects WHERE employerId = :employerId ORDER BY startDate DESC")
     suspend fun getProjectsByEmployer(employerId: Long): List<Project>
+
+    @Query("""
+        SELECT DISTINCT p.* FROM projects p
+        INNER JOIN shifts s ON p.id = s.projectId
+        INNER JOIN shift_workers sw ON s.id = sw.shiftId
+        WHERE sw.workerId = :workerId
+        ORDER BY p.startDate DESC
+    """)
+    suspend fun getProjectsForWorker(workerId: Long): List<Project>
 }

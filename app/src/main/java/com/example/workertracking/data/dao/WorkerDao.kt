@@ -105,23 +105,8 @@ interface WorkerDao {
         ) reference_events ON w.id = reference_events.refWorkerId
         LEFT JOIN (
             SELECT
-                sw3.workerId,
-                SUM(CASE WHEN sw3.isHourlyRate = 1 THEN sw3.payRate * s3.hours ELSE sw3.payRate END) as shift_earnings
-            FROM shift_workers sw3
-            INNER JOIN shifts s3 ON sw3.shiftId = s3.id
-            GROUP BY sw3.workerId
-        ) shift_earnings ON w.id = shift_earnings.workerId
-        LEFT JOIN (
-            SELECT
-                ew3.workerId,
-                SUM(CASE WHEN ew3.isHourlyRate = 1 THEN ew3.hours * ew3.payRate ELSE ew3.payRate END) as event_earnings
-            FROM event_workers ew3
-            GROUP BY ew3.workerId
-        ) event_earnings ON w.id = event_earnings.workerId
-        LEFT JOIN (
-            SELECT
-                workerId,
-                COALESCE(shift_earnings.shift_earnings, 0.0) + COALESCE(event_earnings.event_earnings, 0.0) as earnings
+                all_workers.workerId,
+                COALESCE(shift_earnings_sub.shift_earnings, 0.0) + COALESCE(event_earnings_sub.event_earnings, 0.0) as earnings
             FROM (SELECT DISTINCT workerId FROM shift_workers UNION SELECT DISTINCT workerId FROM event_workers) all_workers
             LEFT JOIN (
                 SELECT
@@ -130,14 +115,14 @@ interface WorkerDao {
                 FROM shift_workers sw3
                 INNER JOIN shifts s3 ON sw3.shiftId = s3.id
                 GROUP BY sw3.workerId
-            ) shift_earnings ON all_workers.workerId = shift_earnings.workerId
+            ) shift_earnings_sub ON all_workers.workerId = shift_earnings_sub.workerId
             LEFT JOIN (
                 SELECT
                     ew3.workerId,
                     SUM(CASE WHEN ew3.isHourlyRate = 1 THEN ew3.hours * ew3.payRate ELSE ew3.payRate END) as event_earnings
                 FROM event_workers ew3
                 GROUP BY ew3.workerId
-            ) event_earnings ON all_workers.workerId = event_earnings.workerId
+            ) event_earnings_sub ON all_workers.workerId = event_earnings_sub.workerId
         ) total_earnings ON w.id = total_earnings.workerId
         LEFT JOIN workers ref_worker ON w.referenceId = ref_worker.id
         ORDER BY w.name

@@ -28,17 +28,6 @@ MAJOR BUGS
 
 
 
-MEDIUM PRIORITY BUGS
-====================
-
-12. Locale Hardcoded to Hebrew
-    Location: Multiple files using Locale("he", "IL")
-    Problem: Currency formatting hardcoded instead of using device locale
-    Impact: Users in other countries see Hebrew formatting
-    Fix Required:
-    - Use Locale.getDefault() instead of hardcoded Locale("he", "IL")
-    - OR: Add locale setting to user preferences
-
 
 LOW PRIORITY / MINOR BUGS
 ==========================
@@ -51,21 +40,13 @@ LOW PRIORITY / MINOR BUGS
     - Add error state to ViewModels
     - Show error messages to users
 
-14. Worker Detail Project History Hardcoded Empty
-    Location: WorkerDetailViewModel.kt:117
-    Problem: Projects hardcoded to emptyList() with TODO comment
-    Impact: Worker detail screen never shows project history
-    Fix Required:
-    - Implement actual project history query
-    - Remove TODO and empty list
-
-15. Navigation Clears Entire Backstack
+14. Navigation Clears Entire Backstack
     Location: MainActivity.kt:135-142
     Problem: Dashboard navigation uses popUpTo(0) { inclusive = true }
     Impact: User can't navigate back after visiting dashboard
     Note: May be intentional design, verify with product requirements
 
-16. ShiftWorker Payment Status Not Granular
+15. ShiftWorker Payment Status Not Granular
     Location: ShiftWorker entity (inferred)
     Problem: ShiftWorker only has isPaid boolean, unlike EventWorker which has amountPaid,
              tipAmount, etc.
@@ -75,7 +56,7 @@ LOW PRIORITY / MINOR BUGS
     - Add referenceAmountPaid, referenceTipAmount fields
     - Update UI to support partial shift payments
 
-17. Manual Event Bus Instead of Reactive Data
+16. Manual Event Bus Instead of Reactive Data
     Location: MoneyOwedViewModel.kt calling appContainer.triggerDashboardRefresh()
     Problem: ViewModels manually trigger refreshes instead of using Room Flows
     Impact: Tight coupling to DI container, unnecessary complexity
@@ -87,17 +68,17 @@ LOW PRIORITY / MINOR BUGS
 POTENTIAL ISSUES - VERIFY
 ==========================
 
-18. Date Type Conversion
+17. Date Type Conversion
     Location: WorkerRepository.kt:217, 236
     Question: Is shiftDate stored as Long (millis) or Date object?
     Action: Verify data type and ensure Date(shift.shiftDate) is correct
 
-19. Worker Deletion Cascade
+18. Worker Deletion Cascade
     Location: Worker.kt:16
     Question: Should historical ShiftWorker/EventWorker records be preserved when worker deleted?
     Action: Verify intended behavior with product owner
 
-20. Reference Worker Commission on Fixed Amount
+19. Reference Worker Commission on Fixed Amount
     Location: WorkerRepository.kt:265, EventDetailScreen.kt:299-301
     Question: Should reference workers get hourly commission when referred worker got fixed payment?
     Action: Clarify business logic with product owner
@@ -116,26 +97,3 @@ ARCHITECTURE IMPROVEMENTS
     Benefit: Consistent calculations across all ViewModels
     Implementation: Create PaymentCalculator class with all formulas
 
-
-========================================
-PRIORITY ORDER
-========================================
-
-1. Fix Circular Reference Validation (Bug #1) - Prevent infinite loops [COMPLETED]
-2. Fix Flow Memory Leaks (Bug #4) - Memory stability [COMPLETED]
-3. Fix Dashboard Date Filter Ignores Project Income (Bug #8) - Data accuracy [COMPLETED]
-4. Fix Payment Dialog Validation (Bug #10) - Prevent overpayment [COMPLETED]
-5. Fix Missing Database Indices (Bug #11) - Improve query performance [COMPLETED]
-6. Remaining Major/Medium bugs as time permits
-
-
-========================================
-TESTING GAPS
-========================================
-
-- No unit tests exist for payment calculations
-- No tests for date filtering logic
-- No tests for time input validation
-- No tests for circular reference detection
-
-Add comprehensive test coverage for all payment math before making fixes.

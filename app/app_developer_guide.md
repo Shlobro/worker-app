@@ -16,7 +16,7 @@ This is the main Android application module.
 - **src/main**: Production code and resources.
   - **AndroidManifest.xml**: App manifest and component declarations.
   - **java/com/example/workertracking**: Kotlin source root (see `workertracking_developer_guide.md`).
-  - **res**: Android resources used by Compose and the system.
+- **res**: Android resources used by Compose UI and the system.
     - **drawable**: Vector assets and images.
     - **mipmap-***: App launcher icons.
     - **values**: Default resources (strings, colors, styles).

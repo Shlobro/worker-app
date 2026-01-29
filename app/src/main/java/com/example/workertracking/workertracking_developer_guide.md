@@ -12,7 +12,7 @@ This package is the root of the Kotlin source code for the app. It is the entry 
 - **data**: Room database configuration, DAOs, and entities.
 - **di**: Manual dependency injection container (AppContainer).
 - **repository**: Data access and business logic used by ViewModels.
-- **ui**: Compose UI, navigation, themes, components, and ViewModels.
+- **ui**: Compose UI, navigation, themes, shared components, and ViewModels.
 
 ## Where to Start
 

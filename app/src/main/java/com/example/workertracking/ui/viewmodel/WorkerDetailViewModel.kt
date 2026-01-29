@@ -20,7 +20,7 @@ import java.util.*
 
 class WorkerDetailViewModel(
     private val workerRepository: WorkerRepository,
-    @Suppress("unused") private val projectRepository: ProjectRepository,
+    private val projectRepository: ProjectRepository,
     private val eventRepository: EventRepository,
     @Suppress("unused") private val shiftRepository: ShiftRepository
 ) : ViewModel() {
@@ -114,9 +114,8 @@ class WorkerDetailViewModel(
     }
 
     private suspend fun loadWorkerProjectsAndEvents(workerId: Long) {
-        // For now, load empty projects list
-        // TODO: Implement proper project loading for worker through ShiftWorker table
-        _projects.value = emptyList()
+        // Load projects where worker has worked through shifts
+        _projects.value = projectRepository.getProjectsForWorker(workerId)
 
         // Load only events where this worker is assigned
         _events.value = eventRepository.getEventsForWorker(workerId).first()

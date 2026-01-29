@@ -4,7 +4,7 @@ This package contains all Jetpack Compose UI code, navigation definitions, share
 
 ## Subpackages
 
-- **components**: Reusable Compose pieces (dialogs, cards, selectors, shared controls).
+- **components**: Reusable Compose pieces (dialogs, selectors, shared controls).
 - **navigation**: Route definitions and bottom navigation metadata.
 - **screens**: Feature screens grouped by domain (dashboard, events, projects, etc.).
 - **theme**: Material 3 theme configuration (colors, typography, theme wrapper).

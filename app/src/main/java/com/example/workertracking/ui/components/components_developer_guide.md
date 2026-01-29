@@ -5,7 +5,6 @@ This package contains reusable Jetpack Compose UI components shared across scree
 ## Files
 
 - **AddWorkerDialog.kt**: Dialog for adding a worker (used in shift/event flows).
-- **Cards.kt**: Card composables used in list views (projects, events, workers, shifts).
 - **EditEventWorkerDialog.kt**: Dialog for editing a worker assignment inside an event.
 - **PaymentDialogs.kt**: Payment entry dialogs for marking payments and amounts.
 - **SearchableEmployerSelector.kt**: Searchable dropdown for selecting an employer.
