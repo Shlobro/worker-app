@@ -31,15 +31,6 @@ MAJOR BUGS
 MEDIUM PRIORITY BUGS
 ====================
 
-10. Payment Dialog Doesn't Validate Against Total
-    Location: WorkerDetailScreen.kt:646-648
-    Problem: Partial payment has no validation that amountPaid + currentAmountPaid <= totalDue
-    Impact: Users can pay more than owed, causing negative balances
-    Fix Required:
-    - Add validation before saving payment
-    - Show error if payment exceeds remaining balance
-    - Show remaining balance in dialog
-
 11. Missing Database Indices on Foreign Keys
     Location: All entity files
     Problem: No indices defined on foreign key columns (workerId, shiftId, eventId, etc.)
@@ -142,7 +133,8 @@ PRIORITY ORDER
 1. Fix Circular Reference Validation (Bug #1) - Prevent infinite loops [COMPLETED]
 2. Fix Flow Memory Leaks (Bug #4) - Memory stability [COMPLETED]
 3. Fix Dashboard Date Filter Ignores Project Income (Bug #8) - Data accuracy [COMPLETED]
-4. Remaining Major/Medium bugs as time permits
+4. Fix Payment Dialog Validation (Bug #10) - Prevent overpayment [COMPLETED]
+5. Remaining Major/Medium bugs as time permits
 
 
 ========================================

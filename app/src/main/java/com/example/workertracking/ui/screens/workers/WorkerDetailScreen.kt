@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Refresh
@@ -37,14 +36,16 @@ import com.example.workertracking.ui.components.PaymentDialog
 import com.example.workertracking.ui.components.EditPaymentDialog
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkerDetailScreen(
     worker: Worker?,
+    @Suppress("UNUSED_PARAMETER") modifier: Modifier = Modifier,
     referenceWorker: Worker? = null,
-    projects: List<Project> = emptyList(),
-    events: List<Event> = emptyList(),
+    @Suppress("UNUSED_PARAMETER") projects: List<Project> = emptyList(),
+    @Suppress("UNUSED_PARAMETER") events: List<Event> = emptyList(),
     isLoading: Boolean,
     unpaidShifts: List<UnpaidShiftWorkerInfo> = emptyList(),
     unpaidEvents: List<UnpaidEventWorkerInfo> = emptyList(),
@@ -70,8 +71,7 @@ fun WorkerDetailScreen(
     onMarkAllAsPaid: () -> Unit = {},
     onToggleShowPaidItems: () -> Unit = {},
     onDateRangeSelected: (Date?, Date?) -> Unit = { _, _ -> },
-    onClearDateFilter: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onClearDateFilter: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -79,7 +79,8 @@ fun WorkerDetailScreen(
     // Dialog States
     var showPaymentDialog by remember { mutableStateOf<EventWorker?>(null) }
     var showEditPaymentDialog by remember { mutableStateOf<EventWorker?>(null) }
-    var paymentDialogTotalDue by remember { mutableStateOf(0.0) }
+    var paymentDialogRemainingBalance by remember { mutableStateOf(0.0) }
+    var editPaymentDialogTotalAmount by remember { mutableStateOf(0.0) }
 
     Scaffold(
         topBar = {
@@ -208,7 +209,7 @@ fun WorkerDetailScreen(
                                 )
                                 
                                 Text(
-                                    text = "₪${String.format("%.2f", totalOwed)}",
+                                    text = "₪${String.format(Locale("he", "IL"), "%.2f", totalOwed)}",
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.error
@@ -245,7 +246,6 @@ fun WorkerDetailScreen(
                                     
                                     unpaidShifts.forEach { unpaidShift ->
                                         WorkerDebtCard(
-                                            type = "shift",
                                             projectName = unpaidShift.projectName,
                                             date = unpaidShift.shiftDate,
                                             amount = if (unpaidShift.shiftWorker.isHourlyRate) {
@@ -272,16 +272,17 @@ fun WorkerDetailScreen(
                                         } else {
                                             unpaidEvent.eventWorker.payRate
                                         }
+                                        val remainingBalance = amount - unpaidEvent.eventWorker.amountPaid
                                         WorkerDebtCard(
-                                            type = "event",
                                             projectName = unpaidEvent.eventName,
                                             date = unpaidEvent.eventDate,
                                             amount = amount,
-                                            onMarkAsPaid = { 
-                                                paymentDialogTotalDue = amount
+                                            onMarkAsPaid = {
                                                 if (unpaidEvent.eventWorker.amountPaid > 0) {
+                                                    editPaymentDialogTotalAmount = amount
                                                     showEditPaymentDialog = unpaidEvent.eventWorker
                                                 } else {
+                                                    paymentDialogRemainingBalance = remainingBalance
                                                     showPaymentDialog = unpaidEvent.eventWorker
                                                 }
                                             },
@@ -343,7 +344,7 @@ fun WorkerDetailScreen(
                                 )
                                 
                                 Text(
-                                    text = "₪${String.format("%.2f", totalReferenceOwed)}",
+                                    text = "₪${String.format(Locale("he", "IL"), "%.2f", totalReferenceOwed)}",
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.secondary
@@ -362,12 +363,10 @@ fun WorkerDetailScreen(
                                         )
                                         shiftsWithPayment.forEach { unpaidShift ->
                                             WorkerDebtCard(
-                                                type = "reference_shift",
                                                 projectName = unpaidShift.projectName,
                                                 date = unpaidShift.shiftDate,
                                                 amount = (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours,
-                                                onMarkAsPaid = { onMarkShiftAsPaid(unpaidShift.shiftWorker.id) },
-                                                isReference = true
+                                                onMarkAsPaid = { onMarkShiftAsPaid(unpaidShift.shiftWorker.id) }
                                             )
                                         }
                                     }
@@ -386,12 +385,10 @@ fun WorkerDetailScreen(
                                         )
                                         eventsWithPayment.forEach { unpaidEvent ->
                                             WorkerDebtCard(
-                                                type = "reference_event",
                                                 projectName = unpaidEvent.eventName,
                                                 date = unpaidEvent.eventDate,
                                                 amount = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours,
-                                                onMarkAsPaid = { onMarkEventAsPaid(unpaidEvent.eventWorker.id) },
-                                                isReference = true
+                                                onMarkAsPaid = { onMarkEventAsPaid(unpaidEvent.eventWorker.id) }
                                             )
                                         }
                                     }
@@ -430,7 +427,6 @@ fun WorkerDetailScreen(
                                     )
                                     paidShifts.forEach { paidShift ->
                                         WorkerPaidCard(
-                                            type = "shift",
                                             projectName = paidShift.projectName,
                                             date = paidShift.shiftDate,
                                             amount = if (paidShift.shiftWorker.isHourlyRate) {
@@ -457,14 +453,13 @@ fun WorkerDetailScreen(
                                             paidEvent.eventWorker.payRate
                                         }
                                         WorkerPaidCard(
-                                            type = "event",
                                             projectName = paidEvent.eventName,
                                             date = paidEvent.eventDate,
                                             amount = amount,
                                             onRevokePayment = { onRevokeEventPayment(paidEvent.eventWorker.id) },
                                             // Add Edit support
                                             onEditPayment = {
-                                                paymentDialogTotalDue = amount
+                                                editPaymentDialogTotalAmount = amount
                                                 showEditPaymentDialog = paidEvent.eventWorker
                                             }
                                         )
@@ -559,7 +554,6 @@ fun WorkerDetailScreen(
                         }
                         items(allShifts) { shiftInfo ->
                             WorkerHistoryCard(
-                                type = "shift",
                                 projectName = shiftInfo.projectName,
                                 date = shiftInfo.shiftDate,
                                 amount = (if (shiftInfo.shiftWorker.isHourlyRate) {
@@ -593,20 +587,20 @@ fun WorkerDetailScreen(
                             }) + ((eventInfo.eventWorker.referencePayRate ?: 0.0) * eventInfo.eventWorker.hours)
                             
                             WorkerHistoryCard(
-                                type = "event",
                                 projectName = eventInfo.eventName,
                                 date = eventInfo.eventDate,
                                 amount = amount,
                                 isPaid = eventInfo.eventWorker.isPaid,
                                 onMarkAsPaid = if (!eventInfo.eventWorker.isPaid) {
-                                    { 
-                                        paymentDialogTotalDue = amount
+                                    {
+                                        val remainingBalance = amount - eventInfo.eventWorker.amountPaid
+                                        paymentDialogRemainingBalance = remainingBalance
                                         showPaymentDialog = eventInfo.eventWorker
                                     }
                                 } else null,
                                 onEditPayment = if (eventInfo.eventWorker.isPaid || eventInfo.eventWorker.amountPaid > 0) {
                                     {
-                                        paymentDialogTotalDue = amount
+                                        editPaymentDialogTotalAmount = amount
                                         showEditPaymentDialog = eventInfo.eventWorker
                                     }
                                 } else null
@@ -642,10 +636,12 @@ fun WorkerDetailScreen(
     // Payment Dialogs
     if (showPaymentDialog != null) {
         PaymentDialog(
-            totalAmount = paymentDialogTotalDue,
+            totalAmount = paymentDialogRemainingBalance,
             onConfirm = { isFullPayment, amount, tip ->
-                val amountToPay = if (isFullPayment) paymentDialogTotalDue else amount
-                onUpdateEventPayment(showPaymentDialog!!.id, isFullPayment, amountToPay, tip)
+                val additionalPayment = if (isFullPayment) paymentDialogRemainingBalance else amount
+                val newTotalPaid = showPaymentDialog!!.amountPaid + additionalPayment
+                val newTotalTip = showPaymentDialog!!.tipAmount + tip
+                onUpdateEventPayment(showPaymentDialog!!.id, isFullPayment, newTotalPaid, newTotalTip)
                 showPaymentDialog = null
             },
             onDismiss = { showPaymentDialog = null }
@@ -656,7 +652,7 @@ fun WorkerDetailScreen(
         EditPaymentDialog(
             currentPaidAmount = showEditPaymentDialog!!.amountPaid,
             currentTipAmount = showEditPaymentDialog!!.tipAmount,
-            totalDue = paymentDialogTotalDue,
+            totalDue = editPaymentDialogTotalAmount,
             isPaid = showEditPaymentDialog!!.isPaid,
             onConfirm = { isPaid, amount, tip ->
                 onUpdateEventPayment(showEditPaymentDialog!!.id, isPaid, amount, tip)
@@ -701,12 +697,10 @@ fun WorkerDetailScreen(
 
 @Composable
 private fun WorkerDebtCard(
-    type: String,
     projectName: String,
     date: Long,
     amount: Double,
     onMarkAsPaid: () -> Unit,
-    isReference: Boolean = false,
     partialAmount: Double? = null
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -739,7 +733,7 @@ private fun WorkerDebtCard(
             
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "₪${String.format("%.2f", amount)}",
+                    text = "₪${String.format(Locale("he", "IL"), "%.2f", amount)}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.error
@@ -747,7 +741,7 @@ private fun WorkerDebtCard(
                 
                 if (partialAmount != null) {
                     Text(
-                        text = "שולם: ₪${String.format("%.2f", partialAmount)}",
+                        text = "שולם: ₪${String.format(Locale("he", "IL"), "%.2f", partialAmount)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFFFFA000),
                         fontWeight = FontWeight.Bold
@@ -776,7 +770,6 @@ private fun WorkerDebtCard(
 
 @Composable
 private fun WorkerPaidCard(
-    type: String,
     projectName: String,
     date: Long,
     amount: Double,
@@ -820,7 +813,7 @@ private fun WorkerPaidCard(
             
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "₪${String.format("%.2f", amount)}",
+                    text = "₪${String.format(Locale("he", "IL"), "%.2f", amount)}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -889,7 +882,6 @@ private fun WorkerPaidCard(
 
 @Composable
 private fun WorkerHistoryCard(
-    type: String,
     projectName: String,
     date: Long,
     amount: Double,
@@ -938,7 +930,7 @@ private fun WorkerHistoryCard(
             
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "₪${String.format("%.2f", amount)}",
+                    text = "₪${String.format(Locale("he", "IL"), "%.2f", amount)}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = if (isPaid) {

@@ -6,10 +6,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.example.workertracking.R
+import java.util.Locale
 
 @Composable
 fun PaymentDialog(
@@ -30,7 +30,11 @@ fun PaymentDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("סכום לתשלום: ₪${String.format("%.2f", totalAmount)}")
+                Text(
+                    text = "יתרה לתשלום: ₪${String.format(Locale("he", "IL"), "%.2f", totalAmount)}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
 
                 // Payment Type Selection
                 Row(
@@ -152,7 +156,11 @@ fun EditPaymentDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("סכום לתשלום מלא: ₪${String.format("%.2f", totalDue)}")
+                Text(
+                    text = "סכום כולל לתשלום: ₪${String.format(Locale("he", "IL"), "%.2f", totalDue)}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
 
                 OutlinedTextField(
                     value = amount,

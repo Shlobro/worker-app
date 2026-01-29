@@ -7,3 +7,11 @@
 - never mention legacy functionality or recent changes in the MD files they are only needed to get engineers into what is happening right now in the code.
 - always ask if a commit message is good before commiting.
 - backward compatibility is never a concern, always assume that everyone has the latest installed.
+- after making code changes, ALWAYS run lint checks to ensure code quality:
+  * Run `./gradlew lint` from the project root (requires build to pass first)
+  * Fix all warnings introduced by your changes, including:
+    - Unused imports
+    - Unused parameters/variables
+    - Locale issues (always use `String.format(Locale(...), format, args)` instead of `String.format(format, args)`)
+    - Missing indices on foreign keys
+  * Do not introduce new warnings - clean code is maintained code
