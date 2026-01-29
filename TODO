@@ -24,21 +24,13 @@ MAJOR BUGS
 LOW PRIORITY / MINOR BUGS
 ==========================
 
-13. Inconsistent Error Handling
-    Location: All ViewModels
-    Problem: Empty catch blocks silently swallow errors
-    Impact: Users have no feedback when operations fail
-    Fix Required:
-    - Add error state to ViewModels
-    - Show error messages to users
-
-14. Navigation Clears Entire Backstack
+13. Navigation Clears Entire Backstack
     Location: MainActivity.kt:135-142
     Problem: Dashboard navigation uses popUpTo(0) { inclusive = true }
     Impact: User can't navigate back after visiting dashboard
     Note: May be intentional design, verify with product requirements
 
-15. ShiftWorker Payment Status Not Granular
+14. ShiftWorker Payment Status Not Granular
     Location: ShiftWorker entity (inferred)
     Problem: ShiftWorker only has isPaid boolean, unlike EventWorker which has amountPaid,
              tipAmount, etc.
@@ -48,7 +40,7 @@ LOW PRIORITY / MINOR BUGS
     - Add referenceAmountPaid, referenceTipAmount fields
     - Update UI to support partial shift payments
 
-16. Manual Event Bus Instead of Reactive Data
+15. Manual Event Bus Instead of Reactive Data
     Location: MoneyOwedViewModel.kt calling appContainer.triggerDashboardRefresh()
     Problem: ViewModels manually trigger refreshes instead of using Room Flows
     Impact: Tight coupling to DI container, unnecessary complexity
@@ -60,17 +52,17 @@ LOW PRIORITY / MINOR BUGS
 POTENTIAL ISSUES - VERIFY
 ==========================
 
-17. Date Type Conversion
+16. Date Type Conversion
     Location: WorkerRepository.kt:217, 236
     Question: Is shiftDate stored as Long (millis) or Date object?
     Action: Verify data type and ensure Date(shift.shiftDate) is correct
 
-18. Worker Deletion Cascade
+17. Worker Deletion Cascade
     Location: Worker.kt:16
     Question: Should historical ShiftWorker/EventWorker records be preserved when worker deleted?
     Action: Verify intended behavior with product owner
 
-19. Reference Worker Commission on Fixed Amount
+18. Reference Worker Commission on Fixed Amount
     Location: WorkerRepository.kt:265, EventDetailScreen.kt:299-301
     Question: Should reference workers get hourly commission when referred worker got fixed payment?
     Action: Clarify business logic with product owner

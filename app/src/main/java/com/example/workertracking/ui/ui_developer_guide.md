@@ -14,3 +14,5 @@ This package contains all Jetpack Compose UI code, navigation definitions, share
 
 - Screens should only depend on their ViewModel and reusable components.
 - Shared UI is extracted into **components** when reused across multiple screens.
+- Top-level composables expose a `modifier` parameter to support layout control from navigation.
+- Screens that display money format numbers with the current locale.

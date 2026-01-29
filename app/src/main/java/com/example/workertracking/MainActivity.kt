@@ -284,17 +284,27 @@ fun WorkerTrackingApp() {
                 val totalIncome by viewModel.totalIncome.collectAsState()
                 val totalPayments by viewModel.totalPayments.collectAsState()
                 val isLoading by viewModel.isLoading.collectAsState()
-                
+                val error by viewModel.error.collectAsState()
+                val snackbarHostState = remember { SnackbarHostState() }
+
                 LaunchedEffect(projectId) {
                     viewModel.loadProject(projectId)
                 }
-                
+
+                LaunchedEffect(error) {
+                    error?.let {
+                        snackbarHostState.showSnackbar(it)
+                        viewModel.clearError()
+                    }
+                }
+
                 ProjectDetailScreen(
                     project = project,
                     shifts = shifts,
                     totalIncome = totalIncome,
                     totalPayments = totalPayments,
                     isLoading = isLoading,
+                    snackbarHostState = snackbarHostState,
                     onNavigateBack = {
                         navController.popBackStack()
                     },

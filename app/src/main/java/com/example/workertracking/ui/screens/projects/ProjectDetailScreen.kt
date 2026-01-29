@@ -3,7 +3,14 @@ package com.example.workertracking.ui.screens.projects
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -20,36 +27,43 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.workertracking.R
 import com.example.workertracking.data.entity.Project
-import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.data.entity.Shift
 import com.example.workertracking.data.entity.ProjectStatus
 import java.text.DateFormat
 import java.text.NumberFormat
-import java.util.*
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ProjectDetailScreen(
     project: Project?,
+    isLoading: Boolean,
+    onNavigateBack: () -> Unit,
+    onAddShift: () -> Unit,
+    modifier: Modifier = Modifier,
     shifts: List<Shift> = emptyList(),
     totalIncome: Double = 0.0,
     totalPayments: Double = 0.0,
-    isLoading: Boolean,
-    onNavigateBack: () -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onEditProject: () -> Unit = {},
     onDeleteProject: () -> Unit = {},
-    onAddShift: () -> Unit,
     onShiftClick: (Long) -> Unit = {},
     onDeleteShift: (Shift) -> Unit = {},
     onAddIncome: () -> Unit = {},
     onIncomeHistoryClick: () -> Unit = {},
-    onCloseProject: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onCloseProject: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var shiftToDelete by remember { mutableStateOf<Shift?>(null) }
     var showCloseDialog by remember { mutableStateOf(false) }
     var showDeleteProjectDialog by remember { mutableStateOf(false) }
+    val locale = Locale.getDefault()
+    val moneyFormatter = remember(locale) {
+        NumberFormat.getNumberInstance(locale).apply {
+            minimumFractionDigits = 2
+            maximumFractionDigits = 2
+        }
+    }
     
     val filteredShifts = remember(shifts, searchQuery) {
         if (searchQuery.isBlank()) {
@@ -61,9 +75,10 @@ fun ProjectDetailScreen(
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(project?.name ?: stringResource(R.string.projects_title))
                 },
                 navigationIcon = {
@@ -92,7 +107,8 @@ fun ProjectDetailScreen(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         if (isLoading) {
             Box(
@@ -253,7 +269,7 @@ fun ProjectDetailScreen(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
-                                        text = "${String.format("%.2f", totalIncome)} ש\"ח",
+                                        text = "${moneyFormatter.format(totalIncome)} ש\"ח",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
@@ -267,7 +283,7 @@ fun ProjectDetailScreen(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
-                                        text = "${String.format("%.2f", totalPayments)} ש\"ח",
+                                        text = "${moneyFormatter.format(totalPayments)} ש\"ח",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.error
@@ -282,7 +298,7 @@ fun ProjectDetailScreen(
                                     )
                                     val profit = totalIncome - totalPayments
                                     Text(
-                                        text = "${String.format("%.2f", profit)} ש\"ח",
+                                        text = "${moneyFormatter.format(profit)} ש\"ח",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = if (profit >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error

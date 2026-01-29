@@ -42,6 +42,9 @@ class ProjectDetailViewModel(
     private val _currentIncome = MutableStateFlow<ProjectIncome?>(null)
     val currentIncome: StateFlow<ProjectIncome?> = _currentIncome.asStateFlow()
 
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
     fun loadProject(projectId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -85,7 +88,7 @@ class ProjectDetailViewModel(
                 // Refresh financial data after deleting shift
                 _project.value?.let { loadFinancialData(it.id) }
             } catch (e: Exception) {
-                // Handle error silently or add error state if needed
+                _error.value = e.message ?: "Failed to delete shift"
             }
         }
     }
@@ -99,7 +102,7 @@ class ProjectDetailViewModel(
                     loadProject(project.id)
                 }
             } catch (e: Exception) {
-                // Handle error silently or add error state if needed
+                _error.value = e.message ?: "Failed to close project"
             }
         }
     }
@@ -111,7 +114,7 @@ class ProjectDetailViewModel(
                     projectRepository.deleteProject(project)
                 }
             } catch (e: Exception) {
-                // Handle error silently or add error state if needed
+                _error.value = e.message ?: "Failed to delete project"
             }
         }
     }
@@ -130,7 +133,7 @@ class ProjectDetailViewModel(
                     _updateSuccess.value = true
                 }
             } catch (e: Exception) {
-                // Handle error silently or add error state if needed
+                _error.value = e.message ?: "Failed to update project"
             }
         }
     }
@@ -153,13 +156,13 @@ class ProjectDetailViewModel(
                 // Find the income in the ProjectIncome DAO
                 val income = projectRepository.getIncomeById(incomeId)
                 _currentIncome.value = income
-                
+
                 // Load the associated project
                 income?.let {
                     _project.value = projectRepository.getProjectById(it.projectId)
                 }
             } catch (e: Exception) {
-                // Handle error silently or add error state if needed
+                _error.value = e.message ?: "Failed to load income"
             }
         }
     }
@@ -173,7 +176,7 @@ class ProjectDetailViewModel(
                 // Refresh financial data
                 loadFinancialData(income.projectId)
             } catch (e: Exception) {
-                // Handle error silently or add error state if needed
+                _error.value = e.message ?: "Failed to update income"
             }
         }
     }
@@ -187,8 +190,12 @@ class ProjectDetailViewModel(
                 // Refresh financial data
                 loadFinancialData(income.projectId)
             } catch (e: Exception) {
-                // Handle error silently or add error state if needed
+                _error.value = e.message ?: "Failed to delete income"
             }
         }
+    }
+
+    fun clearError() {
+        _error.value = null
     }
 }

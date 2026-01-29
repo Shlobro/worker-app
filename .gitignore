@@ -31,3 +31,4 @@ proguard/
 # User-specific files
 .DS_Store
 /.kotlin/sessions/kotlin-compiler-12848457850409602922.salive
+/nul

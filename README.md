@@ -10,6 +10,7 @@ A comprehensive Android application for managing construction projects, workers,
 - Add multiple income entries per project with flexible units
 - Real-time profit/loss calculations
 - Edit project details including name, location, and financial information
+- Project detail includes a locale-aware financial summary and searchable shift list
 
 ### 👷 Worker Management
 - Manage worker profiles with contact information and photo albums
@@ -49,7 +50,7 @@ A comprehensive Android application for managing construction projects, workers,
 
 ### 📱 User Interface
 - Modern Material 3 design
-- Fully localized in Hebrew
+- Localized in Hebrew with English translations
 - Bottom navigation with hierarchical screens
 - Search functionality across workers, projects, and events
 - Date/time pickers with Hebrew localization

@@ -18,3 +18,5 @@ This package is the root of the Kotlin source code for the app. It is the entry 
 
 - For app-level navigation or layout: **MainActivity.kt**.
 - For dependency wiring: **WorkerTrackingApplication.kt** and **di/AppContainer.kt**.
+- For project-specific UI behavior: **ui/screens/projects/ProjectDetailScreen.kt** and related screens.
+- For currency/financial formatting: screens use locale-aware number formatting in their summaries.

@@ -1,2 +1,9 @@
-1) I should be able to change the status of a closed project to open
-2) when clicking a project, it should open the project details and not edit it. just like events work.
+the לוח בקרה should be updated where it says מעקב חובות it should only show the total owed at the moment and only when clicked it should should all the workers owed and how many. also if i owe 0 then it shouldnt be red and scary.
+in the dashboard when it shows me how much money i made it should only show this month. if i go in it i should be able to click by month and see more details there there is too much info at the start. and get rid of the filter by date those should be in the submenu of the revenue
+when entering a time like when adding an event if i  input 200 it works and changes it to 02:00 but when i enter 300 or 400 or 800 etc it does not work, and when i try to enter 0800 it stops me at 08. i cannot enter 19:00 either it stops me at 19
+when i make an event without the מעסיק and then i go to edit it to add him in i don't have the option
+in the screen where i add a worker to an event and there is an עובד מפנה the UI is terrible i cannot see the box where i input the amount to the עובד מפנה
+in the event UI in the worker section there has to be a better UI. need to seperate the title and the list. and need a clearer seperation between the lists of workers and refernce payments.
+when i go into a worker and he is owed money but he was referenced it shows סכום ממתין the amount including what the referer instead of just the amount owed to that worker.
+a worker that is a referer in the section where it shows the תשלומי הפניה it should not only show the event name but also the worker name that he brought.
+in the תשלומי הפניה section when i try and click on סמן כשולם it does nothing.

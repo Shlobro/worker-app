@@ -6,6 +6,7 @@
     <string name="nav_projects">Projects</string>
     <string name="nav_workers">Workers</string>
     <string name="nav_events">Events</string>
+    <string name="nav_employers">Employers</string>
     
     <!-- Dashboard -->
     <string name="dashboard_title">Dashboard</string>
@@ -17,6 +18,7 @@
     <!-- Projects -->
     <string name="projects_title">Projects</string>
     <string name="add_project">Add Project</string>
+    <string name="edit_project">Edit Project</string>
     <string name="project_name">Project Name</string>
     <string name="project_location">Project Location</string>
     <string name="start_date">Start Date</string>
@@ -33,17 +35,24 @@
     <!-- Workers -->
     <string name="workers_title">Workers</string>
     <string name="add_worker">Add Worker</string>
+    <string name="edit_worker">Edit Worker</string>
     <string name="worker_name">Worker Name</string>
-    <string name="contact_info">Contact Info</string>
+    <string name="phone_number">Phone Number</string>
     <string name="reference_worker">Reference Worker</string>
     <string name="total_owed">Total Owed</string>
+    <string name="total_earnings">Total Earnings</string>
     <string name="payment_history">Payment History</string>
     <string name="pending_payments">Pending Payments</string>
     <string name="project_history">Project History</string>
+    <string name="worker_projects_events">Projects and Events</string>
+    <string name="contact_info">Contact Info</string>
+    <string name="reference_percentage">Reference Percentage (%)</string>
     
     <!-- Shifts -->
     <string name="shifts_title">Shifts</string>
     <string name="add_shift">Add Shift</string>
+    <string name="edit_shift">Edit Shift</string>
+    <string name="shift_detail">Shift Details</string>
     <string name="shift_date">Shift Date</string>
     <string name="start_time">Start Time</string>
     <string name="end_time">End Time</string>
@@ -54,6 +63,7 @@
     <!-- Events -->
     <string name="events_title">Events</string>
     <string name="add_event">Add Event</string>
+    <string name="edit_event">Edit Event</string>
     <string name="event_name">Event Name</string>
     <string name="event_date">Event Date</string>
     <string name="event_time">Event Time</string>
@@ -61,6 +71,9 @@
     
     <!-- Payments -->
     <string name="add_payment">Add Payment</string>
+    <string name="add_income">Add Income</string>
+    <string name="edit_income">Edit Income</string>
+    <string name="income_history">Income History</string>
     <string name="payment_amount">Payment Amount</string>
     <string name="payment_date">Payment Date</string>
     <string name="payment_source">Payment Source</string>
@@ -78,7 +91,7 @@
     <string name="hours">Hours</string>
     <string name="currency_symbol">$</string>
     <string name="no_data">No data</string>
-    <string name="loading">Loading...</string>
+    <string name="loading">Loading…</string>
     
     <!-- Validation -->
     <string name="error_empty_field">This field is required</string>
@@ -87,8 +100,19 @@
     <string name="error_invalid_time">Invalid time</string>
     
     <!-- Dashboard Cards -->
-    <string name="financial_summary">Financial Summary</string>
     <string name="recent_activity">Recent Activity</string>
+    <string name="total_revenue">Total Revenue</string>
+    <string name="total_expenses">Total Expenses</string>
+    <string name="money_owed_tracking">Money Owed Tracking</string>
+    <string name="total_pending_payments">Total Pending Payments</string>
+    <string name="active_projects">Active Projects</string>
+    <string name="upcoming_events">Upcoming Events</string>
+    <string name="no_active_projects">No active projects</string>
+    <string name="no_upcoming_events">No upcoming events</string>
+    <string name="view_all">View All</string>
+    <string name="active">Active</string>
+    <string name="filter_by_date">Filter by date</string>
+    <string name="clear_filter">Clear filter</string>
     
     <!-- Content Descriptions -->
     <string name="back">Back</string>
@@ -97,5 +121,95 @@
     
     <!-- Worker specific -->
     <string name="no_reference">No Reference</string>
-    <string name="reference_percentage">Reference Percentage (%)</string>
+    <string name="search_workers">Search workers…</string>
+    <string name="search_events">Search events…</string>
+    <string name="search_projects">Search projects…</string>
+    <string name="call_worker">Call worker</string>
+    
+    <!-- Delete Confirmation -->
+    <string name="delete_confirmation_title">Delete Confirmation</string>
+    <string name="delete_worker_message">Are you sure you want to delete worker %1$s? This cannot be undone and will remove all related data.</string>
+    <string name="delete_project_message">Are you sure you want to delete project %1$s? This cannot be undone and will remove all related data.</string>
+    <string name="delete_event_message">Are you sure you want to delete event %1$s? This cannot be undone and will remove all related data.</string>
+    <string name="delete_shift_message">Are you sure you want to delete this shift? This cannot be undone.</string>
+    <string name="confirm_delete">Delete</string>
+    <string name="cancel_delete">Cancel</string>
+    <string name="delete_project">Delete Project</string>
+    <string name="delete_worker">Delete Worker</string>
+    <string name="delete_event">Delete Event</string>
+    <string name="delete_shift">Delete Shift</string>
+    
+    <!-- Event Details -->
+    <string name="event_details">Event Details</string>
+    <string name="profit">Profit</string>
+    <string name="loss">Loss</string>
+    <string name="worker_payments">Worker Payments</string>
+    <string name="no_workers_assigned">No workers assigned</string>
+    <string name="remove_worker">Remove worker</string>
+    
+    <!-- Photo Gallery -->
+    <string name="worker_photos">Worker Photos</string>
+    <string name="worker_photos_title">%1$s Photos</string>
+    <string name="photo_count">%1$d photos</string>
+    <string name="no_photos">No photos</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="add_first_photo">Add First Photo</string>
+    <string name="take_photo">Take Photo</string>
+    <string name="worker_photo">Worker Photo</string>
+    <string name="share_photo">Share Photo</string>
+    <string name="delete_photo">Delete Photo</string>
+    <string name="delete_photo_confirmation">Are you sure you want to delete this photo?</string>
+    <string name="worker_not_found">Worker not found</string>
+    <string name="worker_of">Worker of %1$s</string>
+    
+    <!-- Money Owed / Debt Tracking -->
+    <string name="money_owed">Money Owed</string>
+    <string name="total_debt">Total Debt</string>
+    <string name="unpaid_shifts">Unpaid Shifts</string>
+    <string name="unpaid_events">Unpaid Events</string>
+    <string name="mark_as_paid">Mark as paid</string>
+    <string name="mark_all_as_paid">Mark all as paid</string>
+    <string name="no_outstanding_payments">No outstanding payments</string>
+    <string name="all_payments_up_to_date">All payments are up to date</string>
+    <string name="outstanding_amount">Outstanding amount</string>
+    <string name="debt_status">Debt status</string>
+    <string name="paid">Paid</string>
+    <string name="unpaid">Unpaid</string>
+    <string name="revoke_payment">Revoke payment</string>
+    <string name="payment_revoked">Payment revoked</string>
+    <string name="revoke_payment_confirmation">Are you sure you want to revoke this payment?</string>
+    <string name="paid_history">Paid History</string>
+    <string name="show_paid_items">Show paid items</string>
+    <string name="hide_paid_items">Hide paid items</string>
+    <string name="work_history">Work History</string>
+    <string name="all_shifts">All shifts</string>
+    <string name="all_events">All events</string>
+    <string name="no_work_history">No work history</string>
+    <string name="total_owed_format">Total owed: %1$.2f $</string>
+    <string name="unpaid_shifts_count">%1$d shifts</string>
+    <string name="unpaid_events_count">%1$d events</string>
+    
+    <!-- Date Filter -->
+    <string name="apply">Apply</string>
+    <string name="select_date_range">Select date range</string>
+    <string name="select_start_date">Select start date</string>
+    <string name="select_end_date">Select end date</string>
+    <string name="next">Next</string>
+    
+    <!-- Employers -->
+    <string name="employers_title">Employers</string>
+    <string name="add_employer">Add Employer</string>
+    <string name="edit_employer">Edit Employer</string>
+    <string name="employer_name">Employer Name</string>
+    <string name="search_employers">Search employers</string>
+    <string name="call_employer">Call employer</string>
+    <string name="delete_employer">Delete employer</string>
+    <string name="delete_employer_message">Are you sure you want to delete %1$s?</string>
+    <string name="employer_not_found">Employer not found</string>
+    <string name="no_projects_events">No projects or events</string>
+    <string name="search_projects_events">Search projects and events</string>
+    <string name="financial_summary">Financial Summary</string>
+    <string name="total_profit">Total Profit</string>
+    <string name="select_employer">Select employer</string>
+    <string name="no_employer">No employer</string>
 </resources>

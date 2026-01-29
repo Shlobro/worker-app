@@ -12,6 +12,6 @@ This package contains top-level Compose screens. Feature screens are organized i
 - **dashboard**: App overview and summary screen.
 - **employers**: Employer list, detail, add, and edit screens.
 - **events**: Event list, detail, add/edit, and worker assignment screens.
-- **projects**: Project list, detail, add/edit, and project income screens.
+- **projects**: Project list, detail, add/edit, and project income screens (detail includes a locale-aware financial summary and shift list).
 - **shifts**: Shift detail, add, and edit screens.
 - **workers**: Worker list, detail, add, and edit screens.
