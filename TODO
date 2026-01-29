@@ -26,14 +26,6 @@ HIGH PRIORITY BUGS
 MAJOR BUGS
 ==========
 
-7. Project Costs Omit Reference Pay
-    Location: ShiftDao.kt:28, DashboardViewModel.kt:205
-    Problem: Project cost calculations don't include referencePayRate
-    Impact: Project profit is under-reported whenever reference payments exist
-    Fix Required:
-    - Add reference payment calculations to ShiftDao cost queries
-    - Update DashboardViewModel to include reference costs
-
 8. Dashboard Date Filter Ignores Project Income
     Location: DashboardViewModel.kt:128
     Problem: Date filtering applies to shifts/events but not project_income table

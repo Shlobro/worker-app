@@ -26,9 +26,15 @@ interface ShiftDao {
     suspend fun deleteShift(shift: Shift)
 
     @Query("""
-        SELECT SUM(CASE WHEN sw.isHourlyRate = 1 THEN sw.payRate * s.hours ELSE sw.payRate END) 
-        FROM shifts s 
-        INNER JOIN shift_workers sw ON s.id = sw.shiftId 
+        SELECT SUM(
+            CASE
+                WHEN sw.isHourlyRate = 1 THEN sw.payRate * s.hours
+                ELSE sw.payRate
+            END +
+            COALESCE(s.hours * sw.referencePayRate, 0.0)
+        )
+        FROM shifts s
+        INNER JOIN shift_workers sw ON s.id = sw.shiftId
         WHERE s.projectId = :projectId
     """)
     suspend fun getTotalCostForProject(projectId: Long): Double?
