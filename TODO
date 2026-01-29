@@ -31,15 +31,6 @@ MAJOR BUGS
 MEDIUM PRIORITY BUGS
 ====================
 
-11. Missing Database Indices on Foreign Keys
-    Location: All entity files
-    Problem: No indices defined on foreign key columns (workerId, shiftId, eventId, etc.)
-    Impact: Slow queries when joining tables, especially with large datasets
-    Fix Required:
-    - Add @Index annotations to all entities
-    - Example: @Entity(indices = [Index("workerId"), Index("eventId")])
-    - Create migration to add indices
-
 12. Locale Hardcoded to Hebrew
     Location: Multiple files using Locale("he", "IL")
     Problem: Currency formatting hardcoded instead of using device locale
@@ -134,7 +125,8 @@ PRIORITY ORDER
 2. Fix Flow Memory Leaks (Bug #4) - Memory stability [COMPLETED]
 3. Fix Dashboard Date Filter Ignores Project Income (Bug #8) - Data accuracy [COMPLETED]
 4. Fix Payment Dialog Validation (Bug #10) - Prevent overpayment [COMPLETED]
-5. Remaining Major/Medium bugs as time permits
+5. Fix Missing Database Indices (Bug #11) - Improve query performance [COMPLETED]
+6. Remaining Major/Medium bugs as time permits
 
 
 ========================================

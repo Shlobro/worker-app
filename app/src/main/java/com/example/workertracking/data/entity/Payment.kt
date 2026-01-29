@@ -2,6 +2,7 @@ package com.example.workertracking.data.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.Date
 
@@ -14,7 +15,8 @@ import java.util.Date
             childColumns = ["workerId"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index("workerId")]
 )
 data class Payment(
     @PrimaryKey(autoGenerate = true)

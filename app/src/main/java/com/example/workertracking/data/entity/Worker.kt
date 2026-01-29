@@ -2,6 +2,7 @@ package com.example.workertracking.data.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.example.workertracking.data.Converters
@@ -15,7 +16,8 @@ import com.example.workertracking.data.Converters
             childColumns = ["referenceId"],
             onDelete = ForeignKey.SET_NULL
         )
-    ]
+    ],
+    indices = [Index("referenceId")]
 )
 @TypeConverters(Converters::class)
 data class Worker(

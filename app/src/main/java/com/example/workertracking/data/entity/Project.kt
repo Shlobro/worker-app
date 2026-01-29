@@ -2,6 +2,7 @@ package com.example.workertracking.data.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.Date
 
@@ -14,7 +15,8 @@ import java.util.Date
             childColumns = ["employerId"],
             onDelete = ForeignKey.SET_NULL
         )
-    ]
+    ],
+    indices = [Index("employerId")]
 )
 data class Project(
     @PrimaryKey(autoGenerate = true)
@@ -26,14 +28,6 @@ data class Project(
     val endDate: Date? = null,
     val employerId: Long? = null
 )
-
-enum class IncomeType {
-    DAILY,
-    WEEKLY,
-    HOURLY,
-    MONTHLY,
-    FIXED
-}
 
 enum class ProjectStatus {
     ACTIVE,
