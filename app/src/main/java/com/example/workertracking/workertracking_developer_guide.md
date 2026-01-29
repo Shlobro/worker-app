@@ -1,15 +1,20 @@
-# WorkerTracking Package Developer Guide
+﻿# WorkerTracking Package Developer Guide
 
-This is the root package of the application source code.
+This package is the root of the Kotlin source code for the app. It is the entry point for the UI layer and the top-level dependency wiring.
 
 ## Files
 
-- **MainActivity.kt**: The single Activity entry point for the application. It sets up the `WorkerTrackingTheme` and hosts the main navigation graph.
-- **WorkerTrackingApplication.kt**: The Application class. It initializes the dependency injection container (`AppContainer`) upon app startup.
+- **MainActivity.kt**: The single Activity. It sets the Compose content, hosts the NavHost, and applies the app theme and scaffolding.
+- **WorkerTrackingApplication.kt**: Application class. Creates the AppContainer so repositories and the database are available app-wide.
 
-## Architecture Overview
+## Subpackages
 
-The app follows the recommended Android architecture:
-- **UI Layer**: Jetpack Compose + ViewModels.
-- **Data Layer**: Repositories + Room Database (DAOs & Entities).
-- **DI**: Manual dependency injection via `AppContainer`.
+- **data**: Room database configuration, DAOs, and entities.
+- **di**: Manual dependency injection container (AppContainer).
+- **repository**: Data access and business logic used by ViewModels.
+- **ui**: Compose UI, navigation, themes, components, and ViewModels.
+
+## Where to Start
+
+- For app-level navigation or layout: **MainActivity.kt**.
+- For dependency wiring: **WorkerTrackingApplication.kt** and **di/AppContainer.kt**.

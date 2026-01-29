@@ -1,5 +1,7 @@
-# Dashboard Screen Developer Guide
+﻿# Dashboard Screen Developer Guide
+
+This folder contains the dashboard overview screen.
 
 ## Files
 
-- **DashboardScreen.kt**: The main landing screen of the application. It typically shows a summary of recent activity, upcoming shifts, or quick stats.
+- **DashboardScreen.kt**: Main landing screen showing high-level totals and recent activity summaries.

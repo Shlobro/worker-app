@@ -1,15 +1,16 @@
-# UI Package Developer Guide
+﻿# UI Package Developer Guide
 
-This package contains all the User Interface related code, including Composables, Navigation, Themes, and reusable Components.
+This package contains all Jetpack Compose UI code, navigation definitions, shared components, and ViewModels.
 
-## Sub-packages
+## Subpackages
 
-- **components**: Reusable UI components used across multiple screens (e.g., Dialogs, Cards).
-- **navigation**: Navigation definitions, routes, and bottom bar configurations.
-- **screens**: The actual screens of the application, organized by feature.
-- **theme**: Jetpack Compose theme definitions (Colors, Typography, Shapes).
-- **viewmodel**: Contains the ViewModels for the screens (sometimes located here or in a parallel package).
+- **components**: Reusable Compose pieces (dialogs, cards, selectors, shared controls).
+- **navigation**: Route definitions and bottom navigation metadata.
+- **screens**: Feature screens grouped by domain (dashboard, events, projects, etc.).
+- **theme**: Material 3 theme configuration (colors, typography, theme wrapper).
+- **viewmodel**: ViewModels for screens and supporting UI state.
 
-## Architecture
+## Usage Notes
 
-The app uses Jetpack Compose for the UI. It follows a unidirectional data flow pattern (MVI/MVVM) where ViewModels expose StateFlows that the UI observes.
+- Screens should only depend on their ViewModel and reusable components.
+- Shared UI is extracted into **components** when reused across multiple screens.

@@ -1,12 +1,12 @@
-# Navigation Package Developer Guide
+﻿# Navigation Package Developer Guide
 
-This package handles the application's navigation logic.
+This package contains the navigation metadata used by the app's NavHost and bottom bar.
 
 ## Files
 
-- **BottomNavItem.kt**: Sealed class defining the items in the bottom navigation bar (Dashboard, Events, Projects, etc.).
-- **Screen.kt**: Sealed class defining the routes for all screens in the application. It maps screen names to their route strings.
+- **BottomNavItem.kt**: Defines bottom navigation destinations (label, icon, and route).
+- **Screen.kt**: Defines all navigation routes and route helpers used by the NavHost.
 
 ## Usage
 
-The `Screen` sealed class is used by the `NavHost` to define the navigation graph.
+Routes in `Screen` are referenced by `MainActivity` when building the NavHost and when navigating from screens.

@@ -1,17 +1,17 @@
-# Repository Package Developer Guide
+﻿# Repository Package Developer Guide
 
-This package contains the Repository layer, which acts as a single source of truth for data. It mediates between the data sources (DAOs) and the UI/Domain layer (ViewModels).
+This package contains the repository layer that coordinates DAOs and provides a clean API for ViewModels.
 
 ## Files
 
-- **EmployerRepository.kt**: Manages data operations for Employers.
-- **EventRepository.kt**: Manages data operations for Events.
-- **ProjectRepository.kt**: Manages data operations for Projects and Project Income.
-- **ShiftRepository.kt**: Manages data operations for Shifts.
-- **WorkerRepository.kt**: Manages data operations for Workers.
+- **EmployerRepository.kt**: Employer CRUD and employer-level aggregates.
+- **EventRepository.kt**: Event CRUD plus event-worker assignment operations and totals.
+- **ProjectRepository.kt**: Project CRUD and project income operations.
+- **ShiftRepository.kt**: Shift CRUD and shift-worker assignment operations.
+- **WorkerRepository.kt**: Worker CRUD plus worker-related debt/summary calculations.
 
 ## Responsibilities
 
-- Exposing data as `Flow` streams to the ViewModels.
-- Executing suspend functions for database writes on appropriate dispatchers (though Room handles this, Repositories provide the API).
-- Abstraction: The UI layer interacts with these repositories rather than directly with the DAOs.
+- Expose data as `Flow` streams for live UI updates.
+- Centralize write operations so ViewModels do not talk to DAOs directly.
+- Encapsulate business logic and calculations tied to each feature.

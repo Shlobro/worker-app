@@ -1,26 +1,21 @@
-# Entity Package Developer Guide
+﻿# Entity Package Developer Guide
 
-This package contains the data classes that represent the database tables and complex query results.
+This package contains Room entities (tables) and projection models used by queries.
 
-## Database Tables (Entities)
+## Room Entities (Tables)
 
-- **Employer.kt**: Represents an employer.
-- **Event.kt**: Represents a work event.
-- **EventWorker.kt**: Cross-reference table for the many-to-many relationship between Events and Workers.
-- **Payment.kt**: Represents a payment made to a worker.
-- **Project.kt**: Represents a project.
-- **ProjectIncome.kt**: Represents income associated with a project.
-- **Shift.kt**: Represents a work shift.
-- **ShiftWorker.kt**: Cross-reference table for Shift assignments.
-- **Worker.kt**: Represents a worker.
+- **Employer.kt**: Employer/company records.
+- **Event.kt**: Standalone event records with time and income fields.
+- **EventWorker.kt**: Join table for event-worker assignments and pay info.
+- **Payment.kt**: Payment records made to workers.
+- **Project.kt**: Project records with status and dates.
+- **ProjectIncome.kt**: Income entries attached to a project.
+- **Shift.kt**: Work shift records tied to a project.
+- **ShiftWorker.kt**: Join table for shift-worker assignments and pay info.
+- **Worker.kt**: Worker records including optional reference worker link and photos.
 
-## Data Views (POJOs)
+## Projection / Helper Models
 
-- **UnpaidInfo.kt**: Helper class to represent unpaid amount information.
-- **WorkerWithDebt.kt**: Helper class or view to represent a worker along with their calculated debt/credit.
-
-## Conventions
-
-- Each entity class is annotated with `@Entity`.
-- Primary keys are annotated with `@PrimaryKey`.
-- Foreign keys are defined within the `@Entity` annotation to ensure referential integrity.
+- **UnpaidInfo.kt**: Lightweight projection for unpaid amounts and counts.
+- **WorkerWithDebt.kt**: Combines a Worker with computed debt totals.
+- **WorkerWithDebtData.kt**: Aggregated fields for worker debt and totals with helpers to map to Worker/WorkerWithDebt.

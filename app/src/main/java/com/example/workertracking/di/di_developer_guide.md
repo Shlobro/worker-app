@@ -1,11 +1,11 @@
-# Dependency Injection Package Developer Guide
+﻿# Dependency Injection Package Developer Guide
 
-This package manages dependency injection for the application.
+This package provides the manual dependency injection container used by the app.
 
 ## Files
 
-- **AppContainer.kt**: Implements a manual dependency injection container. It holds the singleton instance of the `WorkerTrackingDatabase` and provides repository instances (`WorkerRepository`, `EventRepository`, etc.) to the rest of the application.
+- **AppContainer.kt**: Builds the `WorkerTrackingDatabase` and exposes repository singletons (ProjectRepository, WorkerRepository, EventRepository, ShiftRepository, EmployerRepository). Use this when wiring new repositories or database access.
 
-## Usage
+## How It Is Used
 
-The `AppContainer` is initialized in the `WorkerTrackingApplication` class. ViewModels or other components access dependencies through this container.
+`WorkerTrackingApplication` creates the AppContainer at startup so ViewModels and screens can access repositories.

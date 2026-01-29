@@ -1,19 +1,30 @@
-# ViewModel Package Developer Guide
+﻿# ViewModel Package Developer Guide
 
-This package contains the ViewModels for the application screens. They extend `ViewModel` and are responsible for preparing and managing the data for the UI.
+This package contains ViewModels that back Compose screens and expose UI state via `StateFlow`.
 
-## Pattern
+## Files
 
-- ViewModels interact with Repositories to fetch and save data.
-- They expose UI state via `StateFlow` or `LiveData` (mostly `StateFlow` in this app).
-- Naming convention: `[ScreenName]ViewModel`.
+- **AddEmployerViewModel.kt**: State and actions for creating employers.
+- **AddEventViewModel.kt**: State and actions for creating events.
+- **AddIncomeViewModel.kt**: State and actions for adding project income.
+- **AddProjectViewModel.kt**: State and actions for creating projects.
+- **AddShiftViewModel.kt**: State and actions for creating shifts.
+- **AddWorkerViewModel.kt**: State and actions for creating workers.
+- **DashboardViewModel.kt**: Aggregated totals and dashboard filters.
+- **EditEmployerViewModel.kt**: State and actions for editing employers.
+- **EmployerDetailViewModel.kt**: Employer detail data and updates.
+- **EmployersViewModel.kt**: Employer list data and filters.
+- **EventDetailViewModel.kt**: Event detail data and worker assignments.
+- **EventsViewModel.kt**: Event list data and filters.
+- **MoneyOwedViewModel.kt**: Outstanding payment totals and grouping.
+- **ProjectDetailViewModel.kt**: Project detail data, shifts, and income.
+- **ProjectsViewModel.kt**: Project list data and filters.
+- **ShiftDetailViewModel.kt**: Shift detail data and worker assignments.
+- **WorkerDetailViewModel.kt**: Worker detail data, payments, and related history.
+- **WorkerPhotoGalleryViewModel.kt**: Worker photo gallery state and actions.
+- **WorkersViewModel.kt**: Worker list data and filters.
 
-## Files (Key ViewModels)
+## Usage Notes
 
-- **DashboardViewModel.kt**: Logic for the main dashboard.
-- **EmployersViewModel.kt** & **Edit/AddEmployerViewModel.kt**: Logic for employer management.
-- **EventsViewModel.kt** & **Edit/AddEventViewModel.kt**: Logic for event management.
-- **ProjectsViewModel.kt** & **ProjectDetailViewModel.kt**: Logic for project tracking.
-- **WorkersViewModel.kt** & **WorkerDetailViewModel.kt**: Logic for worker management.
-- **MoneyOwedViewModel.kt**: Logic for calculating and displaying debts.
-- **WorkerPhotoGalleryViewModel.kt**: Logic for the photo gallery feature.
+- ViewModels should call repositories for all data access.
+- UI screens should observe state flows rather than perform direct queries.

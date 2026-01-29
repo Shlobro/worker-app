@@ -1,11 +1,11 @@
-# Android Test Package Developer Guide
+﻿# Android Test Package Developer Guide
 
-This package contains instrumented tests that run on an Android device or emulator.
+This package contains instrumented tests that run on device or emulator.
 
 ## Files
 
-- **ExampleInstrumentedTest.kt**: A basic instrumented test file.
+- **ExampleInstrumentedTest.kt**: Placeholder instrumented test file and basic Android test setup example.
 
-## Testing Strategy
+## Usage
 
-- Instrumented tests are used for UI testing (Compose tests) and integration tests requiring Android framework components (e.g., Room database tests).
+Add UI tests and integration tests here, including Room database tests and Compose UI tests.

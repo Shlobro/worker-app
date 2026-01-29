@@ -82,9 +82,8 @@ A comprehensive Android application for managing construction projects, workers,
 ```
 app/src/main/java/com/example/workertracking/
 ├── data/
-│   ├── database/          # Room database and converters
 │   ├── dao/              # Database access objects
-│   └── entity/           # Data entities
+│   └── entity/           # Data entities and projections
 ├── repository/           # Business logic layer
 ├── ui/
 │   ├── screens/          # Compose screens by feature
@@ -93,6 +92,23 @@ app/src/main/java/com/example/workertracking/
 │   └── navigation/       # Navigation components
 └── di/                   # Dependency injection
 ```
+
+## Developer Guide Map
+
+- **app/app_developer_guide.md**: Entry guide for the Android module (files and folders under `app/`).  
+- **app/src/main/java/com/example/workertracking/workertracking_developer_guide.md**: Entry guide for Kotlin source and subpackages.  
+- Each package under `app/src/main/java/com/example/workertracking/` has its own `*_developer_guide.md` that documents the files in that folder and its subfolders.
+
+## Top-Level Layout
+
+- **app/**: Android application module (see `app/app_developer_guide.md`).  
+- **gradle/**: Gradle wrapper scripts and version catalog.  
+- **screenshots/**: UI screenshots for reference.  
+- **.idea/**, **.gradle/**, **.kotlin/**, **.claude/**: Tooling configuration and caches.  
+- **build.gradle.kts**, **settings.gradle.kts**, **gradle.properties**: Project-level Gradle configuration.  
+- **gradlew**, **gradlew.bat**: Gradle wrapper launchers.  
+- **local.properties**: Local SDK path (developer machine specific).  
+- **Bugs**, **TODO**: Internal notes and bug backlogs.
 
 ## Getting Started
 

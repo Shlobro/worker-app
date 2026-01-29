@@ -1,9 +1,9 @@
-# Shifts Screen Developer Guide
+﻿# Shifts Screen Developer Guide
 
-This package handles screens related to Shift management.
+This folder contains screens for shift management.
 
 ## Files
 
-- **ShiftDetailScreen.kt**: Details view for a single shift.
+- **ShiftDetailScreen.kt**: Shift detail view with assigned workers and totals.
 - **AddShiftScreen.kt**: Form to create a new shift.
-- **EditShiftScreen.kt**: Form to edit an existing shift.
+- **EditShiftScreen.kt**: Form to update an existing shift.

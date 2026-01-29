@@ -1,13 +1,13 @@
-# Projects Screen Developer Guide
+﻿# Projects Screen Developer Guide
 
-This package handles screens related to Project management.
+This folder contains screens for project management and project income.
 
 ## Files
 
-- **ProjectsScreen.kt**: List of all projects.
-- **ProjectDetailScreen.kt**: Details view for a single project.
+- **ProjectsScreen.kt**: Project list and entry point to add/edit flows.
+- **ProjectDetailScreen.kt**: Project detail view with shifts, income totals, and status.
 - **AddProjectScreen.kt**: Form to create a new project.
-- **EditProjectScreen.kt**: Form to edit an existing project.
-- **ProjectIncomeListScreen.kt**: List of income records for a project.
+- **EditProjectScreen.kt**: Form to update an existing project.
+- **ProjectIncomeListScreen.kt**: Income history list for a project.
 - **AddIncomeScreen.kt**: Form to add income to a project.
-- **EditIncomeScreen.kt**: Form to edit project income.
+- **EditIncomeScreen.kt**: Form to update an income entry.

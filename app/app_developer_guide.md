@@ -1,16 +1,28 @@
-# App Module Developer Guide
+﻿# App Module Developer Guide
 
-This is the main application module.
+This is the main Android application module.
 
-## Key Files
+## Files
 
-- **build.gradle.kts**: The build configuration for the app module. It defines dependencies, SDK versions, and build types.
-- **src/main/AndroidManifest.xml**: The Android manifest file, describing the app components (Activity, Application) and permissions.
-- **proguard-rules.pro**: ProGuard rules for code shrinking and obfuscation.
+- **build.gradle.kts**: Module build configuration (SDK versions, dependencies, Compose setup).
+- **proguard-rules.pro**: ProGuard/R8 rules for release builds.
+- **.gitignore**: Module-specific ignore rules.
+- **Plan**: Freeform product notes for upcoming tasks.
+- **todo's**: Short backlog of feature behavior notes.
+- **app_developer_guide.md**: This guide.
 
 ## Folders
 
-- **src/main/java**: Kotlin source code.
-- **src/main/res**: Android resources (layouts, drawables, strings, etc.).
-- **src/test**: Local unit tests.
-- **src/androidTest**: Instrumented tests.
+- **src/main**: Production code and resources.
+  - **AndroidManifest.xml**: App manifest and component declarations.
+  - **java/com/example/workertracking**: Kotlin source root (see `workertracking_developer_guide.md`).
+  - **res**: Android resources used by Compose and the system.
+    - **drawable**: Vector assets and images.
+    - **mipmap-***: App launcher icons.
+    - **values**: Default resources (strings, colors, styles).
+    - **values-en**: English localized resources.
+    - **values-he**: Hebrew localized resources.
+    - **values-he-rIL**: Hebrew (Israel) localized resources.
+    - **xml**: XML configuration resources.
+- **src/test**: JVM unit tests (see `workertracking_test_developer_guide.md`).
+- **src/androidTest**: Instrumented tests on device/emulator (see `workertracking_android_test_developer_guide.md`).

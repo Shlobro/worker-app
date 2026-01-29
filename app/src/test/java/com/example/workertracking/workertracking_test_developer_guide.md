@@ -1,11 +1,11 @@
-# Test Package Developer Guide
+﻿# Test Package Developer Guide
 
-This package contains local unit tests for the application.
+This package contains local JVM unit tests.
 
 ## Files
 
-- **ExampleUnitTest.kt**: A basic unit test file (likely a placeholder or simple example).
+- **ExampleUnitTest.kt**: Placeholder unit test file and basic JVM test setup example.
 
-## Testing Strategy
+## Usage
 
-- Unit tests should be placed here to test business logic (ViewModels, Repositories, Domain logic) that runs on the JVM.
+Add unit tests here for repository logic, ViewModel calculations, and pure Kotlin utilities that do not need Android framework classes.

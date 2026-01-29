@@ -1,9 +1,9 @@
-# Theme Package Developer Guide
+﻿# Theme Package Developer Guide
 
-This package defines the visual theme of the application using Jetpack Compose Material 3.
+This package defines the Material 3 theme used by the app.
 
 ## Files
 
-- **Color.kt**: Defines the color palette constants.
-- **Theme.kt**: Defines the `WorkerTrackingTheme` composable, which applies the colors and typography to the content. It handles Light/Dark mode switching.
-- **Type.kt**: Defines the Typography styles (fonts, sizes, weights).
+- **Color.kt**: Color palette constants.
+- **Theme.kt**: `WorkerTrackingTheme` composable that applies colors and typography.
+- **Type.kt**: Typography definitions (fonts, sizes, weights).
