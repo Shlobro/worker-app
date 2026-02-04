@@ -28,6 +28,9 @@ interface EventWorkerDao {
     @Query("UPDATE event_workers SET isPaid = :isPaid WHERE id = :id")
     suspend fun updatePaymentStatus(id: Long, isPaid: Boolean)
 
+    @Query("UPDATE event_workers SET isReferencePaid = :isReferencePaid WHERE id = :id")
+    suspend fun updateReferencePaymentStatus(id: Long, isReferencePaid: Boolean)
+
     @Query("UPDATE event_workers SET isPaid = :isPaid, amountPaid = :amountPaid, tipAmount = :tipAmount WHERE id = :id")
     suspend fun updatePaymentDetails(id: Long, isPaid: Boolean, amountPaid: Double, tipAmount: Double)
 
@@ -71,6 +74,26 @@ interface EventWorkerDao {
         ORDER BY e.date DESC
     """)
     fun getUnpaidEventWorkersFlow(): Flow<List<UnpaidEventWorkerInfo>>
+
+    @Query("""
+        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName
+        FROM event_workers ew
+        LEFT JOIN workers w ON ew.workerId = w.id
+        INNER JOIN events e ON ew.eventId = e.id
+        WHERE ew.isPaid = 0 OR (ew.isReferencePaid = 0 AND ew.referencePayRate IS NOT NULL AND ew.referencePayRate > 0)
+        ORDER BY e.date DESC
+    """)
+    suspend fun getEventWorkersWithOutstandingPayments(): List<UnpaidEventWorkerInfo>
+
+    @Query("""
+        SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName
+        FROM event_workers ew
+        LEFT JOIN workers w ON ew.workerId = w.id
+        INNER JOIN events e ON ew.eventId = e.id
+        WHERE ew.isPaid = 0 OR (ew.isReferencePaid = 0 AND ew.referencePayRate IS NOT NULL AND ew.referencePayRate > 0)
+        ORDER BY e.date DESC
+    """)
+    fun getEventWorkersWithOutstandingPaymentsFlow(): Flow<List<UnpaidEventWorkerInfo>>
 
     @Query("""
         SELECT ew.*, w.name as workerName, e.date as eventDate, e.name as eventName

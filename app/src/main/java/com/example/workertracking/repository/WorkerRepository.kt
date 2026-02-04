@@ -9,9 +9,11 @@ import com.example.workertracking.data.entity.UnpaidShiftWorkerInfo
 import com.example.workertracking.data.entity.UnpaidEventWorkerInfo
 import com.example.workertracking.data.entity.WorkerWithDebt
 import com.example.workertracking.data.entity.WorkerWithDebtData
+import com.example.workertracking.util.PaymentCalculator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.*
+import kotlin.math.max
 
 class WorkerRepository(
     private val workerDao: WorkerDao,
@@ -89,77 +91,179 @@ class WorkerRepository(
     suspend fun getTotalOwedToWorker(workerId: Long): Double {
         val shifts = shiftWorkerDao.getAllShiftWorkersForWorker(workerId)
         val events = eventWorkerDao.getAllEventWorkersForWorker(workerId)
-        
+
         val shiftsOwed = shifts.sumOf { shiftInfo ->
-            if (shiftInfo.shiftWorker.isPaid) 0.0 else {
-                val cost = if (shiftInfo.shiftWorker.isHourlyRate) {
-                    shiftInfo.shiftWorker.payRate * shiftInfo.shiftHours
-                } else {
-                    shiftInfo.shiftWorker.payRate
-                }
-                val ref = (shiftInfo.shiftWorker.referencePayRate ?: 0.0) * shiftInfo.shiftHours
-                cost + ref
+            var total = 0.0
+            if (!shiftInfo.shiftWorker.isPaid) {
+                val workerPayment = PaymentCalculator.calculateWorkerPayment(
+                    payRate = shiftInfo.shiftWorker.payRate,
+                    hours = shiftInfo.shiftHours,
+                    isHourlyRate = shiftInfo.shiftWorker.isHourlyRate
+                )
+                val netWorkerPayment = PaymentCalculator.calculateNetPayment(
+                    totalPayment = workerPayment,
+                    amountPaid = shiftInfo.shiftWorker.amountPaid,
+                    tipAmount = shiftInfo.shiftWorker.tipAmount
+                )
+                total += max(0.0, netWorkerPayment)
             }
+            if (!shiftInfo.shiftWorker.isReferencePaid && shiftInfo.shiftWorker.referencePayRate != null) {
+                val refPayment = PaymentCalculator.calculateReferencePayment(
+                    referencePayRate = shiftInfo.shiftWorker.referencePayRate,
+                    hours = shiftInfo.shiftHours,
+                    isReferenceHourlyRate = shiftInfo.shiftWorker.isReferenceHourlyRate
+                )
+                val netRefPayment = PaymentCalculator.calculateNetReferencePayment(
+                    totalReferencePayment = refPayment,
+                    referenceAmountPaid = shiftInfo.shiftWorker.referenceAmountPaid,
+                    referenceTipAmount = shiftInfo.shiftWorker.referenceTipAmount
+                )
+                total += max(0.0, netRefPayment)
+            }
+            total
         }
-        
+
         val eventsOwed = events.sumOf { eventInfo ->
-            if (eventInfo.eventWorker.isPaid) 0.0 else {
-                val cost = if (eventInfo.eventWorker.isHourlyRate) {
-                    eventInfo.eventWorker.hours * eventInfo.eventWorker.payRate
-                } else {
-                    eventInfo.eventWorker.payRate
-                }
-                val ref = (eventInfo.eventWorker.referencePayRate ?: 0.0) * eventInfo.eventWorker.hours
-                val totalCost = cost + ref
-                totalCost - eventInfo.eventWorker.amountPaid - eventInfo.eventWorker.tipAmount
+            var total = 0.0
+            if (!eventInfo.eventWorker.isPaid) {
+                val workerPayment = PaymentCalculator.calculateWorkerPayment(
+                    payRate = eventInfo.eventWorker.payRate,
+                    hours = eventInfo.eventWorker.hours,
+                    isHourlyRate = eventInfo.eventWorker.isHourlyRate
+                )
+                val netWorkerPayment = PaymentCalculator.calculateNetPayment(
+                    totalPayment = workerPayment,
+                    amountPaid = eventInfo.eventWorker.amountPaid,
+                    tipAmount = eventInfo.eventWorker.tipAmount
+                )
+                total += max(0.0, netWorkerPayment)
+            }
+            if (!eventInfo.eventWorker.isReferencePaid && eventInfo.eventWorker.referencePayRate != null) {
+                val refPayment = PaymentCalculator.calculateReferencePayment(
+                    referencePayRate = eventInfo.eventWorker.referencePayRate,
+                    hours = eventInfo.eventWorker.hours,
+                    isReferenceHourlyRate = eventInfo.eventWorker.isReferenceHourlyRate
+                )
+                val netRefPayment = PaymentCalculator.calculateNetReferencePayment(
+                    totalReferencePayment = refPayment,
+                    referenceAmountPaid = eventInfo.eventWorker.referenceAmountPaid,
+                    referenceTipAmount = eventInfo.eventWorker.referenceTipAmount
+                )
+                total += max(0.0, netRefPayment)
+            }
+            total
+        }
+
+        val refShiftsOwed = getUnpaidReferenceShiftsForWorker(workerId).sumOf { shift ->
+            if (shift.shiftWorker.isReferencePaid) 0.0 else {
+                val refPayment = PaymentCalculator.calculateReferencePayment(
+                    referencePayRate = shift.shiftWorker.referencePayRate,
+                    hours = shift.shiftHours,
+                    isReferenceHourlyRate = shift.shiftWorker.isReferenceHourlyRate
+                )
+                val netRefPayment = PaymentCalculator.calculateNetReferencePayment(
+                    totalReferencePayment = refPayment,
+                    referenceAmountPaid = shift.shiftWorker.referenceAmountPaid,
+                    referenceTipAmount = shift.shiftWorker.referenceTipAmount
+                )
+                max(0.0, netRefPayment)
             }
         }
-        
-        val refShiftsOwed = getUnpaidReferenceShiftsForWorker(workerId).sumOf { shift ->
-            (shift.shiftWorker.referencePayRate ?: 0.0) * shift.shiftHours
-        }
-        
+
         val refEventsOwed = getUnpaidReferenceEventsForWorker(workerId).sumOf { event ->
-            val totalRefCost = (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
-            if (event.eventWorker.isReferencePaid) 0.0 else totalRefCost - event.eventWorker.referenceAmountPaid - event.eventWorker.referenceTipAmount
+            if (event.eventWorker.isReferencePaid) 0.0 else {
+                val refPayment = PaymentCalculator.calculateReferencePayment(
+                    referencePayRate = event.eventWorker.referencePayRate,
+                    hours = event.eventWorker.hours,
+                    isReferenceHourlyRate = event.eventWorker.isReferenceHourlyRate
+                )
+                val netRefPayment = PaymentCalculator.calculateNetReferencePayment(
+                    totalReferencePayment = refPayment,
+                    referenceAmountPaid = event.eventWorker.referenceAmountPaid,
+                    referenceTipAmount = event.eventWorker.referenceTipAmount
+                )
+                max(0.0, netRefPayment)
+            }
         }
-        
+
         return shiftsOwed + eventsOwed + refShiftsOwed + refEventsOwed
     }
     
     suspend fun getTotalPaymentsOwed(): Double {
-        val unpaidShifts = shiftWorkerDao.getUnpaidShiftWorkers()
-        val unpaidEvents = eventWorkerDao.getUnpaidEventWorkers()
-        
-        val shiftTotal = unpaidShifts.sumOf { unpaidShift ->
-            val workerPayment = if (unpaidShift.shiftWorker.isHourlyRate) {
-                unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
-            } else {
-                unpaidShift.shiftWorker.payRate
+        val shifts = shiftWorkerDao.getShiftWorkersWithOutstandingPayments()
+        val events = eventWorkerDao.getEventWorkersWithOutstandingPayments()
+
+        val shiftTotal = shifts.sumOf { shift ->
+            var total = 0.0
+            if (!shift.shiftWorker.isPaid) {
+                val workerPayment = PaymentCalculator.calculateWorkerPayment(
+                    payRate = shift.shiftWorker.payRate,
+                    hours = shift.shiftHours,
+                    isHourlyRate = shift.shiftWorker.isHourlyRate
+                )
+                val netWorkerPayment = PaymentCalculator.calculateNetPayment(
+                    totalPayment = workerPayment,
+                    amountPaid = shift.shiftWorker.amountPaid,
+                    tipAmount = shift.shiftWorker.tipAmount
+                )
+                total += max(0.0, netWorkerPayment)
             }
-            val referencePayment = (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours
-            workerPayment + referencePayment
-        }
-        
-        val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
-            val workerPayment = if (unpaidEvent.eventWorker.isHourlyRate) {
-                unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
-            } else {
-                unpaidEvent.eventWorker.payRate
+            if (!shift.shiftWorker.isReferencePaid && shift.shiftWorker.referencePayRate != null) {
+                val refPayment = PaymentCalculator.calculateReferencePayment(
+                    referencePayRate = shift.shiftWorker.referencePayRate,
+                    hours = shift.shiftHours,
+                    isReferenceHourlyRate = shift.shiftWorker.isReferenceHourlyRate
+                )
+                val netRefPayment = PaymentCalculator.calculateNetReferencePayment(
+                    totalReferencePayment = refPayment,
+                    referenceAmountPaid = shift.shiftWorker.referenceAmountPaid,
+                    referenceTipAmount = shift.shiftWorker.referenceTipAmount
+                )
+                total += max(0.0, netRefPayment)
             }
-            val referencePayment = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours
-            workerPayment + referencePayment - unpaidEvent.eventWorker.amountPaid - unpaidEvent.eventWorker.tipAmount - unpaidEvent.eventWorker.referenceAmountPaid - unpaidEvent.eventWorker.referenceTipAmount
+            total
         }
-        
+
+        val eventTotal = events.sumOf { event ->
+            var total = 0.0
+            if (!event.eventWorker.isPaid) {
+                val workerPayment = PaymentCalculator.calculateWorkerPayment(
+                    payRate = event.eventWorker.payRate,
+                    hours = event.eventWorker.hours,
+                    isHourlyRate = event.eventWorker.isHourlyRate
+                )
+                val netWorkerPayment = PaymentCalculator.calculateNetPayment(
+                    totalPayment = workerPayment,
+                    amountPaid = event.eventWorker.amountPaid,
+                    tipAmount = event.eventWorker.tipAmount
+                )
+                total += max(0.0, netWorkerPayment)
+            }
+            if (!event.eventWorker.isReferencePaid && event.eventWorker.referencePayRate != null) {
+                val refPayment = PaymentCalculator.calculateReferencePayment(
+                    referencePayRate = event.eventWorker.referencePayRate,
+                    hours = event.eventWorker.hours,
+                    isReferenceHourlyRate = event.eventWorker.isReferenceHourlyRate
+                )
+                val netRefPayment = PaymentCalculator.calculateNetReferencePayment(
+                    totalReferencePayment = refPayment,
+                    referenceAmountPaid = event.eventWorker.referenceAmountPaid,
+                    referenceTipAmount = event.eventWorker.referenceTipAmount
+                )
+                total += max(0.0, netRefPayment)
+            }
+            total
+        }
+
         return shiftTotal + eventTotal
     }
 
-    fun getUnpaidShiftWorkersFlow(): Flow<List<UnpaidShiftWorkerInfo>> {
-        return shiftWorkerDao.getUnpaidShiftWorkersFlow()
+    fun getShiftWorkersWithOutstandingPaymentsFlow(): Flow<List<UnpaidShiftWorkerInfo>> {
+        return shiftWorkerDao.getShiftWorkersWithOutstandingPaymentsFlow()
     }
 
-    fun getUnpaidEventWorkersFlow(): Flow<List<UnpaidEventWorkerInfo>> {
-        return eventWorkerDao.getUnpaidEventWorkersFlow()
+    fun getEventWorkersWithOutstandingPaymentsFlow(): Flow<List<UnpaidEventWorkerInfo>> {
+        return eventWorkerDao.getEventWorkersWithOutstandingPaymentsFlow()
     }
 
     suspend fun getUnpaidShiftWorkersForWorker(workerId: Long): List<UnpaidShiftWorkerInfo> {
@@ -176,6 +280,22 @@ class WorkerRepository(
 
     suspend fun markEventWorkerAsPaid(eventWorkerId: Long) {
         eventWorkerDao.updatePaymentStatus(eventWorkerId, true)
+    }
+
+    suspend fun markShiftReferenceAsPaid(shiftWorkerId: Long) {
+        shiftWorkerDao.updateReferencePaymentStatus(shiftWorkerId, true)
+    }
+
+    suspend fun markEventReferenceAsPaid(eventWorkerId: Long) {
+        eventWorkerDao.updateReferencePaymentStatus(eventWorkerId, true)
+    }
+
+    suspend fun revokeShiftReferencePayment(shiftWorkerId: Long) {
+        shiftWorkerDao.updateReferencePaymentStatus(shiftWorkerId, false)
+    }
+
+    suspend fun revokeEventReferencePayment(eventWorkerId: Long) {
+        eventWorkerDao.updateReferencePaymentStatus(eventWorkerId, false)
     }
 
     suspend fun updateEventWorkerPayment(eventWorkerId: Long, isPaid: Boolean, amountPaid: Double, tipAmount: Double) {
@@ -327,23 +447,23 @@ class WorkerRepository(
     ): Double {
         val shifts = getAllShiftWorkersForWorkerWithDateFilter(workerId, startDate, endDate)
         val events = getAllEventWorkersForWorkerWithDateFilter(workerId, startDate, endDate)
-        
+
         val shiftEarnings = shifts.sumOf { shift ->
-            if (shift.shiftWorker.isHourlyRate) {
-                shift.shiftWorker.payRate * shift.shiftHours
-            } else {
-                shift.shiftWorker.payRate
-            }
+            PaymentCalculator.calculateWorkerPayment(
+                payRate = shift.shiftWorker.payRate,
+                hours = shift.shiftHours,
+                isHourlyRate = shift.shiftWorker.isHourlyRate
+            )
         }
 
         val eventEarnings = events.sumOf { event ->
-            if (event.eventWorker.isHourlyRate) {
-                event.eventWorker.hours * event.eventWorker.payRate
-            } else {
-                event.eventWorker.payRate
-            }
+            PaymentCalculator.calculateWorkerPayment(
+                payRate = event.eventWorker.payRate,
+                hours = event.eventWorker.hours,
+                isHourlyRate = event.eventWorker.isHourlyRate
+            )
         }
-        
+
         return shiftEarnings + eventEarnings
     }
     
@@ -374,12 +494,35 @@ class WorkerRepository(
         val referenceEvents = getUnpaidReferenceEventsForWorker(workerId)
 
         val shiftReferenceTotal = referenceShifts.sumOf { shift ->
-            (shift.shiftWorker.referencePayRate ?: 0.0) * shift.shiftHours
+            if (shift.shiftWorker.isReferencePaid) 0.0 else {
+                val refPayment = PaymentCalculator.calculateReferencePayment(
+                    referencePayRate = shift.shiftWorker.referencePayRate,
+                    hours = shift.shiftHours,
+                    isReferenceHourlyRate = shift.shiftWorker.isReferenceHourlyRate
+                )
+                val netRefPayment = PaymentCalculator.calculateNetReferencePayment(
+                    totalReferencePayment = refPayment,
+                    referenceAmountPaid = shift.shiftWorker.referenceAmountPaid,
+                    referenceTipAmount = shift.shiftWorker.referenceTipAmount
+                )
+                max(0.0, netRefPayment)
+            }
         }
 
         val eventReferenceTotal = referenceEvents.sumOf { event ->
-            val totalRefCost = (event.eventWorker.referencePayRate ?: 0.0) * event.eventWorker.hours
-            totalRefCost - event.eventWorker.referenceAmountPaid - event.eventWorker.referenceTipAmount
+            if (event.eventWorker.isReferencePaid) 0.0 else {
+                val refPayment = PaymentCalculator.calculateReferencePayment(
+                    referencePayRate = event.eventWorker.referencePayRate,
+                    hours = event.eventWorker.hours,
+                    isReferenceHourlyRate = event.eventWorker.isReferenceHourlyRate
+                )
+                val netRefPayment = PaymentCalculator.calculateNetReferencePayment(
+                    totalReferencePayment = refPayment,
+                    referenceAmountPaid = event.eventWorker.referenceAmountPaid,
+                    referenceTipAmount = event.eventWorker.referenceTipAmount
+                )
+                max(0.0, netRefPayment)
+            }
         }
 
         return shiftReferenceTotal + eventReferenceTotal

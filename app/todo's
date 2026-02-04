@@ -5,5 +5,4 @@ in the screen where i add a worker to an event and there is an עובד מפנה
 in the event UI in the worker section there has to be a better UI. need to seperate the title and the list. and need a clearer seperation between the lists of workers and refernce payments.
 when i go into a worker and he is owed money but he was referenced it shows סכום ממתין the amount including what the referer instead of just the amount owed to that worker.
 a worker that is a referer in the section where it shows the תשלומי הפניה it should not only show the event name but also the worker name that he brought.
-in the תשלומי הפניה section when i try and click on סמן כשולם it does nothing.
 the UX of choosing the time is bad. we need to make it like the best apps allow users to choose a time (perhaps a cool UI showing a clock? or choosing hours and minutes separately?)

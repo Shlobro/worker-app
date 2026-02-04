@@ -20,8 +20,10 @@ import com.example.workertracking.R
 import com.example.workertracking.ui.viewmodel.MoneyOwedViewModel
 import com.example.workertracking.data.entity.UnpaidShiftWorkerInfo
 import com.example.workertracking.data.entity.UnpaidEventWorkerInfo
+import com.example.workertracking.util.PaymentCalculator
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,35 +114,45 @@ fun MoneyOwedScreen(
                     }
                     
                     items(uiState.unpaidShifts) { unpaidShift ->
-                        // Show worker's direct payment card
-                        val workerPayment = if (unpaidShift.shiftWorker.isHourlyRate) {
-                            unpaidShift.shiftWorker.payRate * unpaidShift.shiftHours
-                        } else {
-                            unpaidShift.shiftWorker.payRate
-                        }
-                        
-                        if (workerPayment > 0) {
+                        // Show worker's direct payment card (net amount)
+                        val workerPaymentNet = max(0.0, PaymentCalculator.calculateNetPayment(
+                            totalPayment = PaymentCalculator.calculateWorkerPayment(
+                                payRate = unpaidShift.shiftWorker.payRate,
+                                hours = unpaidShift.shiftHours,
+                                isHourlyRate = unpaidShift.shiftWorker.isHourlyRate
+                            ),
+                            amountPaid = unpaidShift.shiftWorker.amountPaid,
+                            tipAmount = unpaidShift.shiftWorker.tipAmount
+                        ))
+
+                        if (workerPaymentNet > 0 && !unpaidShift.shiftWorker.isPaid) {
                             UnpaidShiftCard(
                                 unpaidShift = unpaidShift,
                                 onMarkAsPaid = { viewModel.markShiftAsPaid(it) },
                                 onWorkerClick = onWorkerClick,
                                 isReferencePayment = false,
-                                displayAmount = workerPayment
+                                displayAmount = workerPaymentNet
                             )
                         }
-                        
-                        // Show reference worker payment card if exists
-                        val referencePayment = unpaidShift.shiftWorker.referencePayRate?.let { refRate ->
-                            refRate * unpaidShift.shiftHours
-                        } ?: 0.0
-                        
-                        if (referencePayment > 0) {
+
+                        // Show reference worker payment card if exists and not paid (net amount)
+                        val referencePaymentNet = max(0.0, PaymentCalculator.calculateNetReferencePayment(
+                            totalReferencePayment = PaymentCalculator.calculateReferencePayment(
+                                referencePayRate = unpaidShift.shiftWorker.referencePayRate,
+                                hours = unpaidShift.shiftHours,
+                                isReferenceHourlyRate = unpaidShift.shiftWorker.isReferenceHourlyRate
+                            ),
+                            referenceAmountPaid = unpaidShift.shiftWorker.referenceAmountPaid,
+                            referenceTipAmount = unpaidShift.shiftWorker.referenceTipAmount
+                        ))
+
+                        if (referencePaymentNet > 0 && !unpaidShift.shiftWorker.isReferencePaid) {
                             UnpaidShiftCard(
                                 unpaidShift = unpaidShift,
-                                onMarkAsPaid = { viewModel.markShiftAsPaid(it) },
+                                onMarkAsPaid = { viewModel.markShiftReferenceAsPaid(it) },
                                 onWorkerClick = onWorkerClick,
                                 isReferencePayment = true,
-                                displayAmount = referencePayment
+                                displayAmount = referencePaymentNet
                             )
                         }
                     }
@@ -158,129 +170,229 @@ fun MoneyOwedScreen(
                     }
                     
                     items(uiState.unpaidEvents) { unpaidEvent ->
-                        // Show worker's direct payment card
-                        val workerPayment = if (unpaidEvent.eventWorker.isHourlyRate) {
-                            unpaidEvent.eventWorker.hours * unpaidEvent.eventWorker.payRate
-                        } else {
-                            unpaidEvent.eventWorker.payRate
-                        }
-                        
-                        if (workerPayment > 0) {
+                        // Show worker's direct payment card (net amount)
+                        val workerPaymentNet = max(0.0, PaymentCalculator.calculateNetPayment(
+                            totalPayment = PaymentCalculator.calculateWorkerPayment(
+                                payRate = unpaidEvent.eventWorker.payRate,
+                                hours = unpaidEvent.eventWorker.hours,
+                                isHourlyRate = unpaidEvent.eventWorker.isHourlyRate
+                            ),
+                            amountPaid = unpaidEvent.eventWorker.amountPaid,
+                            tipAmount = unpaidEvent.eventWorker.tipAmount
+                        ))
+
+                        if (workerPaymentNet > 0 && !unpaidEvent.eventWorker.isPaid) {
                             UnpaidEventCard(
                                 unpaidEvent = unpaidEvent,
                                 onMarkAsPaid = { viewModel.markEventAsPaid(it) },
                                 onWorkerClick = onWorkerClick,
                                 isReferencePayment = false,
-                                displayAmount = workerPayment
+                                displayAmount = workerPaymentNet
                             )
                         }
-                        
-                        // Show reference worker payment card if exists
-                        val referencePayment = unpaidEvent.eventWorker.referencePayRate?.let { refRate ->
-                            refRate * unpaidEvent.eventWorker.hours
-                        } ?: 0.0
-                        
-                        if (referencePayment > 0) {
+
+                        // Show reference worker payment card if exists and not paid (net amount)
+                        val referencePaymentNet = max(0.0, PaymentCalculator.calculateNetReferencePayment(
+                            totalReferencePayment = PaymentCalculator.calculateReferencePayment(
+                                referencePayRate = unpaidEvent.eventWorker.referencePayRate,
+                                hours = unpaidEvent.eventWorker.hours,
+                                isReferenceHourlyRate = unpaidEvent.eventWorker.isReferenceHourlyRate
+                            ),
+                            referenceAmountPaid = unpaidEvent.eventWorker.referenceAmountPaid,
+                            referenceTipAmount = unpaidEvent.eventWorker.referenceTipAmount
+                        ))
+
+                        if (referencePaymentNet > 0 && !unpaidEvent.eventWorker.isReferencePaid) {
                             UnpaidEventCard(
                                 unpaidEvent = unpaidEvent,
-                                onMarkAsPaid = { viewModel.markEventAsPaid(it) },
+                                onMarkAsPaid = { viewModel.markEventReferenceAsPaid(it) },
                                 onWorkerClick = onWorkerClick,
                                 isReferencePayment = true,
-                                displayAmount = referencePayment
+                                displayAmount = referencePaymentNet
                             )
                         }
                     }
                 }
                 
                 // Paid shifts (shown only when toggled)
-                if (uiState.showPaidItems && uiState.paidShifts.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = stringResource(R.string.paid_history) + " - ${stringResource(R.string.unpaid_shifts)}",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-                    
-                    items(uiState.paidShifts) { paidShift ->
-                        // Show worker's direct payment card
-                        val workerPayment = if (paidShift.shiftWorker.isHourlyRate) {
-                            paidShift.shiftWorker.payRate * paidShift.shiftHours
-                        } else {
-                            paidShift.shiftWorker.payRate
+                if (uiState.showPaidItems) {
+                    // Collect all paid shift items (from both paidShifts and unpaidShifts with paid references)
+                    val hasPaidShiftItems = uiState.paidShifts.isNotEmpty() ||
+                        uiState.unpaidShifts.any {
+                            it.shiftWorker.isReferencePaid &&
+                            PaymentCalculator.calculateReferencePayment(
+                                it.shiftWorker.referencePayRate,
+                                it.shiftHours,
+                                it.shiftWorker.isReferenceHourlyRate
+                            ) > 0
                         }
-                        
-                        if (workerPayment > 0) {
-                            PaidShiftCard(
-                                paidShift = paidShift,
-                                onRevokePayment = { viewModel.revokeShiftPayment(it) },
-                                onWorkerClick = onWorkerClick,
-                                isReferencePayment = false,
-                                displayAmount = workerPayment
+
+                    if (hasPaidShiftItems) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.paid_history) + " - ${stringResource(R.string.unpaid_shifts)}",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                color = MaterialTheme.colorScheme.secondary
                             )
                         }
-                        
-                        // Show reference worker payment card if exists
-                        val referencePayment = paidShift.shiftWorker.referencePayRate?.let { refRate ->
-                            refRate * paidShift.shiftHours
-                        } ?: 0.0
-                        
-                        if (referencePayment > 0) {
+
+                        // Show paid shifts from paidShifts collection
+                        items(uiState.paidShifts) { paidShift ->
+                            // Show worker's direct payment card - display amount paid (partial + tip)
+                            val workerPayment = PaymentCalculator.calculateWorkerPayment(
+                                payRate = paidShift.shiftWorker.payRate,
+                                hours = paidShift.shiftHours,
+                                isHourlyRate = paidShift.shiftWorker.isHourlyRate
+                            )
+                            // For paid items, show the total amount that was paid (amountPaid + tipAmount)
+                            val workerAmountPaid = paidShift.shiftWorker.amountPaid + paidShift.shiftWorker.tipAmount
+
+                            if (workerPayment > 0 && paidShift.shiftWorker.isPaid) {
+                                PaidShiftCard(
+                                    paidShift = paidShift,
+                                    onRevokePayment = { viewModel.revokeShiftPayment(it) },
+                                    onWorkerClick = onWorkerClick,
+                                    isReferencePayment = false,
+                                    displayAmount = if (workerAmountPaid > 0) workerAmountPaid else workerPayment
+                                )
+                            }
+
+                            // Show reference worker payment card if exists and is paid
+                            val referencePayment = PaymentCalculator.calculateReferencePayment(
+                                referencePayRate = paidShift.shiftWorker.referencePayRate,
+                                hours = paidShift.shiftHours,
+                                isReferenceHourlyRate = paidShift.shiftWorker.isReferenceHourlyRate
+                            )
+                            // For paid items, show the total amount that was paid
+                            val referenceAmountPaid = paidShift.shiftWorker.referenceAmountPaid + paidShift.shiftWorker.referenceTipAmount
+
+                            if (referencePayment > 0 && paidShift.shiftWorker.isReferencePaid) {
+                                PaidShiftCard(
+                                    paidShift = paidShift,
+                                    onRevokePayment = { viewModel.revokeShiftReferencePayment(it) },
+                                    onWorkerClick = onWorkerClick,
+                                    isReferencePayment = true,
+                                    displayAmount = if (referenceAmountPaid > 0) referenceAmountPaid else referencePayment
+                                )
+                            }
+                        }
+
+                        // Show paid reference payments from unpaidShifts (where worker is unpaid but reference is paid)
+                        items(uiState.unpaidShifts.filter { shift ->
+                            val refPayment = PaymentCalculator.calculateReferencePayment(
+                                shift.shiftWorker.referencePayRate,
+                                shift.shiftHours,
+                                shift.shiftWorker.isReferenceHourlyRate
+                            )
+                            shift.shiftWorker.isReferencePaid && refPayment > 0
+                        }) { unpaidShift ->
+                            val referencePayment = PaymentCalculator.calculateReferencePayment(
+                                referencePayRate = unpaidShift.shiftWorker.referencePayRate,
+                                hours = unpaidShift.shiftHours,
+                                isReferenceHourlyRate = unpaidShift.shiftWorker.isReferenceHourlyRate
+                            )
+                            // For paid items, show the total amount that was paid
+                            val referenceAmountPaid = unpaidShift.shiftWorker.referenceAmountPaid + unpaidShift.shiftWorker.referenceTipAmount
                             PaidShiftCard(
-                                paidShift = paidShift,
-                                onRevokePayment = { viewModel.revokeShiftPayment(it) },
+                                paidShift = unpaidShift,
+                                onRevokePayment = { viewModel.revokeShiftReferencePayment(it) },
                                 onWorkerClick = onWorkerClick,
                                 isReferencePayment = true,
-                                displayAmount = referencePayment
+                                displayAmount = if (referenceAmountPaid > 0) referenceAmountPaid else referencePayment
                             )
                         }
                     }
                 }
 
                 // Paid events (shown only when toggled)
-                if (uiState.showPaidItems && uiState.paidEvents.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = stringResource(R.string.paid_history) + " - ${stringResource(R.string.unpaid_events)}",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-                    
-                    items(uiState.paidEvents) { paidEvent ->
-                        // Show worker's direct payment card
-                        val workerPayment = if (paidEvent.eventWorker.isHourlyRate) {
-                            paidEvent.eventWorker.hours * paidEvent.eventWorker.payRate
-                        } else {
-                            paidEvent.eventWorker.payRate
+                if (uiState.showPaidItems) {
+                    // Collect all paid event items (from both paidEvents and unpaidEvents with paid references)
+                    val hasPaidEventItems = uiState.paidEvents.isNotEmpty() ||
+                        uiState.unpaidEvents.any {
+                            it.eventWorker.isReferencePaid &&
+                            PaymentCalculator.calculateReferencePayment(
+                                it.eventWorker.referencePayRate,
+                                it.eventWorker.hours,
+                                it.eventWorker.isReferenceHourlyRate
+                            ) > 0
                         }
-                        
-                        if (workerPayment > 0) {
-                            PaidEventCard(
-                                paidEvent = paidEvent,
-                                onRevokePayment = { viewModel.revokeEventPayment(it) },
-                                onWorkerClick = onWorkerClick,
-                                isReferencePayment = false,
-                                displayAmount = workerPayment
+
+                    if (hasPaidEventItems) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.paid_history) + " - ${stringResource(R.string.unpaid_events)}",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                color = MaterialTheme.colorScheme.secondary
                             )
                         }
-                        
-                        // Show reference worker payment card if exists
-                        val referencePayment = paidEvent.eventWorker.referencePayRate?.let { refRate ->
-                            refRate * paidEvent.eventWorker.hours
-                        } ?: 0.0
-                        
-                        if (referencePayment > 0) {
+
+                        // Show paid events from paidEvents collection
+                        items(uiState.paidEvents) { paidEvent ->
+                            // Show worker's direct payment card - display amount paid (partial + tip)
+                            val workerPayment = PaymentCalculator.calculateWorkerPayment(
+                                payRate = paidEvent.eventWorker.payRate,
+                                hours = paidEvent.eventWorker.hours,
+                                isHourlyRate = paidEvent.eventWorker.isHourlyRate
+                            )
+                            // For paid items, show the total amount that was paid (amountPaid + tipAmount)
+                            val workerAmountPaid = paidEvent.eventWorker.amountPaid + paidEvent.eventWorker.tipAmount
+
+                            if (workerPayment > 0 && paidEvent.eventWorker.isPaid) {
+                                PaidEventCard(
+                                    paidEvent = paidEvent,
+                                    onRevokePayment = { viewModel.revokeEventPayment(it) },
+                                    onWorkerClick = onWorkerClick,
+                                    isReferencePayment = false,
+                                    displayAmount = if (workerAmountPaid > 0) workerAmountPaid else workerPayment
+                                )
+                            }
+
+                            // Show reference worker payment card if exists and is paid
+                            val referencePayment = PaymentCalculator.calculateReferencePayment(
+                                referencePayRate = paidEvent.eventWorker.referencePayRate,
+                                hours = paidEvent.eventWorker.hours,
+                                isReferenceHourlyRate = paidEvent.eventWorker.isReferenceHourlyRate
+                            )
+                            // For paid items, show the total amount that was paid
+                            val referenceAmountPaid = paidEvent.eventWorker.referenceAmountPaid + paidEvent.eventWorker.referenceTipAmount
+
+                            if (referencePayment > 0 && paidEvent.eventWorker.isReferencePaid) {
+                                PaidEventCard(
+                                    paidEvent = paidEvent,
+                                    onRevokePayment = { viewModel.revokeEventReferencePayment(it) },
+                                    onWorkerClick = onWorkerClick,
+                                    isReferencePayment = true,
+                                    displayAmount = if (referenceAmountPaid > 0) referenceAmountPaid else referencePayment
+                                )
+                            }
+                        }
+
+                        // Show paid reference payments from unpaidEvents (where worker is unpaid but reference is paid)
+                        items(uiState.unpaidEvents.filter { event ->
+                            val refPayment = PaymentCalculator.calculateReferencePayment(
+                                event.eventWorker.referencePayRate,
+                                event.eventWorker.hours,
+                                event.eventWorker.isReferenceHourlyRate
+                            )
+                            event.eventWorker.isReferencePaid && refPayment > 0
+                        }) { unpaidEvent ->
+                            val referencePayment = PaymentCalculator.calculateReferencePayment(
+                                referencePayRate = unpaidEvent.eventWorker.referencePayRate,
+                                hours = unpaidEvent.eventWorker.hours,
+                                isReferenceHourlyRate = unpaidEvent.eventWorker.isReferenceHourlyRate
+                            )
+                            // For paid items, show the total amount that was paid
+                            val referenceAmountPaid = unpaidEvent.eventWorker.referenceAmountPaid + unpaidEvent.eventWorker.referenceTipAmount
                             PaidEventCard(
-                                paidEvent = paidEvent,
-                                onRevokePayment = { viewModel.revokeEventPayment(it) },
+                                paidEvent = unpaidEvent,
+                                onRevokePayment = { viewModel.revokeEventReferencePayment(it) },
                                 onWorkerClick = onWorkerClick,
                                 isReferencePayment = true,
-                                displayAmount = referencePayment
+                                displayAmount = if (referenceAmountPaid > 0) referenceAmountPaid else referencePayment
                             )
                         }
                     }
@@ -658,21 +770,20 @@ private fun PaidShiftCard(
 
     if (showRevokeDialog) {
         AlertDialog(
-            onDismissRequest = { showRevokeDialog = false },
+            onDismissRequest = { },
             title = { Text(stringResource(R.string.revoke_payment)) },
             text = { Text(stringResource(R.string.revoke_payment_confirmation)) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         onRevokePayment(paidShift.shiftWorker.id)
-                        showRevokeDialog = false
                     }
                 ) {
                     Text(stringResource(R.string.revoke_payment))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showRevokeDialog = false }) {
+                TextButton(onClick = { }) {
                     Text(stringResource(R.string.cancel))
                 }
             }
@@ -800,21 +911,20 @@ private fun PaidEventCard(
 
     if (showRevokeDialog) {
         AlertDialog(
-            onDismissRequest = { showRevokeDialog = false },
+            onDismissRequest = { },
             title = { Text(stringResource(R.string.revoke_payment)) },
             text = { Text(stringResource(R.string.revoke_payment_confirmation)) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         onRevokePayment(paidEvent.eventWorker.id)
-                        showRevokeDialog = false
                     }
                 ) {
                     Text(stringResource(R.string.revoke_payment))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showRevokeDialog = false }) {
+                TextButton(onClick = { }) {
                     Text(stringResource(R.string.cancel))
                 }
             }

@@ -51,6 +51,9 @@ interface ShiftWorkerDao {
     @Query("UPDATE shift_workers SET isPaid = :isPaid WHERE id = :id")
     suspend fun updatePaymentStatus(id: Long, isPaid: Boolean)
 
+    @Query("UPDATE shift_workers SET isReferencePaid = :isReferencePaid WHERE id = :id")
+    suspend fun updateReferencePaymentStatus(id: Long, isReferencePaid: Boolean)
+
     @Query("UPDATE shift_workers SET isPaid = :isPaid, amountPaid = :amountPaid, tipAmount = :tipAmount WHERE id = :id")
     suspend fun updatePaymentDetails(id: Long, isPaid: Boolean, amountPaid: Double, tipAmount: Double)
 
@@ -78,6 +81,28 @@ interface ShiftWorkerDao {
         ORDER BY s.date DESC
     """)
     fun getUnpaidShiftWorkersFlow(): Flow<List<UnpaidShiftWorkerInfo>>
+
+    @Query("""
+        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime
+        FROM shift_workers sw
+        LEFT JOIN workers w ON sw.workerId = w.id
+        INNER JOIN shifts s ON sw.shiftId = s.id
+        INNER JOIN projects p ON s.projectId = p.id
+        WHERE sw.isPaid = 0 OR (sw.isReferencePaid = 0 AND sw.referencePayRate IS NOT NULL AND sw.referencePayRate > 0)
+        ORDER BY s.date DESC
+    """)
+    suspend fun getShiftWorkersWithOutstandingPayments(): List<UnpaidShiftWorkerInfo>
+
+    @Query("""
+        SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime
+        FROM shift_workers sw
+        LEFT JOIN workers w ON sw.workerId = w.id
+        INNER JOIN shifts s ON sw.shiftId = s.id
+        INNER JOIN projects p ON s.projectId = p.id
+        WHERE sw.isPaid = 0 OR (sw.isReferencePaid = 0 AND sw.referencePayRate IS NOT NULL AND sw.referencePayRate > 0)
+        ORDER BY s.date DESC
+    """)
+    fun getShiftWorkersWithOutstandingPaymentsFlow(): Flow<List<UnpaidShiftWorkerInfo>>
 
     @Query("""
         SELECT sw.*, w.name as workerName, s.date as shiftDate, p.name as projectName, s.hours as shiftHours, s.startTime, s.endTime
