@@ -103,6 +103,8 @@
     <string name="total_expenses">סה"כ הוצאות</string>
     <string name="money_owed_tracking">מעקב חובות</string>
     <string name="total_pending_payments">סה"כ תשלומים ממתינים</string>
+    <string name="loading_payment_status">טוען מצב תשלומים…</string>
+    <string name="loading_amount_placeholder">—</string>
     <string name="active_projects">פרויקטים פעילים</string>
     <string name="upcoming_events">אירועים קרובים</string>
     <string name="no_active_projects">אין פרויקטים פעילים</string>

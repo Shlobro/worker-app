@@ -9,7 +9,7 @@ This package contains top-level Compose screens. Feature screens are organized i
 
 ## Subpackages
 
-- **dashboard**: App overview and summary screen.
+- **dashboard**: App overview and summary screen. The MoneyOwedCard displays loading/debt/no-debt states with appropriate colors and icons to avoid showing misleading financial status before data loads.
 - **employers**: Employer list, detail, add, and edit screens.
 - **events**: Event list, detail, add/edit, and worker assignment screens.
 - **projects**: Project list, detail, add/edit, and project income screens (detail includes a locale-aware financial summary and shift list).

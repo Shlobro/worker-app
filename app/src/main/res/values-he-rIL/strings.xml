@@ -89,6 +89,13 @@
     <!-- Dashboard Cards -->
     <string name="financial_summary">סיכום כספי</string>
     <string name="recent_activity">פעילות אחרונה</string>
+    <string name="money_owed_tracking">מעקב חובות</string>
+    <string name="total_pending_payments">סה"כ תשלומים ממתינים</string>
+    <string name="loading_payment_status">טוען מצב תשלומים…</string>
+    <string name="loading_amount_placeholder">—</string>
+    <string name="active_projects">פרויקטים פעילים</string>
+    <string name="upcoming_events">אירועים קרובים</string>
+    <string name="all_payments_up_to_date">כל התשלומים מעודכנים</string>
     
     <!-- Content Descriptions -->
     <string name="back">חזור</string>

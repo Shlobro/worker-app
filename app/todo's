@@ -1,7 +1,3 @@
-the לוח בקרה should be updated where it says מעקב חובות it should only show the total owed at the moment and only when clicked it should should all the workers owed and how many. also if i owe 0 then it shouldnt be red and scary.
 in the dashboard when it shows me how much money i made it should only show this month. if i go in it i should be able to click by month and see more details there there is too much info at the start. and get rid of the filter by date those should be in the submenu of the revenue
-DONE: when i make an event without the מעסיק and then i go to edit it to add him in i don't have the option
-DONE: in the screen where i add a worker to an event and there is an עובד מפנה the UI is terrible i cannot see the box where i input the amount to the עובד מפנה
-DONE: in the event UI in the worker section there has to be a better UI. need to seperate the title and the list. and need a clearer seperation between the lists of workers and refernce payments.
 a worker that is a referer in the section where it shows the תשלומי הפניה it should not only show the event name but also the worker name that he brought.
 the UX of choosing the time is bad. we need to make it like the best apps allow users to choose a time (perhaps a cool UI showing a clock? or choosing hours and minutes separately?)

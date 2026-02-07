@@ -18,6 +18,7 @@ This is the main Android application module.
   - **java/com/example/workertracking**: Kotlin source root (see `workertracking_developer_guide.md` for UI and feature packages).
   - Financial UI formatting follows locale-aware conventions in screen-level summaries, including shift payment dialogs.
   - Payment calculations in ViewModels rely on `util/PaymentCalculator.kt` for consistent net/total summaries.
+  - Dashboard cards (like MoneyOwedCard) display distinct loading/debt/no-debt visual states to prevent showing misleading financial information before data loads.
 - **res**: Android resources used by Compose UI and the system. Android resource directories cannot contain `.md` files, so see `src/main/res_developer_guide.md` for full details on localization and resource structure.
     - **values**: Default resources (strings, colors, themes).
     - **values-en**: English translations.

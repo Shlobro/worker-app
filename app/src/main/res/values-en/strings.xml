@@ -105,6 +105,8 @@
     <string name="total_expenses">Total Expenses</string>
     <string name="money_owed_tracking">Money Owed Tracking</string>
     <string name="total_pending_payments">Total Pending Payments</string>
+    <string name="loading_payment_status">Loading payment status…</string>
+    <string name="loading_amount_placeholder">—</string>
     <string name="active_projects">Active Projects</string>
     <string name="upcoming_events">Upcoming Events</string>
     <string name="no_active_projects">No active projects</string>
