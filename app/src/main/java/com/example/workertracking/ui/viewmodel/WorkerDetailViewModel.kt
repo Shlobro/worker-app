@@ -155,7 +155,7 @@ class WorkerDetailViewModel(
                 _worker.value?.let { worker ->
                     workerRepository.deleteWorker(worker)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error silently or add error state if needed
             }
         }
@@ -196,15 +196,15 @@ class WorkerDetailViewModel(
                 }
                 
                 val eventTotal = unpaidEvents.sumOf { unpaidEvent ->
-                    PaymentCalculator.calculateTotalNetPayment(
+                    val workerPayment = PaymentCalculator.calculateWorkerPayment(
                         payRate = unpaidEvent.eventWorker.payRate,
                         hours = unpaidEvent.eventWorker.hours,
-                        isHourlyRate = unpaidEvent.eventWorker.isHourlyRate,
-                        referencePayRate = unpaidEvent.eventWorker.referencePayRate,
+                        isHourlyRate = unpaidEvent.eventWorker.isHourlyRate
+                    )
+                    PaymentCalculator.calculateNetPayment(
+                        totalPayment = workerPayment,
                         amountPaid = unpaidEvent.eventWorker.amountPaid,
-                        tipAmount = unpaidEvent.eventWorker.tipAmount,
-                        referenceAmountPaid = unpaidEvent.eventWorker.referenceAmountPaid,
-                        referenceTipAmount = unpaidEvent.eventWorker.referenceTipAmount
+                        tipAmount = unpaidEvent.eventWorker.tipAmount
                     )
                 }
                 
@@ -230,7 +230,7 @@ class WorkerDetailViewModel(
                 
                 _totalOwed.value = shiftTotal + eventTotal
                 _totalReferenceOwed.value = referenceShiftTotal + referenceEventTotal
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error silently or add error state if needed
             }
         }
@@ -253,7 +253,7 @@ class WorkerDetailViewModel(
                 
                 _allShifts.value = allShifts
                 _allEvents.value = allEvents
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error silently or add error state if needed
             }
         }
@@ -270,7 +270,7 @@ class WorkerDetailViewModel(
                         loadPaidItems(worker.id) // Refresh paid items if showing
                     }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error
             }
         }
@@ -287,7 +287,7 @@ class WorkerDetailViewModel(
                         loadPaidItems(worker.id) // Refresh paid items if showing
                     }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error
             }
         }
@@ -304,7 +304,7 @@ class WorkerDetailViewModel(
                         loadPaidItems(worker.id) // Refresh paid items if showing
                     }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error
             }
         }
@@ -339,7 +339,7 @@ class WorkerDetailViewModel(
                         loadPaidItems(worker.id) // Refresh paid items if showing
                     }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error
             }
         }
@@ -356,7 +356,7 @@ class WorkerDetailViewModel(
                         loadPaidItems(worker.id) // Refresh paid items
                     }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error
             }
         }
@@ -373,7 +373,7 @@ class WorkerDetailViewModel(
                         loadPaidItems(worker.id) // Refresh paid items
                     }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error
             }
         }
@@ -399,7 +399,7 @@ class WorkerDetailViewModel(
                 
                 _paidShifts.value = paidShifts
                 _paidEvents.value = paidEvents
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error silently or add error state if needed
             }
         }
