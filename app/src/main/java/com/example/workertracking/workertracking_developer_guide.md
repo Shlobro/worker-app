@@ -17,7 +17,7 @@ This package is the root of the Kotlin source code for the app. It is the entry 
 
 ## Where to Start
 
-- For app-level navigation or layout: **MainActivity.kt**.
+- For app-level navigation or layout: **MainActivity.kt** and navigation routing in **ui/navigation/**.
 - For dependency wiring: **WorkerTrackingApplication.kt** and **di/AppContainer.kt**.
 - For project-specific UI behavior: **ui/screens/projects/ProjectDetailScreen.kt** and related screens.
 - For shift payment workflows (including reference payments): **ui/screens/shifts/ShiftDetailScreen.kt** and **ui/viewmodel/ShiftDetailViewModel.kt**.

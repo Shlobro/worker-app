@@ -1,6 +1,8 @@
 package com.example.workertracking.ui.navigation
 
-sealed class Screen(val route: String, val titleRes: Int, val iconRes: Int? = null) {
+import android.net.Uri
+
+sealed class Screen(val route: String, val titleRes: Int) {
     object Dashboard : Screen("dashboard", com.example.workertracking.R.string.nav_dashboard)
     object Projects : Screen("projects", com.example.workertracking.R.string.nav_projects)
     object Workers : Screen("workers", com.example.workertracking.R.string.nav_workers)
@@ -57,7 +59,8 @@ sealed class Screen(val route: String, val titleRes: Int, val iconRes: Int? = nu
         fun createRoute(incomeId: Long) = "edit_income/$incomeId"
     }
     object MoneyOwed : Screen("money_owed", com.example.workertracking.R.string.money_owed)
+    object RevenueDetail : Screen("revenue_detail", com.example.workertracking.R.string.revenue_details)
     object WorkerPhotoGallery : Screen("worker_photos/{workerId}/{workerName}", com.example.workertracking.R.string.worker_photos) {
-        fun createRoute(workerId: Long, workerName: String) = "worker_photos/$workerId/$workerName"
+        fun createRoute(workerId: Long, workerName: String) = "worker_photos/$workerId/${Uri.encode(workerName)}"
     }
 }

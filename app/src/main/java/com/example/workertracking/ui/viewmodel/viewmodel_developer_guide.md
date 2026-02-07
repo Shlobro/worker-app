@@ -10,7 +10,7 @@ This package contains ViewModels that back Compose screens and expose UI state v
 - **AddProjectViewModel.kt**: State and actions for creating projects.
 - **AddShiftViewModel.kt**: State and actions for creating shifts.
 - **AddWorkerViewModel.kt**: State and actions for creating workers.
-- **DashboardViewModel.kt**: Aggregated totals and dashboard filters.
+- **DashboardViewModel.kt**: Aggregated dashboard totals and lists. Financial totals are scoped to the current month, while active projects and upcoming events are not date-filtered by user input. Income and expense totals are computed using one shared month range per refresh so both values stay aligned during month boundaries.
 - **EditEmployerViewModel.kt**: State and actions for editing employers.
 - **EmployerDetailViewModel.kt**: Employer detail data and updates.
 - **EmployersViewModel.kt**: Employer list data and filters.
@@ -19,6 +19,7 @@ This package contains ViewModels that back Compose screens and expose UI state v
 - **MoneyOwedViewModel.kt**: Outstanding payment totals and grouping.
 - **ProjectDetailViewModel.kt**: Project detail data, shifts, and income.
 - **ProjectsViewModel.kt**: Project list data and filters.
+- **RevenueDetailViewModel.kt**: Monthly revenue aggregation for detailed revenue analysis. Loads events and shifts once per refresh, resolves per-item costs once, then computes selected-month and a 12-month history window anchored to the currently selected month/year.
 - **ShiftDetailViewModel.kt**: Shift detail data, worker assignments, and payment updates (direct and reference).
 - **WorkerDetailViewModel.kt**: Worker detail data, payments, and related history. Exposes two separate debt totals: `totalOwed` (what is owed directly to the worker, excludes referral payouts) and `totalReferenceOwed` (referral commissions owed to this worker when they are the referrer). These are intentionally independent calculations.
 - **WorkerPhotoGalleryViewModel.kt**: Worker photo gallery state and actions.

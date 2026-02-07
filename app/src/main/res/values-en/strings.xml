@@ -220,5 +220,24 @@
     <string name="for_worker_format">For: %1$s</string>
     <string name="unknown_worker">Unknown</string>
     <string name="partial_paid_format">Partially paid: ₪%1$s</string>
-</resources>
 
+    <!-- Revenue Details -->
+    <string name="revenue_details">Revenue Details</string>
+    <string name="monthly_history">Monthly History</string>
+    <string name="previous_year">Previous year</string>
+    <string name="next_year">Next year</string>
+
+    <!-- Months -->
+    <string name="january">January</string>
+    <string name="february">February</string>
+    <string name="march">March</string>
+    <string name="april">April</string>
+    <string name="may">May</string>
+    <string name="june">June</string>
+    <string name="july">July</string>
+    <string name="august">August</string>
+    <string name="september">September</string>
+    <string name="october">October</string>
+    <string name="november">November</string>
+    <string name="december">December</string>
+</resources>

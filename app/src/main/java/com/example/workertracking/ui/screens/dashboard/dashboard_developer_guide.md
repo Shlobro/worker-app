@@ -20,10 +20,11 @@ Displays the total outstanding debt amount. Styles adapt based on loading state 
 Clicking the card navigates to the detailed `MoneyOwedScreen`.
 
 ### FinancialSummaryCard
-Shows total revenue, total expenses, and net profit/loss.
+Shows total revenue, total expenses, and net profit/loss for the current month. Clicking the card navigates to `RevenueDetailScreen` for detailed monthly revenue information.
 
 ### ActiveProjectsCard / UpcomingEventsCard
 Horizontal scrolling rows of project/event summary cards with "View All" navigation.
 
-### DateFilterChip / DateRangePickerDialog
-Date range filter controls that affect all dashboard data via `DashboardViewModel`.
+## Data Filtering
+
+The dashboard automatically displays financial data (revenue, expenses, profit) for the current month only. This is set in `DashboardViewModel.getCurrentMonthRange()`. Active projects and upcoming events are shown regardless of month. For detailed revenue analysis with month/year selection, users can click on the Financial Summary card to navigate to `RevenueDetailScreen`.

@@ -9,9 +9,11 @@ import com.example.workertracking.repository.ProjectRepository
 import com.example.workertracking.repository.ShiftRepository
 import com.example.workertracking.repository.WorkerRepository
 import com.example.workertracking.di.AppContainer
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
 import java.util.*
 import java.util.Calendar
 
@@ -38,13 +40,34 @@ class DashboardViewModel(
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
-    private val _dateFilter = MutableStateFlow<Pair<Date?, Date?>>(null to null)
-    val dateFilter: StateFlow<Pair<Date?, Date?>> = _dateFilter.asStateFlow()
+    private var loadJob: Job? = null
 
     init {
         loadDashboardData()
         startPeriodicRefresh()
         listenToRefreshTrigger()
+    }
+
+    private fun getCurrentMonthRange(): Pair<Date, Date> {
+        val calendar = Calendar.getInstance()
+
+        // Start of current month
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val startOfMonth = calendar.time
+
+        // End of current month
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        val endOfMonth = calendar.time
+
+        return startOfMonth to endOfMonth
     }
     
     private fun listenToRefreshTrigger() {
@@ -66,27 +89,18 @@ class DashboardViewModel(
         }
     }
 
-    fun setDateFilter(startDate: Date?, endDate: Date?) {
-        _dateFilter.value = startDate to endDate
-        _uiState.value = _uiState.value.copy(
-            filteredStartDate = startDate,
-            filteredEndDate = endDate
-        )
-        loadDashboardData()
-    }
-
-    fun clearDateFilter() {
-        setDateFilter(null, null)
-    }
-
     private fun loadDashboardData() {
-        viewModelScope.launch {
+        // Cancel previous load to avoid stacking collectors
+        loadJob?.cancel()
+
+        loadJob = viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-            
+
             try {
+                val monthRange = getCurrentMonthRange()
                 combine(
-                    calculateTotalIncome(),
-                    calculateTotalExpenses(),
+                    calculateTotalIncome(monthRange.first, monthRange.second),
+                    calculateTotalExpenses(monthRange.first, monthRange.second),
                     getActiveProjects(),
                     getUpcomingEvents(),
                     calculateTotalOwed()
@@ -98,22 +112,22 @@ class DashboardViewModel(
                         activeProjects = projects,
                         upcomingEvents = events,
                         totalOwed = owed,
-                        filteredStartDate = _dateFilter.value.first,
-                        filteredEndDate = _dateFilter.value.second,
+                        filteredStartDate = monthRange.first,
+                        filteredEndDate = monthRange.second,
                         isLoading = false
                     )
                 }.collect { newState ->
                     _uiState.value = newState
                 }
-            } catch (e: Exception) {
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: Exception) {
                 _uiState.value = _uiState.value.copy(isLoading = false)
             }
         }
     }
 
-    private fun calculateTotalIncome(): Flow<Double> = flow {
-        val (startDate, endDate) = _dateFilter.value
-
+    private fun calculateTotalIncome(startDate: Date, endDate: Date): Flow<Double> = flow {
         // Get project income with date filter applied
         val projectIncome = projectRepository.getTotalProjectIncome(startDate, endDate)
 
@@ -128,9 +142,7 @@ class DashboardViewModel(
         emit(projectIncome + eventIncome)
     }
 
-    private fun calculateTotalExpenses(): Flow<Double> = flow {
-        val (startDate, endDate) = _dateFilter.value
-        
+    private fun calculateTotalExpenses(startDate: Date, endDate: Date): Flow<Double> = flow {
         // Get shift costs
         val shifts = shiftRepository.getAllShifts().first()
         val shiftCosts = shifts
@@ -140,7 +152,7 @@ class DashboardViewModel(
             .sumOf { shift ->
                 shiftRepository.getTotalCostForShift(shift.id) ?: 0.0
             }
-        
+
         // Get event costs
         val events = eventRepository.getAllEvents().first()
         val eventCosts = events
@@ -150,16 +162,14 @@ class DashboardViewModel(
             .sumOf { event ->
                 eventRepository.getTotalEventCost(event.id) ?: 0.0
             }
-        
+
         emit(shiftCosts + eventCosts)
     }
 
-    private fun getActiveProjects(): Flow<List<Project>> = 
+    private fun getActiveProjects(): Flow<List<Project>> =
         projectRepository.getAllProjects().map { projects ->
-            val (startDate, endDate) = _dateFilter.value
             projects.filter { project ->
-                project.endDate == null && // Active projects only
-                isWithinDateRange(project.startDate, startDate, endDate)
+                project.endDate == null // Active projects only (no date filtering)
             }.take(5) // Limit to 5 most recent
         }
 
@@ -171,10 +181,8 @@ class DashboardViewModel(
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
             }.time
-            val (startDate, endDate) = _dateFilter.value
             events.filter { event ->
-                !event.date.before(today) && // Today and future events
-                isWithinDateRange(event.date, startDate, endDate)
+                !event.date.before(today) // Today and future events (no date filtering)
             }.sortedBy { it.date }.take(5) // Next 5 events
         }
 

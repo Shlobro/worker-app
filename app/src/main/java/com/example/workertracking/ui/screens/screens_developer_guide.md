@@ -5,6 +5,7 @@ This package contains top-level Compose screens. Feature screens are organized i
 ## Direct Files
 
 - **MoneyOwedScreen.kt**: Displays outstanding payments owed to workers and references.
+- **RevenueDetailScreen.kt**: Displays detailed revenue information with month/year selection and a 12-month historical window anchored to the selected month. Year navigation controls use localized accessibility labels.
 - **WorkerPhotoGalleryScreen.kt**: Displays and manages a worker's photo gallery.
 
 ## Subpackages
