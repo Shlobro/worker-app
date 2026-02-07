@@ -212,4 +212,11 @@
     <string name="total_profit">Total Profit</string>
     <string name="select_employer">Select employer</string>
     <string name="no_employer">No employer</string>
+
+    <!-- Reference Payments -->
+    <string name="reference_payments_title">Reference Payments</string>
+    <string name="for_worker_format">For: %1$s</string>
+    <string name="unknown_worker">Unknown</string>
+    <string name="partial_paid_format">Partially paid: ₪%1$s</string>
 </resources>
+

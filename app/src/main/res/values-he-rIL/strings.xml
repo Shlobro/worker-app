@@ -78,7 +78,7 @@
     <string name="hours">שעות</string>
     <string name="currency_symbol">₪</string>
     <string name="no_data">אין נתונים</string>
-    <string name="loading">טוען...</string>
+    <string name="loading">טוען…</string>
     
     <!-- Validation -->
     <string name="error_empty_field">שדה זה חובה</string>
@@ -98,4 +98,10 @@
     <!-- Worker specific -->
     <string name="no_reference">ללא מפנה</string>
     <string name="reference_percentage">אחוז המפנה (%)</string>
+
+    <!-- Reference Payments -->
+    <string name="reference_payments_title">תשלומי הפניה</string>
+    <string name="for_worker_format">עבור: %1$s</string>
+    <string name="unknown_worker">לא ידוע</string>
+    <string name="partial_paid_format">שולם חלקית: ₪%1$s</string>
 </resources>

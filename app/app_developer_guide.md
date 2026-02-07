@@ -18,13 +18,13 @@ This is the main Android application module.
   - **java/com/example/workertracking**: Kotlin source root (see `workertracking_developer_guide.md` for UI and feature packages).
   - Financial UI formatting follows locale-aware conventions in screen-level summaries, including shift payment dialogs.
   - Payment calculations in ViewModels rely on `util/PaymentCalculator.kt` for consistent net/total summaries.
-- **res**: Android resources used by Compose UI and the system.
+- **res**: Android resources used by Compose UI and the system. Android resource directories cannot contain `.md` files, so see `src/main/res_developer_guide.md` for full details on localization and resource structure.
+    - **values**: Default resources (strings, colors, themes).
+    - **values-en**: English translations.
+    - **values-he**: Hebrew translations.
+    - **values-he-rIL**: Hebrew (Israel) partial translations.
     - **drawable**: Vector assets and images.
     - **mipmap-***: App launcher icons.
-    - **values**: Default resources (strings, colors, styles).
-    - **values-en**: English localized resources.
-    - **values-he**: Hebrew localized resources.
-    - **values-he-rIL**: Hebrew (Israel) localized resources.
     - **xml**: XML configuration resources.
 - **src/test**: JVM unit tests (see `workertracking_test_developer_guide.md`).
 - **src/androidTest**: Instrumented tests on device/emulator (see `workertracking_android_test_developer_guide.md`).

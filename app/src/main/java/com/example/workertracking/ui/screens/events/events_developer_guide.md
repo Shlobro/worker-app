@@ -5,7 +5,7 @@ This folder contains screens for event management.
 ## Files
 
 - **EventsScreen.kt**: Event list and entry point to add/edit flows.
-- **EventDetailScreen.kt**: Event detail view with worker assignments and totals.
+- **EventDetailScreen.kt**: Event detail view with worker assignments and totals. Workers and reference payments are displayed in separate `Card` sections — the workers card has a header with an add button separated from the list by a divider. When reference payments exist, they appear in their own card with a distinct secondary container background; this card is only rendered when at least one reference payment is present.
 - **AddEventScreen.kt**: Form to create a new event with optional employer selection.
 - **EditEventScreen.kt**: Form to update an existing event including employer assignment. Supports changing or clearing the employer via `ExposedDropdownMenuBox` and `SearchableEmployerSelector`. The initial employer selection is derived from the `availableEmployers` list matched against `event.employerId` (no separate async lookup).
 - **AddWorkerToEventScreen.kt**: Assign workers to an event and configure pay.

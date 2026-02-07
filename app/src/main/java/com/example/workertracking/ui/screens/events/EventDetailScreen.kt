@@ -63,6 +63,8 @@ fun EventDetailScreen(
 
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
+    val workersById = remember(allWorkers) { allWorkers.associateBy { it.id } }
+
     val filteredWorkers = allWorkers.filter { worker ->
         worker.name.contains(searchQuery, ignoreCase = true) &&
         eventWorkers.none { it.eventWorker.workerId == worker.id }
@@ -261,7 +263,7 @@ fun EventDetailScreen(
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(0.dp)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -280,7 +282,12 @@ fun EventDetailScreen(
                                     )
                                 }
                             }
-                            
+
+                            HorizontalDivider(
+                                modifier = Modifier.padding(bottom = 8.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+
                             if (eventWorkers.isEmpty()) {
                                 Text(
                                     text = stringResource(R.string.no_workers_assigned),
@@ -317,7 +324,7 @@ fun EventDetailScreen(
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
-                                            
+
                                         }
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
@@ -331,11 +338,11 @@ fun EventDetailScreen(
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     fontWeight = FontWeight.Medium
                                                 )
-                                                
+
                                                 // Payment Status Display
                                                 if (workerWithName.eventWorker.isPaid) {
                                                     TextButton(
-                                                        onClick = { 
+                                                        onClick = {
                                                             paymentDialogTotalDue = workerPayment
                                                             showEditPaymentDialog = workerWithName.eventWorker
                                                         },
@@ -351,14 +358,14 @@ fun EventDetailScreen(
                                                 } else if (workerWithName.eventWorker.amountPaid > 0) {
                                                     // Partial Payment
                                                     TextButton(
-                                                        onClick = { 
+                                                        onClick = {
                                                             paymentDialogTotalDue = workerPayment
                                                             showEditPaymentDialog = workerWithName.eventWorker
                                                         },
                                                         contentPadding = PaddingValues(0.dp)
                                                     ) {
                                                         Text(
-                                                            text = "שולם חלקית: ₪${String.format(Locale.getDefault(), "%.2f", workerWithName.eventWorker.amountPaid)}",
+                                                            text = stringResource(R.string.partial_paid_format, String.format(Locale.getDefault(), "%.2f", workerWithName.eventWorker.amountPaid)),
                                                             style = MaterialTheme.typography.bodySmall,
                                                             color = Color(0xFFFFA000), // Orange for partial
                                                             fontWeight = FontWeight.Medium
@@ -366,7 +373,7 @@ fun EventDetailScreen(
                                                     }
                                                 } else {
                                                     TextButton(
-                                                        onClick = { 
+                                                        onClick = {
                                                             paymentDialogTotalDue = workerPayment
                                                             showPaymentDialog = workerWithName.eventWorker
                                                         },
@@ -381,7 +388,7 @@ fun EventDetailScreen(
                                                     }
                                                 }
                                             }
-                                            
+
                                             Row {
                                                 IconButton(
                                                     onClick = { showEditWorkerDialog = workerWithName.eventWorker }
@@ -405,130 +412,140 @@ fun EventDetailScreen(
                                         }
                                     }
                                     if (workerWithName != eventWorkers.last()) {
-                                        HorizontalDivider()
+                                        HorizontalDivider(
+                                            modifier = Modifier.padding(vertical = 4.dp),
+                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                        )
                                     }
                                 }
                             }
-                            
-                            // Reference Workers Section
-                            val referencePayments = eventWorkers.mapNotNull { workerWithName ->
-                                workerWithName.eventWorker.referencePayRate?.let { refRate ->
-                                    val worker = allWorkers.find { it.id == workerWithName.eventWorker.workerId }
-                                    worker?.referenceId?.let { referenceId ->
-                                        val referenceWorker = allWorkers.find { it.id == referenceId }
-                                        referenceWorker?.let { refWorker ->
-                                            // Return: (ReferenceWorker, EventWorker record, Commission Amount)
-                                            val commissionAmount = if (workerWithName.eventWorker.isReferenceHourlyRate) {
-                                                refRate * workerWithName.eventWorker.hours
-                                            } else {
-                                                refRate // Fixed amount
-                                            }
-                                            Triple(refWorker, workerWithName.eventWorker, commissionAmount)
-                                        }
+                        }
+                    }
+
+                    // Reference Payments Card (separate from workers)
+                    val referencePayments = eventWorkers.mapNotNull { workerWithName ->
+                        workerWithName.eventWorker.referencePayRate?.let { refRate ->
+                            val worker = workersById[workerWithName.eventWorker.workerId]
+                            worker?.referenceId?.let { referenceId ->
+                                workersById[referenceId]?.let { refWorker ->
+                                    val commissionAmount = if (workerWithName.eventWorker.isReferenceHourlyRate) {
+                                        refRate * workerWithName.eventWorker.hours
+                                    } else {
+                                        refRate
                                     }
+                                    Triple(refWorker, workerWithName.eventWorker, commissionAmount)
                                 }
                             }
-                            
-                            if (referencePayments.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+
+                    if (referencePayments.isNotEmpty()) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(0.dp)
+                            ) {
                                 Text(
-                                    text = "עובדים מפנים:",
+                                    text = stringResource(R.string.reference_payments_title),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
-                                
-                                referencePayments.forEach { (referenceWorker, eventWorker, commissionAmount) ->
-                                    val referredWorker = allWorkers.find { it.id == eventWorker.workerId }
-                                    
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Card(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                                        )
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                                    color = MaterialTheme.colorScheme.outlineVariant
+                                )
+
+                                referencePayments.forEachIndexed { index, (referenceWorker, eventWorker, commissionAmount) ->
+                                    val referredWorker = workersById[eventWorker.workerId]
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 6.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(12.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = referenceWorker.name,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                            Text(
+                                                text = stringResource(R.string.for_worker_format, referredWorker?.name ?: stringResource(R.string.unknown_worker)),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Column(
+                                            horizontalAlignment = Alignment.End
                                         ) {
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(
-                                                    text = referenceWorker.name,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-                                                Text(
-                                                    text = "עבור: ${referredWorker?.name ?: "Unknown"}",
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                Column(
-                                                    horizontalAlignment = Alignment.End
+                                            Text(
+                                                text = "₪${String.format(Locale.getDefault(), "%.2f", commissionAmount)}",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.secondary
+                                            )
+
+                                            if (eventWorker.isReferencePaid) {
+                                                TextButton(
+                                                    onClick = {
+                                                        paymentDialogTotalDue = commissionAmount
+                                                        showReferenceEditPaymentDialog = eventWorker
+                                                    },
+                                                    contentPadding = PaddingValues(0.dp)
                                                 ) {
                                                     Text(
-                                                        text = "₪${String.format(Locale.getDefault(), "%.2f", commissionAmount)}",
-                                                        style = MaterialTheme.typography.bodyMedium,
-                                                        fontWeight = FontWeight.Medium,
-                                                        color = MaterialTheme.colorScheme.secondary
+                                                        text = stringResource(R.string.paid),
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = Color(0xFF4CAF50),
+                                                        fontWeight = FontWeight.Medium
                                                     )
-                                                    
-                                                    if (eventWorker.isReferencePaid) {
-                                                        TextButton(
-                                                            onClick = { 
-                                                                paymentDialogTotalDue = commissionAmount
-                                                                showReferenceEditPaymentDialog = eventWorker
-                                                            },
-                                                            contentPadding = PaddingValues(0.dp)
-                                                        ) {
-                                                            Text(
-                                                                text = stringResource(R.string.paid),
-                                                                style = MaterialTheme.typography.bodySmall,
-                                                                color = Color(0xFF4CAF50),
-                                                                fontWeight = FontWeight.Medium
-                                                            )
-                                                        }
-                                                    } else if (eventWorker.referenceAmountPaid > 0) {
-                                                        TextButton(
-                                                            onClick = { 
-                                                                paymentDialogTotalDue = commissionAmount
-                                                                showReferenceEditPaymentDialog = eventWorker
-                                                            },
-                                                            contentPadding = PaddingValues(0.dp)
-                                                        ) {
-                                                            Text(
-                                                                text = "שולם חלקית: ₪${String.format(Locale.getDefault(), "%.2f", eventWorker.referenceAmountPaid)}",
-                                                                style = MaterialTheme.typography.bodySmall,
-                                                                color = Color(0xFFFFA000),
-                                                                fontWeight = FontWeight.Medium
-                                                            )
-                                                        }
-                                                    } else {
-                                                        TextButton(
-                                                            onClick = { 
-                                                                paymentDialogTotalDue = commissionAmount
-                                                                showReferencePaymentDialog = eventWorker
-                                                            },
-                                                            colors = ButtonDefaults.textButtonColors(
-                                                                contentColor = Color(0xFF4CAF50)
-                                                            )
-                                                        ) {
-                                                            Text(
-                                                                text = stringResource(R.string.mark_as_paid),
-                                                                style = MaterialTheme.typography.bodySmall
-                                                            )
-                                                        }
-                                                    }
+                                                }
+                                            } else if (eventWorker.referenceAmountPaid > 0) {
+                                                TextButton(
+                                                    onClick = {
+                                                        paymentDialogTotalDue = commissionAmount
+                                                        showReferenceEditPaymentDialog = eventWorker
+                                                    },
+                                                    contentPadding = PaddingValues(0.dp)
+                                                ) {
+                                                    Text(
+                                                        text = stringResource(R.string.partial_paid_format, String.format(Locale.getDefault(), "%.2f", eventWorker.referenceAmountPaid)),
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = Color(0xFFFFA000),
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                }
+                                            } else {
+                                                TextButton(
+                                                    onClick = {
+                                                        paymentDialogTotalDue = commissionAmount
+                                                        showReferencePaymentDialog = eventWorker
+                                                    },
+                                                    colors = ButtonDefaults.textButtonColors(
+                                                        contentColor = Color(0xFF4CAF50)
+                                                    )
+                                                ) {
+                                                    Text(
+                                                        text = stringResource(R.string.mark_as_paid),
+                                                        style = MaterialTheme.typography.bodySmall
+                                                    )
                                                 }
                                             }
                                         }
+                                    }
+                                    if (index < referencePayments.size - 1) {
+                                        HorizontalDivider(
+                                            modifier = Modifier.padding(vertical = 4.dp),
+                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                        )
                                     }
                                 }
                             }
@@ -546,9 +563,8 @@ fun EventDetailScreen(
             onConfirm = { isFullPayment, amount, tip ->
                 val amountToPay = if (isFullPayment) paymentDialogTotalDue else amount
                 onUpdatePayment(showPaymentDialog!!.id, isFullPayment, amountToPay, tip)
-                showPaymentDialog = null
             },
-            onDismiss = { showPaymentDialog = null }
+            onDismiss = { }
         )
     }
 
@@ -561,9 +577,8 @@ fun EventDetailScreen(
             isPaid = showEditPaymentDialog!!.isPaid,
             onConfirm = { isPaid, amount, tip ->
                 onUpdatePayment(showEditPaymentDialog!!.id, isPaid, amount, tip)
-                showEditPaymentDialog = null
             },
-            onDismiss = { showEditPaymentDialog = null }
+            onDismiss = { }
         )
     }
     
@@ -574,9 +589,8 @@ fun EventDetailScreen(
             onConfirm = { isFullPayment, amount, tip ->
                 val amountToPay = if (isFullPayment) paymentDialogTotalDue else amount
                 onUpdateReferencePayment(showReferencePaymentDialog!!.id, isFullPayment, amountToPay, tip)
-                showReferencePaymentDialog = null
             },
-            onDismiss = { showReferencePaymentDialog = null }
+            onDismiss = { }
         )
     }
 
@@ -589,9 +603,8 @@ fun EventDetailScreen(
             isPaid = showReferenceEditPaymentDialog!!.isReferencePaid,
             onConfirm = { isPaid, amount, tip ->
                 onUpdateReferencePayment(showReferenceEditPaymentDialog!!.id, isPaid, amount, tip)
-                showReferenceEditPaymentDialog = null
             },
-            onDismiss = { showReferenceEditPaymentDialog = null }
+            onDismiss = { }
         )
     }
     
@@ -607,10 +620,9 @@ fun EventDetailScreen(
                 eventWorker = showEditWorkerDialog!!,
                 worker = worker,
                 referenceWorker = referenceWorker,
-                onDismiss = { showEditWorkerDialog = null },
+                onDismiss = { },
                 onConfirm = { updatedEventWorker ->
                     onUpdateWorker(updatedEventWorker)
-                    showEditWorkerDialog = null
                 }
             )
         }
@@ -622,15 +634,11 @@ fun EventDetailScreen(
             workers = filteredWorkers,
             allWorkers = allWorkers,
             searchQuery = searchQuery,
-            onSearchQueryChange = { searchQuery = it },
-            onDismiss = { 
-                showAddWorkerDialog = false
-                searchQuery = ""
+            onSearchQueryChange = { },
+            onDismiss = {
             },
             onAddWorker = { workerId, isHourlyRate, payRate, refPayRate, isRefHourly ->
                 onAddWorkerToEvent(event.id, workerId, event.hours.toDoubleOrNull() ?: 0.0, isHourlyRate, payRate, refPayRate, isRefHourly)
-                showAddWorkerDialog = false
-                searchQuery = ""
             },
             title = "הוסף עובד לאירוע",
             showPaymentType = true, // Events now support both hourly and fixed amounts
@@ -642,7 +650,7 @@ fun EventDetailScreen(
     // Delete Confirmation Dialog
     if (showDeleteDialog && event != null) {
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
+            onDismissRequest = { },
             title = {
                 Text(stringResource(R.string.delete_confirmation_title))
             },
@@ -652,7 +660,6 @@ fun EventDetailScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        showDeleteDialog = false
                         onDeleteEvent()
                     },
                     colors = ButtonDefaults.textButtonColors(
@@ -664,7 +671,7 @@ fun EventDetailScreen(
             },
             dismissButton = {
                 TextButton(
-                    onClick = { showDeleteDialog = false }
+                    onClick = { }
                 ) {
                     Text(stringResource(R.string.cancel_delete))
                 }
