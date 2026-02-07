@@ -1,23 +1,56 @@
 package com.example.workertracking.ui.screens.workers
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,17 +58,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.example.workertracking.R
-import com.example.workertracking.data.entity.Worker
-import com.example.workertracking.data.entity.Project
 import com.example.workertracking.data.entity.Event
-import com.example.workertracking.data.entity.UnpaidShiftWorkerInfo
-import com.example.workertracking.data.entity.UnpaidEventWorkerInfo
 import com.example.workertracking.data.entity.EventWorker
-import com.example.workertracking.ui.components.PaymentDialog
+import com.example.workertracking.data.entity.Project
+import com.example.workertracking.data.entity.UnpaidEventWorkerInfo
+import com.example.workertracking.data.entity.UnpaidShiftWorkerInfo
+import com.example.workertracking.data.entity.Worker
 import com.example.workertracking.ui.components.EditPaymentDialog
+import com.example.workertracking.ui.components.PaymentDialog
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,8 +113,8 @@ fun WorkerDetailScreen(
     // Dialog States
     var showPaymentDialog by remember { mutableStateOf<EventWorker?>(null) }
     var showEditPaymentDialog by remember { mutableStateOf<EventWorker?>(null) }
-    var paymentDialogRemainingBalance by remember { mutableStateOf(0.0) }
-    var editPaymentDialogTotalAmount by remember { mutableStateOf(0.0) }
+    var paymentDialogRemainingBalance by remember { mutableDoubleStateOf(0.0) }
+    var editPaymentDialogTotalAmount by remember { mutableDoubleStateOf(0.0) }
 
     Scaffold(
         topBar = {
@@ -156,7 +190,7 @@ fun WorkerDetailScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.clickable {
                                     val intent = Intent(Intent.ACTION_DIAL).apply {
-                                        data = Uri.parse("tel:${worker.phoneNumber}")
+                                        data = "tel:${worker.phoneNumber}".toUri()
                                     }
                                     context.startActivity(intent)
                                 }
@@ -366,7 +400,8 @@ fun WorkerDetailScreen(
                                                 projectName = unpaidShift.projectName,
                                                 date = unpaidShift.shiftDate,
                                                 amount = (unpaidShift.shiftWorker.referencePayRate ?: 0.0) * unpaidShift.shiftHours,
-                                                onMarkAsPaid = { onMarkShiftAsPaid(unpaidShift.shiftWorker.id) }
+                                                onMarkAsPaid = { onMarkShiftAsPaid(unpaidShift.shiftWorker.id) },
+                                                workerName = unpaidShift.workerName
                                             )
                                         }
                                     }
@@ -388,7 +423,8 @@ fun WorkerDetailScreen(
                                                 projectName = unpaidEvent.eventName,
                                                 date = unpaidEvent.eventDate,
                                                 amount = (unpaidEvent.eventWorker.referencePayRate ?: 0.0) * unpaidEvent.eventWorker.hours,
-                                                onMarkAsPaid = { onMarkEventAsPaid(unpaidEvent.eventWorker.id) }
+                                                onMarkAsPaid = { onMarkEventAsPaid(unpaidEvent.eventWorker.id) },
+                                                workerName = unpaidEvent.workerName
                                             )
                                         }
                                     }
@@ -642,9 +678,8 @@ fun WorkerDetailScreen(
                 val newTotalPaid = showPaymentDialog!!.amountPaid + additionalPayment
                 val newTotalTip = showPaymentDialog!!.tipAmount + tip
                 onUpdateEventPayment(showPaymentDialog!!.id, isFullPayment, newTotalPaid, newTotalTip)
-                showPaymentDialog = null
             },
-            onDismiss = { showPaymentDialog = null }
+            onDismiss = { }
         )
     }
 
@@ -656,16 +691,15 @@ fun WorkerDetailScreen(
             isPaid = showEditPaymentDialog!!.isPaid,
             onConfirm = { isPaid, amount, tip ->
                 onUpdateEventPayment(showEditPaymentDialog!!.id, isPaid, amount, tip)
-                showEditPaymentDialog = null
             },
-            onDismiss = { showEditPaymentDialog = null }
+            onDismiss = { }
         )
     }
     
     // Delete confirmation dialog
     if (showDeleteDialog) {
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
+            onDismissRequest = { },
             title = { Text(stringResource(R.string.delete_confirmation_title)) },
             text = { 
                 Text(
@@ -677,7 +711,6 @@ fun WorkerDetailScreen(
                 Button(
                     onClick = {
                         onDeleteWorker()
-                        showDeleteDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
@@ -687,7 +720,7 @@ fun WorkerDetailScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
+                TextButton(onClick = { }) {
                     Text(stringResource(R.string.cancel_delete))
                 }
             }
@@ -701,10 +734,11 @@ private fun WorkerDebtCard(
     date: Long,
     amount: Double,
     onMarkAsPaid: () -> Unit,
-    partialAmount: Double? = null
+    partialAmount: Double? = null,
+    workerName: String? = null
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -724,6 +758,14 @@ private fun WorkerDebtCard(
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
                 )
+                if (!workerName.isNullOrBlank()) {
+                    Text(
+                        text = workerName.trim(),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
                 Text(
                     text = dateFormat.format(Date(date)),
                     style = MaterialTheme.typography.bodySmall,
@@ -858,21 +900,20 @@ private fun WorkerPaidCard(
     
     if (showRevokeDialog) {
         AlertDialog(
-            onDismissRequest = { showRevokeDialog = false },
+            onDismissRequest = { },
             title = { Text(stringResource(R.string.revoke_payment)) },
             text = { Text(stringResource(R.string.revoke_payment_confirmation)) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         onRevokePayment()
-                        showRevokeDialog = false
                     }
                 ) {
                     Text(stringResource(R.string.revoke_payment))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showRevokeDialog = false }) {
+                TextButton(onClick = { }) {
                     Text(stringResource(R.string.cancel))
                 }
             }
@@ -1037,10 +1078,8 @@ fun DateFilterChip(
             endDate = endDate,
             onDateRangeSelected = { start, end ->
                 onDateRangeSelected(start, end)
-                showDatePicker = false
             },
             onDismiss = {
-                showDatePicker = false
             }
         )
     }
