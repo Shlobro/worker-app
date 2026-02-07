@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,7 +21,9 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.example.workertracking.R
+import com.example.workertracking.data.entity.Employer
 import com.example.workertracking.data.entity.Event
+import com.example.workertracking.ui.components.SearchableEmployerSelector
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -28,8 +31,9 @@ import java.util.*
 @Composable
 fun EditEventScreen(
     event: Event?,
+    availableEmployers: List<Employer> = emptyList(),
     onNavigateBack: () -> Unit,
-    onUpdateEvent: (String, Date, String, String, String, Double) -> Unit
+    onUpdateEvent: (String, Date, String, String, String, Double, Long?) -> Unit
 ) {
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
@@ -146,7 +150,7 @@ fun EditEventScreen(
             } else {
                 String.format(Locale.US, "%.1f", calculatedHours)
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return ""
         }
     }
@@ -160,7 +164,9 @@ fun EditEventScreen(
     var income by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
     var isAutoCalculate by remember { mutableStateOf(true) }
-    
+    var selectedEmployer by remember { mutableStateOf<Employer?>(null) }
+    var showEmployerSelector by remember { mutableStateOf(false) }
+
     // Initialize state when event becomes available
     LaunchedEffect(event) {
         event?.let { eventData ->
@@ -171,7 +177,7 @@ fun EditEventScreen(
             endTime = eventData.endTime.filter { it.isDigit() }
             hours = eventData.hours
             income = eventData.income.toString()
-            
+
             // Determine if we should auto-calculate based on whether current hours match calculated hours
             isAutoCalculate = if (startTime.length == 4 && endTime.length == 4 && eventData.hours.isNotBlank()) {
                 val calculatedHours = calculateHours(startTime, endTime)
@@ -179,6 +185,14 @@ fun EditEventScreen(
             } else {
                 true
             }
+        }
+    }
+
+    // Initialize employer once when event and employer list are both available
+    var employerInitialized by remember(event?.id) { mutableStateOf(false) }
+    LaunchedEffect(event?.employerId, availableEmployers) {
+        if (!employerInitialized && event != null && availableEmployers.isNotEmpty()) {
+            selectedEmployer = availableEmployers.find { it.id == event.employerId }
         }
     }
     
@@ -350,7 +364,42 @@ fun EditEventScreen(
                 placeholder = { Text("0.0") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
             )
-            
+
+            ExposedDropdownMenuBox(
+                expanded = false,
+                onExpandedChange = { showEmployerSelector = true }
+            ) {
+                OutlinedTextField(
+                    value = selectedEmployer?.name ?: stringResource(R.string.no_employer),
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.select_employer)) },
+                    trailingIcon = {
+                        if (selectedEmployer != null) {
+                            IconButton(onClick = { selectedEmployer = null }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear selection")
+                            }
+                        } else {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = false)
+                        }
+                    },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                )
+            }
+
+            if (showEmployerSelector) {
+                SearchableEmployerSelector(
+                    employers = availableEmployers,
+                    onEmployerSelected = { employer ->
+                        selectedEmployer = employer
+                        showEmployerSelector = false
+                    },
+                    onDismiss = { showEmployerSelector = false }
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
             
             Button(
@@ -366,7 +415,7 @@ fun EditEventScreen(
                         val endPadded = endTime.padStart(4, '0')
                         val formattedStartTime = "${startPadded.substring(0, 2)}:${startPadded.substring(2)}"
                         val formattedEndTime = "${endPadded.substring(0, 2)}:${endPadded.substring(2)}"
-                        onUpdateEvent(eventName, selectedDate, formattedStartTime, formattedEndTime, hours, incomeValue)
+                        onUpdateEvent(eventName, selectedDate, formattedStartTime, formattedEndTime, hours, incomeValue, selectedEmployer?.id)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -391,10 +440,8 @@ fun EditEventScreen(
                 dateMillis?.let {
                     selectedDate = Date(it)
                 }
-                showDatePicker = false
             },
             onDismiss = {
-                showDatePicker = false
             },
             datePickerState = datePickerState
         )

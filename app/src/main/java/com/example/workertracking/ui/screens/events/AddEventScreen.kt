@@ -1,6 +1,5 @@
 package com.example.workertracking.ui.screens.events
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -302,7 +301,10 @@ fun AddEventScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
             )
             
-            Box {
+            ExposedDropdownMenuBox(
+                expanded = false,
+                onExpandedChange = { showEmployerSelector = true }
+            ) {
                 OutlinedTextField(
                     value = selectedEmployer?.name ?: stringResource(R.string.no_employer),
                     onValueChange = { },
@@ -313,14 +315,13 @@ fun AddEventScreen(
                             IconButton(onClick = { selectedEmployer = null }) {
                                 Icon(Icons.Default.Clear, contentDescription = "Clear selection")
                             }
+                        } else {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = false)
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Box(
                     modifier = Modifier
-                        .matchParentSize()
-                        .clickable { showEmployerSelector = true }
+                        .menuAnchor()
+                        .fillMaxWidth()
                 )
             }
             

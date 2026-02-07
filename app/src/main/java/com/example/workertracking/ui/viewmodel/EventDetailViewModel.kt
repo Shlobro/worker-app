@@ -84,7 +84,7 @@ class EventDetailViewModel(
         _totalCost.value = cost
     }
 
-    fun updateEvent(name: String, date: Date, startTime: String, endTime: String, hours: String, income: Double) {
+    fun updateEvent(name: String, date: Date, startTime: String, endTime: String, hours: String, income: Double, employerId: Long?) {
         viewModelScope.launch {
             try {
                 _event.value?.let { currentEvent ->
@@ -94,13 +94,14 @@ class EventDetailViewModel(
                         startTime = startTime,
                         endTime = endTime,
                         hours = hours,
-                        income = income
+                        income = income,
+                        employerId = employerId
                     )
                     eventRepository.updateEvent(updatedEvent)
                     _event.value = updatedEvent
                     _updateSuccess.value = true
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error silently or add error state if needed
             }
         }
@@ -113,7 +114,7 @@ class EventDetailViewModel(
                     eventRepository.deleteEvent(currentEvent)
                     _deleteSuccess.value = true
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error silently or add error state if needed
             }
         }
@@ -161,7 +162,7 @@ class EventDetailViewModel(
                     loadEventWorkers(event.id)
                     loadTotalCost(event.id)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error silently or add error state if needed
             }
         }
@@ -175,7 +176,7 @@ class EventDetailViewModel(
                     loadEventWorkers(event.id)
                     loadTotalCost(event.id)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error silently or add error state if needed
             }
         }
@@ -189,7 +190,7 @@ class EventDetailViewModel(
                     loadEventWorkers(event.id)
                     loadTotalCost(event.id)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error silently or add error state if needed
             }
         }
@@ -203,7 +204,7 @@ class EventDetailViewModel(
                     loadEventWorkers(event.id)
                     loadTotalCost(event.id)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Handle error silently or add error state if needed
             }
         }

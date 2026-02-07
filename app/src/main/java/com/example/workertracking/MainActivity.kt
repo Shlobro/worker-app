@@ -659,27 +659,32 @@ fun WorkerTrackingApp() {
                         application.container.workerRepository
                     )
                 }
+                val employersViewModel: EmployersViewModel = viewModel {
+                    EmployersViewModel(application.container.employerRepository)
+                }
                 val event by viewModel.event.collectAsState()
                 val updateSuccess by viewModel.updateSuccess.collectAsState()
-                
+                val availableEmployers by employersViewModel.employers.collectAsState()
+
                 LaunchedEffect(eventId) {
                     viewModel.loadEvent(eventId)
                 }
-                
+
                 LaunchedEffect(updateSuccess) {
                     if (updateSuccess) {
                         viewModel.clearUpdateSuccess()
                         navController.popBackStack()
                     }
                 }
-                
+
                 EditEventScreen(
                     event = event,
+                    availableEmployers = availableEmployers,
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onUpdateEvent = { name, date, startTime, endTime, hours, income ->
-                        viewModel.updateEvent(name, date, startTime, endTime, hours, income)
+                    onUpdateEvent = { name, date, startTime, endTime, hours, income, employerId ->
+                        viewModel.updateEvent(name, date, startTime, endTime, hours, income, employerId)
                     }
                 )
             }

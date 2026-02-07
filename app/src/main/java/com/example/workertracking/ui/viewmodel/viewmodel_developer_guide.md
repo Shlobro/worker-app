@@ -14,7 +14,7 @@ This package contains ViewModels that back Compose screens and expose UI state v
 - **EditEmployerViewModel.kt**: State and actions for editing employers.
 - **EmployerDetailViewModel.kt**: Employer detail data and updates.
 - **EmployersViewModel.kt**: Employer list data and filters.
-- **EventDetailViewModel.kt**: Event detail data and worker assignments.
+- **EventDetailViewModel.kt**: Event detail data, worker assignments, and event updates. `updateEvent(...)` persists all event fields including `employerId` (nullable — pass `null` to clear employer assignment, a valid ID to set one). The `employerId` parameter is required (no default) to force callers to be explicit.
 - **EventsViewModel.kt**: Event list data and filters.
 - **MoneyOwedViewModel.kt**: Outstanding payment totals and grouping.
 - **ProjectDetailViewModel.kt**: Project detail data, shifts, and income.
