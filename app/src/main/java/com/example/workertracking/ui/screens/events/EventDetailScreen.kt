@@ -59,7 +59,7 @@ fun EventDetailScreen(
     var showReferencePaymentDialog by remember { mutableStateOf<EventWorker?>(null) }
     var showReferenceEditPaymentDialog by remember { mutableStateOf<EventWorker?>(null) }
     
-    var paymentDialogTotalDue by remember { mutableStateOf(0.0) }
+    var paymentDialogTotalDue by remember { mutableDoubleStateOf(0.0) }
 
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
