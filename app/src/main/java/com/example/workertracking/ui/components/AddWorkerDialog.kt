@@ -71,7 +71,7 @@ fun AddWorkerDialog(
                         items(workers) { worker ->
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                onClick = { }
+                                onClick = { selectedWorker = worker }
                             ) {
                                 Row(
                                     modifier = Modifier

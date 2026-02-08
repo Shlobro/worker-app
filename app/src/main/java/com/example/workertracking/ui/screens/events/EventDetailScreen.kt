@@ -563,8 +563,9 @@ fun EventDetailScreen(
             onConfirm = { isFullPayment, amount, tip ->
                 val amountToPay = if (isFullPayment) paymentDialogTotalDue else amount
                 onUpdatePayment(showPaymentDialog!!.id, isFullPayment, amountToPay, tip)
+                showPaymentDialog = null
             },
-            onDismiss = { }
+            onDismiss = { showPaymentDialog = null }
         )
     }
 
@@ -577,8 +578,9 @@ fun EventDetailScreen(
             isPaid = showEditPaymentDialog!!.isPaid,
             onConfirm = { isPaid, amount, tip ->
                 onUpdatePayment(showEditPaymentDialog!!.id, isPaid, amount, tip)
+                showEditPaymentDialog = null
             },
-            onDismiss = { }
+            onDismiss = { showEditPaymentDialog = null }
         )
     }
     
@@ -589,8 +591,9 @@ fun EventDetailScreen(
             onConfirm = { isFullPayment, amount, tip ->
                 val amountToPay = if (isFullPayment) paymentDialogTotalDue else amount
                 onUpdateReferencePayment(showReferencePaymentDialog!!.id, isFullPayment, amountToPay, tip)
+                showReferencePaymentDialog = null
             },
-            onDismiss = { }
+            onDismiss = { showReferencePaymentDialog = null }
         )
     }
 
@@ -603,8 +606,9 @@ fun EventDetailScreen(
             isPaid = showReferenceEditPaymentDialog!!.isReferencePaid,
             onConfirm = { isPaid, amount, tip ->
                 onUpdateReferencePayment(showReferenceEditPaymentDialog!!.id, isPaid, amount, tip)
+                showReferenceEditPaymentDialog = null
             },
-            onDismiss = { }
+            onDismiss = { showReferenceEditPaymentDialog = null }
         )
     }
     
@@ -614,15 +618,16 @@ fun EventDetailScreen(
         val referenceWorker = worker?.referenceId?.let { refId ->
             allWorkers.find { it.id == refId }
         }
-        
+
         if (worker != null) {
             EditEventWorkerDialog(
                 eventWorker = showEditWorkerDialog!!,
                 worker = worker,
                 referenceWorker = referenceWorker,
-                onDismiss = { },
+                onDismiss = { showEditWorkerDialog = null },
                 onConfirm = { updatedEventWorker ->
                     onUpdateWorker(updatedEventWorker)
+                    showEditWorkerDialog = null
                 }
             )
         }
@@ -634,11 +639,15 @@ fun EventDetailScreen(
             workers = filteredWorkers,
             allWorkers = allWorkers,
             searchQuery = searchQuery,
-            onSearchQueryChange = { },
+            onSearchQueryChange = { query -> searchQuery = query },
             onDismiss = {
+                showAddWorkerDialog = false
+                searchQuery = ""
             },
             onAddWorker = { workerId, isHourlyRate, payRate, refPayRate, isRefHourly ->
                 onAddWorkerToEvent(event.id, workerId, event.hours.toDoubleOrNull() ?: 0.0, isHourlyRate, payRate, refPayRate, isRefHourly)
+                showAddWorkerDialog = false
+                searchQuery = ""
             },
             title = "הוסף עובד לאירוע",
             showPaymentType = true, // Events now support both hourly and fixed amounts
@@ -650,7 +659,7 @@ fun EventDetailScreen(
     // Delete Confirmation Dialog
     if (showDeleteDialog && event != null) {
         AlertDialog(
-            onDismissRequest = { },
+            onDismissRequest = { showDeleteDialog = false },
             title = {
                 Text(stringResource(R.string.delete_confirmation_title))
             },
@@ -661,6 +670,7 @@ fun EventDetailScreen(
                 TextButton(
                     onClick = {
                         onDeleteEvent()
+                        showDeleteDialog = false
                     },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.error
@@ -671,7 +681,7 @@ fun EventDetailScreen(
             },
             dismissButton = {
                 TextButton(
-                    onClick = { }
+                    onClick = { showDeleteDialog = false }
                 ) {
                     Text(stringResource(R.string.cancel_delete))
                 }
