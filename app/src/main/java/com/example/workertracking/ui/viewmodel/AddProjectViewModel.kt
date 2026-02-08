@@ -25,7 +25,6 @@ class AddProjectViewModel(
     
     fun saveProject(
         name: String,
-        location: String,
         startDate: Date,
         employerId: Long?
     ) {
@@ -34,7 +33,6 @@ class AddProjectViewModel(
             try {
                 val project = Project(
                     name = name,
-                    location = location,
                     startDate = startDate,
                     employerId = employerId
                 )

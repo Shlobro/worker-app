@@ -27,6 +27,7 @@ import com.example.workertracking.data.entity.Project
 import com.example.workertracking.data.entity.Event
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -150,7 +151,7 @@ fun EmployerDetailScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.clickable {
                                     val intent = Intent(Intent.ACTION_DIAL).apply {
-                                        data = Uri.parse("tel:${employer.phoneNumber}")
+                                        data = "tel:${employer.phoneNumber}".toUri()
                                     }
                                     context.startActivity(intent)
                                 }
@@ -197,7 +198,7 @@ fun EmployerDetailScreen(
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 Text(
-                                    text = "₪${String.format("%.2f", totalIncome)}",
+                                    text = "₪${String.format(Locale.getDefault(), "%.2f", totalIncome)}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
@@ -213,7 +214,7 @@ fun EmployerDetailScreen(
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 Text(
-                                    text = "₪${String.format("%.2f", totalExpenses)}",
+                                    text = "₪${String.format(Locale.getDefault(), "%.2f", totalExpenses)}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.error
@@ -229,7 +230,7 @@ fun EmployerDetailScreen(
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 Text(
-                                    text = "₪${String.format("%.2f", totalProfit)}",
+                                    text = "₪${String.format(Locale.getDefault(), "%.2f", totalProfit)}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = if (totalProfit >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
@@ -382,11 +383,13 @@ fun ProjectCard(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
-            Text(
-                text = project.location,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            project.location?.let { location ->
+                Text(
+                    text = location,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             Text(
                 text = dateFormat.format(project.startDate),
                 style = MaterialTheme.typography.bodySmall,

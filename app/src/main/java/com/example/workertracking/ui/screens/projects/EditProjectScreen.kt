@@ -22,17 +22,15 @@ import java.util.*
 fun EditProjectScreen(
     project: Project?,
     onNavigateBack: () -> Unit,
-    onUpdateProject: (String, String, Date) -> Unit
+    onUpdateProject: (String, Date) -> Unit
 ) {
     var projectName by remember { mutableStateOf("") }
-    var projectLocation by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf(Date()) }
-    
+
     // Update fields when project data becomes available
     LaunchedEffect(project) {
         project?.let {
             projectName = it.name
-            projectLocation = it.location
             selectedDate = it.startDate
         }
     }
@@ -80,15 +78,7 @@ fun EditProjectScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
-            
-            OutlinedTextField(
-                value = projectLocation,
-                onValueChange = { projectLocation = it },
-                label = { Text(stringResource(R.string.project_location)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            
+
             OutlinedTextField(
                 value = dateFormatter.format(selectedDate),
                 onValueChange = { },
@@ -109,12 +99,12 @@ fun EditProjectScreen(
             
             Button(
                 onClick = {
-                    if (projectName.isNotBlank() && projectLocation.isNotBlank()) {
-                        onUpdateProject(projectName, projectLocation, selectedDate)
+                    if (projectName.isNotBlank()) {
+                        onUpdateProject(projectName, selectedDate)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = projectName.isNotBlank() && projectLocation.isNotBlank()
+                enabled = projectName.isNotBlank()
             ) {
                 Text(stringResource(R.string.save))
             }

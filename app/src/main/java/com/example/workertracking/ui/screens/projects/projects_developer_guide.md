@@ -6,8 +6,8 @@ This folder contains screens for project management and project income.
 
 - **ProjectsScreen.kt**: Project list and entry point to add/edit flows.
 - **ProjectDetailScreen.kt**: Project detail view with status, financial summary (locale-aware number formatting), and the shift list (with search and actions).
-- **AddProjectScreen.kt**: Form to create a new project.
-- **EditProjectScreen.kt**: Form to update an existing project.
+- **AddProjectScreen.kt**: Form to create a new project with name, start date, and optional employer selection.
+- **EditProjectScreen.kt**: Form to update an existing project's name and start date.
 - **ProjectIncomeListScreen.kt**: Income history list for a project.
 - **AddIncomeScreen.kt**: Form to add income to a project.
 - **EditIncomeScreen.kt**: Form to update an income entry.

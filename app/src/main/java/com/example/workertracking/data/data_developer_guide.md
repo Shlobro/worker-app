@@ -4,7 +4,7 @@ This package defines the Room database setup and shared type converters used by 
 
 ## Files
 
-- **WorkerTrackingDatabase.kt**: Room database configuration, entity list, DAO accessors, migrations, and the singleton builder (`getDatabase`).
+- **WorkerTrackingDatabase.kt**: Room database configuration, entity list, DAO accessors, migrations (currently at version 26), and the singleton builder (`getDatabase`). Migration 25-26 makes the Project location field nullable.
 - **Converters.kt**: Type converters for Room (Date <-> Long and List<String> <-> JSON for stored photo URIs).
 
 ## Subpackages

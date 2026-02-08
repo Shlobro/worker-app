@@ -488,13 +488,15 @@ fun ProjectSummaryCard(
                 overflow = TextOverflow.Ellipsis
             )
             
-            Text(
-                text = project.location,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            project.location?.let { location ->
+                Text(
+                    text = location,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
             
             Row(
                 modifier = Modifier.fillMaxWidth(),

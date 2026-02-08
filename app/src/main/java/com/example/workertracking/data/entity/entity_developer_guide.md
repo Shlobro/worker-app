@@ -8,7 +8,7 @@ This package contains Room entities (tables) and projection models used by queri
 - **Event.kt**: Standalone event records with time and income fields.
 - **EventWorker.kt**: Join table for event-worker assignments and pay info.
 - **Payment.kt**: Payment records made to workers.
-- **Project.kt**: Project records with status and dates.
+- **Project.kt**: Project records with status, dates, and optional location field.
 - **ProjectIncome.kt**: Income entries attached to a project.
 - **Shift.kt**: Work shift records tied to a project.
 - **ShiftWorker.kt**: Join table for shift-worker assignments and pay info.

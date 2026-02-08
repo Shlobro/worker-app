@@ -87,8 +87,8 @@ fun NavGraphBuilder.projectsNavigation(
             onNavigateBack = {
                 navController.popBackStack()
             },
-            onSaveProject = { name, location, startDate, employerId ->
-                viewModel.saveProject(name, location, startDate, employerId)
+            onSaveProject = { name, startDate, employerId ->
+                viewModel.saveProject(name, startDate, employerId)
             }
         )
     }
@@ -123,8 +123,8 @@ fun NavGraphBuilder.projectsNavigation(
             onNavigateBack = {
                 navController.popBackStack()
             },
-            onUpdateProject = { name, location, startDate ->
-                viewModel.updateProject(name, location, startDate)
+            onUpdateProject = { name, startDate ->
+                viewModel.updateProject(name, startDate)
             }
         )
     }

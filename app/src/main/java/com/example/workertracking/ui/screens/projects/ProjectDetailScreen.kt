@@ -145,15 +145,17 @@ fun ProjectDetailScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Column {
-                                    Text(
-                                        text = stringResource(R.string.project_location),
-                                        style = MaterialTheme.typography.labelMedium
-                                    )
-                                    Text(
-                                        text = project.location,
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
+                                if (project.location != null) {
+                                    Column {
+                                        Text(
+                                            text = stringResource(R.string.project_location),
+                                            style = MaterialTheme.typography.labelMedium
+                                        )
+                                        Text(
+                                            text = project.location,
+                                            style = MaterialTheme.typography.bodyLarge
+                                        )
+                                    }
                                 }
                                 
                                 Column {

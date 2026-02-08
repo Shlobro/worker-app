@@ -25,10 +25,9 @@ import java.util.*
 fun AddProjectScreen(
     availableEmployers: List<Employer> = emptyList(),
     onNavigateBack: () -> Unit,
-    onSaveProject: (String, String, Date, Long?) -> Unit
+    onSaveProject: (String, Date, Long?) -> Unit
 ) {
     var projectName by remember { mutableStateOf("") }
-    var projectLocation by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf(Date()) }
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedEmployer by remember { mutableStateOf<Employer?>(null) }
@@ -66,15 +65,7 @@ fun AddProjectScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
-            
-            OutlinedTextField(
-                value = projectLocation,
-                onValueChange = { projectLocation = it },
-                label = { Text(stringResource(R.string.project_location)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            
+
             OutlinedTextField(
                 value = dateFormatter.format(selectedDate),
                 onValueChange = { },
@@ -128,12 +119,12 @@ fun AddProjectScreen(
             
             Button(
                 onClick = {
-                    if (projectName.isNotBlank() && projectLocation.isNotBlank()) {
-                        onSaveProject(projectName, projectLocation, selectedDate, selectedEmployer?.id)
+                    if (projectName.isNotBlank()) {
+                        onSaveProject(projectName, selectedDate, selectedEmployer?.id)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = projectName.isNotBlank() && projectLocation.isNotBlank()
+                enabled = projectName.isNotBlank()
             ) {
                 Text(stringResource(R.string.save))
             }

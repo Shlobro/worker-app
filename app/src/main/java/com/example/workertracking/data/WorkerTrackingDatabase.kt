@@ -22,7 +22,7 @@ import com.example.workertracking.data.entity.*
         Payment::class,
         Employer::class
     ],
-    version = 25,
+    version = 26,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -404,13 +404,36 @@ abstract class WorkerTrackingDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_25_26 = object : Migration(25, 26) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Make location column nullable in projects table
+                // SQLite doesn't support ALTER COLUMN, so we need to recreate the table
+                db.execSQL("""
+                    CREATE TABLE projects_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        location TEXT,
+                        startDate INTEGER NOT NULL,
+                        status TEXT NOT NULL DEFAULT 'ACTIVE',
+                        endDate INTEGER,
+                        employerId INTEGER,
+                        FOREIGN KEY(employerId) REFERENCES employers(id) ON DELETE SET NULL
+                    )
+                """)
+                db.execSQL("INSERT INTO projects_new SELECT * FROM projects")
+                db.execSQL("DROP TABLE projects")
+                db.execSQL("ALTER TABLE projects_new RENAME TO projects")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_projects_employerId ON projects(employerId)")
+            }
+        }
+
         fun getDatabase(context: Context): WorkerTrackingDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     WorkerTrackingDatabase::class.java,
                     "worker_tracking_database"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25).build()
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26).build()
                 INSTANCE = instance
                 instance
             }

@@ -22,7 +22,7 @@ data class Project(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val name: String,
-    val location: String,
+    val location: String? = null,
     val startDate: Date,
     val status: ProjectStatus = ProjectStatus.ACTIVE,
     val endDate: Date? = null,

@@ -119,13 +119,12 @@ class ProjectDetailViewModel(
         }
     }
     
-    fun updateProject(name: String, location: String, startDate: Date) {
+    fun updateProject(name: String, startDate: Date) {
         viewModelScope.launch {
             try {
                 _project.value?.let { currentProject ->
                     val updatedProject = currentProject.copy(
                         name = name,
-                        location = location,
                         startDate = startDate
                     )
                     projectRepository.updateProject(updatedProject)
