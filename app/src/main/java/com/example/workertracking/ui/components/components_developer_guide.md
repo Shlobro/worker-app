@@ -10,3 +10,4 @@ This package contains reusable Jetpack Compose UI components shared across scree
 - **SearchableEmployerSelector.kt**: Searchable dropdown for selecting an employer.
 - **SearchableWorkerSelector.kt**: Searchable dropdown for selecting a worker.
 - **SharedComponents.kt**: Common buttons, inputs, and small UI helpers used across screens.
+- **TimePickerDialog.kt**: Material Design 3 clock-based time picker dialog for intuitive time selection. Uses the native Material 3 TimePicker component with a visual clock interface supporting 24-hour format. Includes utility functions `parseTimeString()` to convert "HH:mm" strings to hour/minute components and `formatTime()` to format hour and minute integers to "HH:mm" strings. Used in shift and event screens for start/end time selection.

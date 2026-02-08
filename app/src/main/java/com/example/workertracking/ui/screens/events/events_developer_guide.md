@@ -6,8 +6,8 @@ This folder contains screens for event management.
 
 - **EventsScreen.kt**: Event list and entry point to add/edit flows.
 - **EventDetailScreen.kt**: Event detail view with worker assignments and totals. Workers and reference payments are displayed in separate `Card` sections — the workers card has a header with an add button separated from the list by a divider. When reference payments exist, they appear in their own card with a distinct secondary container background; this card is only rendered when at least one reference payment is present. Worker addition is handled via `AddWorkerDialog` component with searchable filtering. Dialog state is properly managed with dismissal after successful addition and search query reset.
-- **AddEventScreen.kt**: Form to create a new event with optional employer selection.
-- **EditEventScreen.kt**: Form to update an existing event including employer assignment. Supports changing or clearing the employer via `ExposedDropdownMenuBox` and `SearchableEmployerSelector`. The initial employer selection is derived from the `availableEmployers` list matched against `event.employerId` (no separate async lookup).
+- **AddEventScreen.kt**: Form to create a new event with optional employer selection and clock-based time pickers. Uses Material Design 3 TimePicker for start and end times, automatically calculating hours with manual override option. Time displayed in HH:mm format (24-hour).
+- **EditEventScreen.kt**: Form to update an existing event including employer assignment and time selection. Uses clock-based time pickers matching AddEventScreen UX. Supports changing or clearing the employer via `ExposedDropdownMenuBox` and `SearchableEmployerSelector`. The initial employer selection is derived from the `availableEmployers` list matched against `event.employerId` (no separate async lookup).
 - **AddWorkerToEventScreen.kt**: Legacy/unused worker assignment screen. Worker addition is now handled through the `AddWorkerDialog` component in `EventDetailScreen`.
 
 ## Employer Selection (Add/Edit Event)

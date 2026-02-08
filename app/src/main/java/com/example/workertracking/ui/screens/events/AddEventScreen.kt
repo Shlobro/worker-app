@@ -8,21 +8,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.example.workertracking.R
 import com.example.workertracking.data.entity.Employer
 import com.example.workertracking.ui.components.SearchableEmployerSelector
+import com.example.workertracking.ui.components.TimePickerDialog
+import com.example.workertracking.ui.components.formatTime
+import com.example.workertracking.ui.components.parseTimeString
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -35,128 +35,51 @@ fun AddEventScreen(
 ) {
     var eventName by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf(Date()) }
-    var startTime by remember { mutableStateOf("") }
-    var endTime by remember { mutableStateOf("") }
+    var startTime by remember { mutableStateOf("08:00") }
+    var endTime by remember { mutableStateOf("17:00") }
     var hours by remember { mutableStateOf("") }
     var income by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showStartTimePicker by remember { mutableStateOf(false) }
+    var showEndTimePicker by remember { mutableStateOf(false) }
     var isAutoCalculate by remember { mutableStateOf(true) }
     var selectedEmployer by remember { mutableStateOf<Employer?>(null) }
     var showEmployerSelector by remember { mutableStateOf(false) }
-    
-    val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    
-    class TimeInputVisualTransformation : VisualTransformation {
-        override fun filter(text: AnnotatedString): TransformedText {
-            val digitsOnly = text.text.filter { it.isDigit() }.take(4)
-            val formatted = when {
-                digitsOnly.isEmpty() -> ""
-                digitsOnly.length == 1 -> digitsOnly
-                digitsOnly.length == 2 -> digitsOnly
-                digitsOnly.length == 3 -> {
-                    // 3-digit input formatted as H:MM when minutes are valid (e.g., "200" -> "02:00", "120" -> "01:20")
-                    // When minutes > 59 (e.g., "180"), show raw digits as user is typing toward 4-digit time (1800 -> 18:00)
-                    val remainingMinutes = digitsOnly.substring(1).toIntOrNull() ?: 0
 
-                    if (remainingMinutes <= 59) {
-                        val hoursStr = digitsOnly.substring(0, 1).padStart(2, '0')
-                        val minutesStr = digitsOnly.substring(1)
-                        "$hoursStr:$minutesStr"
-                    } else {
-                        digitsOnly
-                    }
-                }
-                digitsOnly.length >= 4 -> {
-                    // Handle 4-digit input like "0800" or "1800" -> "08:00" or "18:00"
-                    val hoursStr = digitsOnly.substring(0, 2)
-                    val minutesStr = digitsOnly.substring(2)
-                    val h = hoursStr.toIntOrNull() ?: 0
-                    val m = minutesStr.toIntOrNull() ?: 0
-                    if (h <= 23 && m <= 59) {
-                        "$hoursStr:$minutesStr"
-                    } else {
-                        ""
-                    }
-                }
-                else -> digitsOnly
-            }
-            
-            val offsetMapping = object : OffsetMapping {
-                override fun originalToTransformed(offset: Int): Int {
-                    val digitsBeforeOffset = text.text.take(offset).count { it.isDigit() }
-                    return when {
-                        formatted.contains(":") -> {
-                            // Has colon formatting
-                            when {
-                                digitsBeforeOffset <= 2 -> digitsBeforeOffset
-                                else -> minOf(digitsBeforeOffset + 1, formatted.length) // +1 for colon, but cap at formatted length
-                            }
-                        }
-                        else -> {
-                            // No colon, direct mapping
-                            minOf(digitsBeforeOffset, formatted.length)
-                        }
-                    }
-                }
-                
-                override fun transformedToOriginal(offset: Int): Int {
-                    return when {
-                        formatted.contains(":") -> {
-                            // Has colon formatting
-                            when {
-                                offset <= 2 -> offset
-                                offset == 3 -> 2 // colon position maps to end of hours
-                                else -> offset - 1 // account for the colon
-                            }
-                        }
-                        else -> {
-                            // No colon, direct mapping
-                            offset
-                        }
-                    }
-                }
-            }
-            
-            return TransformedText(AnnotatedString(formatted), offsetMapping)
-        }
-    }
-    
+    val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
     fun calculateHours(start: String, end: String): String {
-        if ((start.length != 3 && start.length != 4) || (end.length != 3 && end.length != 4) || 
-            !start.all { it.isDigit() } || !end.all { it.isDigit() }) {
-            return ""
-        }
-        
-        try {
-            // Pad to 4 digits if needed
-            val startPadded = start.padStart(4, '0')
-            val endPadded = end.padStart(4, '0')
-            
-            val startHour = startPadded.substring(0, 2).toInt()
-            val startMinute = startPadded.substring(2, 4).toInt()
-            val endHour = endPadded.substring(0, 2).toInt()
-            val endMinute = endPadded.substring(2, 4).toInt()
-            
+        return try {
+            val startParts = start.split(":")
+            val endParts = end.split(":")
+
+            if (startParts.size != 2 || endParts.size != 2) return ""
+
+            val startHour = startParts[0].toInt()
+            val startMinute = startParts[1].toInt()
+            val endHour = endParts[0].toInt()
+            val endMinute = endParts[1].toInt()
+
             // Validate time ranges
             if (startHour > 23 || startMinute > 59 || endHour > 23 || endMinute > 59) {
                 return ""
             }
-            
+
             var totalMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute)
-            
+
             // Handle overnight shifts
             if (totalMinutes < 0) {
                 totalMinutes += 24 * 60
             }
-            
+
             val calculatedHours = totalMinutes / 60.0
-            return if (calculatedHours == calculatedHours.toInt().toDouble()) {
+            if (calculatedHours == calculatedHours.toInt().toDouble()) {
                 calculatedHours.toInt().toString()
             } else {
                 String.format(Locale.US, "%.1f", calculatedHours)
             }
         } catch (_: Exception) {
-            return ""
+            ""
         }
     }
     
@@ -216,44 +139,34 @@ fun AddEventScreen(
             
             OutlinedTextField(
                 value = startTime,
-                onValueChange = { input ->
-                    val digitsOnly = input.filter { it.isDigit() }.take(4)
-                    // Only validate 4-digit input; allow all 3-digit intermediates
-                    if (digitsOnly.length == 4) {
-                        val hoursInt = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
-                        val minutesInt = digitsOnly.substring(2).toIntOrNull() ?: 0
-                        if (hoursInt > 23 || minutesInt > 59) return@OutlinedTextField
-                    }
-                    startTime = digitsOnly
-                },
+                onValueChange = { },
                 label = { Text("שעת התחלה") },
-                visualTransformation = TimeInputVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                placeholder = { Text("800 או 0800") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                supportingText = { Text("הקלד 3-4 ספרות (למשל: 800 או 0800 עבור 08:00)") }
+                readOnly = true,
+                trailingIcon = {
+                    IconButton(onClick = { showStartTimePicker = true }) {
+                        Icon(
+                            imageVector = Icons.Default.AccessTime,
+                            contentDescription = "בחר שעת התחלה"
+                        )
+                    }
+                }
             )
-            
+
             OutlinedTextField(
                 value = endTime,
-                onValueChange = { input ->
-                    val digitsOnly = input.filter { it.isDigit() }.take(4)
-                    // Only validate 4-digit input; allow all 3-digit intermediates
-                    if (digitsOnly.length == 4) {
-                        val hoursInt = digitsOnly.substring(0, 2).toIntOrNull() ?: 0
-                        val minutesInt = digitsOnly.substring(2).toIntOrNull() ?: 0
-                        if (hoursInt > 23 || minutesInt > 59) return@OutlinedTextField
-                    }
-                    endTime = digitsOnly
-                },
+                onValueChange = { },
                 label = { Text("שעת סיום") },
-                visualTransformation = TimeInputVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                placeholder = { Text("1700 או 800") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                supportingText = { Text("הקלד 3-4 ספרות (למשל: 1700 או 800 עבור 17:00)") }
+                readOnly = true,
+                trailingIcon = {
+                    IconButton(onClick = { showEndTimePicker = true }) {
+                        Icon(
+                            imageVector = Icons.Default.AccessTime,
+                            contentDescription = "בחר שעת סיום"
+                        )
+                    }
+                }
             )
             
             Row(
@@ -341,23 +254,13 @@ fun AddEventScreen(
             Button(
                 onClick = {
                     val hoursValue = hours.toDoubleOrNull()
-                    if (eventName.isNotBlank() &&
-                        (startTime.length == 3 || startTime.length == 4) &&
-                        (endTime.length == 3 || endTime.length == 4) &&
-                        hoursValue != null && hoursValue > 0) {
+                    if (eventName.isNotBlank() && hoursValue != null && hoursValue > 0) {
                         val incomeValue = income.toDoubleOrNull() ?: 0.0
-                        // Pad times to 4 digits and format
-                        val startPadded = startTime.padStart(4, '0')
-                        val endPadded = endTime.padStart(4, '0')
-                        val formattedStartTime = "${startPadded.substring(0, 2)}:${startPadded.substring(2)}"
-                        val formattedEndTime = "${endPadded.substring(0, 2)}:${endPadded.substring(2)}"
-                        onSaveEvent(eventName, selectedDate, formattedStartTime, formattedEndTime, hours, incomeValue, selectedEmployer?.id)
+                        onSaveEvent(eventName, selectedDate, startTime, endTime, hours, incomeValue, selectedEmployer?.id)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = eventName.isNotBlank() &&
-                         (startTime.length == 3 || startTime.length == 4) &&
-                         (endTime.length == 3 || endTime.length == 4) &&
                          hours.toDoubleOrNull()?.let { it > 0 } == true
             ) {
                 Text(stringResource(R.string.save))
@@ -365,6 +268,36 @@ fun AddEventScreen(
         }
     }
     
+    // Start Time Picker Dialog
+    if (showStartTimePicker) {
+        val parsedTime = parseTimeString(startTime)
+        TimePickerDialog(
+            initialHour = parsedTime?.first ?: 8,
+            initialMinute = parsedTime?.second ?: 0,
+            onTimeSelected = { hour, minute ->
+                startTime = formatTime(hour, minute)
+                showStartTimePicker = false
+            },
+            onDismiss = { showStartTimePicker = false },
+            title = "בחר שעת התחלה"
+        )
+    }
+
+    // End Time Picker Dialog
+    if (showEndTimePicker) {
+        val parsedTime = parseTimeString(endTime)
+        TimePickerDialog(
+            initialHour = parsedTime?.first ?: 17,
+            initialMinute = parsedTime?.second ?: 0,
+            onTimeSelected = { hour, minute ->
+                endTime = formatTime(hour, minute)
+                showEndTimePicker = false
+            },
+            onDismiss = { showEndTimePicker = false },
+            title = "בחר שעת סיום"
+        )
+    }
+
     // Date Picker Dialog
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
@@ -372,6 +305,7 @@ fun AddEventScreen(
         )
 
         fun closeDialog() {
+            showDatePicker = false
         }
 
         DatePickerDialog(
